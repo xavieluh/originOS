@@ -1,6 +1,6 @@
 # OriginOS build state
 
-**Current phase:** 02 — in progress
+**Current phase:** 02 — all acceptance checks passed (local and CI); PR #3 awaiting owner review
 **Last fully completed phase:** 01 (monorepo scaffold; PR #2 merged by owner 2026-11-22)
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
 **Implementation status:** Monorepo scaffold, local dev tooling and CI. Health endpoints only: no product module, no database tables, no external integration exists.
@@ -11,7 +11,7 @@
 |---|---|---|---|
 | 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
-| 02 Local development, CI and conventions | IN PROGRESS | 3 of 4 checks passed locally 2026-11-22; "CI validates a real build" waits for the first GitHub Actions run on the Phase 02 PR (see Phase 02 handoff) | First CI run |
+| 02 Local development, CI and conventions | PASSED, IN REVIEW | All 4 checks passed 2026-11-22: locally and in GitHub Actions run 45063816462 (5/5 jobs green). See Phase 02 handoff. | Owner review of PR #3; ADR-017/018 acceptance |
 | 03 Distinctive UX system and app shell | NOT STARTED | — | — |
 | 04 Authentication, teams and organizations | NOT STARTED | — | — |
 | 05 Authorization, policy baseline and consent | NOT STARTED | — | — |
@@ -71,7 +71,7 @@
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
 2. ADR-013 to ADR-018 are Proposed and need the owner's acceptance.
-3. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs in CI.
+3. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
 
 ## Phase 02 handoff (2026-11-22)
 
@@ -84,10 +84,11 @@
   - `pnpm db:seed` → "No seed sets are registered yet"; with `NODE_ENV=production` → refused; with a remote host → refused. `pnpm test:integration` without `TEST_DATABASE_URL` → fails with an explicit message.
   - Fresh checkout: `git clone` → `scripts/bootstrap.sh` (after `docker compose down -v`) → `scripts/smoke.sh` passed: api and worker readiness 200 with `database: ok`, web page shows the API ready, the smoke request's correlation ID appears in the API log.
   - `scripts/dev.sh` from the fresh clone: api and worker report `database: ok`, web shows the API ready. (First attempt reported `not_configured`: Turborepo's strict env mode dropped `DATABASE_URL`. Fixed with `dev.passThroughEnv`.)
-  - CI: pending the first run on the PR.
+  - CI, first run (45063733696): secret scan, Python, audit/SBOM green; "Lint, typecheck, test, build" failed because turbo ran the Python package's lint in a job without uv (`uv: not found`). Reproduced locally with uv removed from PATH; fixed by filtering `@originos/ai-worker` out of the Node job (the Python job covers it).
+  - CI, second run (45063816462, head 3ce2998): 5/5 jobs green. gitleaks 8.30.1 over full history: "no leaks found"; `.env` untracked check passed; `pnpm audit --prod --audit-level high` passed and the CycloneDX SBOM was uploaded; local-stack job: compose healthy, DB integration tests, seed guard, and `scripts/smoke.sh` ("Smoke test passed: web, api, worker and database are up", correlation ID found in the API log).
 - **Security/privacy:** compose ports bind to 127.0.0.1; local credentials are labeled `originos-local…` and are the only gitleaks allow-list entries; `.env` ignored and checked by `scripts/check.sh` and CI; logs carry correlation IDs and redact credentials (API test asserts both on real request logs); CI has read-only `contents` permission and SHA-pinned actions; seeding refuses production and remote databases.
 - **External setup:** none required. CI runs on GitHub-hosted runners in the owner's account (free minutes for public repos; private repos use the account's included minutes).
-- **Remaining gaps:** migration checks start in Phase 06; Python dependency audit not needed yet (no runtime deps); scripts are bash only; gitleaks unverified locally.
+- **Remaining gaps:** migration checks start in Phase 06; Python dependency audit not needed yet (no runtime deps); scripts are bash only; gitleaks verified in CI only.
 - **Recommended next:** owner reviews the PR and ADR-013–018; then Phase 03 (UX system and app shell).
 
 ## Phase 01 handoff (2026-11-22)
