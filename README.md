@@ -19,6 +19,7 @@ The scripts are Bash, and the package scripts run on Windows too (environment va
 - **Git Bash** (comes with [Git for Windows](https://git-scm.com/download/win)): run `bash scripts/bootstrap.sh` and `bash scripts/dev.sh` from it. PowerShell and cmd work for `pnpm` commands but not for `scripts/*.sh`.
 - **Docker Desktop**, installed and *running* before you run the scripts (they stop with "Docker is installed but not running" otherwise). Use the WSL 2 backend.
 - **pnpm through corepack:** `corepack enable` writes into the Node.js install folder, so run it once from a terminal opened with "Run as administrator", or install pnpm with `npm install -g pnpm@10.28.0` instead.
+- **"ports are not available … 127.0.0.1:5432 … forbidden by its access permissions"** means Windows has reserved that port (Hyper-V/WSL often reserve ranges; `netsh interface ipv4 show excludedportrange protocol=tcp` lists them) or another Postgres is using it. Pick a free port in `.env`, for example `POSTGRES_HOST_PORT=55432`, change `5432` to `55432` in `DATABASE_URL` and `TEST_DATABASE_URL`, then run `bash scripts/dev.sh` again. The same works for `S3_HOST_PORT`, `SMTP_HOST_PORT` and `MAILPIT_HOST_PORT`.
 - **uv** is optional: without it the Python ai-worker is skipped.
 - `pnpm` may print "Ignored build scripts: esbuild…". That is expected: esbuild ships its binaries as optional packages, so the skipped install script is not needed.
 
