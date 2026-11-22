@@ -1,6 +1,6 @@
 # Architecture decision log
 
-**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. ADR-024 (Phase 05) was accepted by the owner on 2026-11-22, before merge. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
@@ -28,7 +28,7 @@
 | ADR-021 | Browser tests: Playwright, axe and visual baselines in a pinned container | Host-rendered baselines (see ADR text) | Accepted 2026-11-22 (Phase 03) | 03, updated 04 |
 | ADR-022 | Authentication: Better Auth 1.7.27 in the API (email+password, verification, reset, TOTP, passkeys) behind a same-origin proxy | Hosted IdP; Auth.js; hand-rolled | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05 and 42 |
 | ADR-023 | Tenancy: `core` schema, non-superuser app role, row-level security that requires membership | App-only checks; Better Auth organization plugin | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05, 06 and 42 |
-| ADR-024 | Authorization: one pure evaluator (`packages/authz`) for roles, resource-scoped grants and explicit deny; agents capped by their owner; consent records with history | Policy engine (OPA/Cedar/Casbin); permission checks per module; roles only | Proposed (Phase 05) | 05, revisit at 06, 16 and 42 |
+| ADR-024 | Authorization: one pure evaluator (`packages/authz`) for roles, resource-scoped grants and explicit deny; agents capped by their owner; consent records with history | Policy engine (OPA/Cedar/Casbin); permission checks per module; roles only | Accepted 2026-11-22 (Phase 05) | 05, revisit at 06, 16 and 42 |
 
 ---
 
@@ -272,7 +272,7 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-024 — Authorization: one evaluator, grants, explicit deny and consent (Phase 05)
 
-**Status.** Proposed (Phase 05). Implements ADR-010's authorization half on top of ADR-023.
+**Status.** Accepted 2026-11-22 (proposed in Phase 05; accepted by the owner before merge). Implements ADR-010's authorization half on top of ADR-023.
 
 **Decision.** `packages/authz` (new, no runtime dependencies) is the only place permission rules live. `evaluate(actor, action, resource)` is pure and deterministic. Callers load the actor's role and live grants for one organization and pass them in.
 - **Vocabulary.** Actor types are human, service and agent. Actions are read, write, publish, export and admin. Resource types so far are organization, members, invitations, audit_log, grants, agents and consents; later phases append to this list rather than inventing their own checks.
