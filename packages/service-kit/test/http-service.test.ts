@@ -2,7 +2,7 @@ import { Writable } from "node:stream";
 import { HealthResponse } from "@originos/contracts";
 import Fastify from "fastify";
 import { afterEach, describe, expect, it } from "vitest";
-import { createHttpService, loggerOptions } from "../src/index.js";
+import { createHttpService, loggerOptions, redactUrl } from "../src/index.js";
 
 const fixedNow = () => new Date("2026-11-22T00:00:00.000Z");
 const apps: { close(): Promise<unknown> }[] = [];
@@ -103,5 +103,33 @@ describe("loggerOptions", () => {
     expect(output).not.toContain("top-secret-token");
     expect(output).not.toContain("session=abc");
     expect(output).not.toContain("hunter2");
+  });
+
+  it("never logs query strings, which can carry one-time tokens", async () => {
+    const lines: string[] = [];
+    const stream = new Writable({
+      write(chunk, _enc, cb) {
+        lines.push(String(chunk));
+        cb();
+      },
+    });
+    const app = Fastify({ logger: { ...loggerOptions("info"), stream } });
+    apps.push(app);
+    app.get("/api/auth/verify-email", async () => ({}));
+    await app.inject({
+      method: "GET",
+      url: "/api/auth/verify-email?token=one-time-secret&callbackURL=%2F",
+    });
+    const output = lines.join("");
+    expect(output).toContain("/api/auth/verify-email?[REDACTED]");
+    expect(output).not.toContain("one-time-secret");
+  });
+});
+
+describe("redactUrl", () => {
+  it("keeps the path and drops the query", () => {
+    expect(redactUrl("/a/b")).toBe("/a/b");
+    expect(redactUrl("/a?x=1")).toBe("/a?[REDACTED]");
+    expect(redactUrl(undefined)).toBeUndefined();
   });
 });

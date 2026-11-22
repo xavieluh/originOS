@@ -1,5 +1,11 @@
-export { createDatabase, pingDatabase } from "./client.js";
-export type { Database, DatabaseOptions, PingResult } from "./client.js";
+export { APPLICATION_ROLE, createDatabase, pingDatabase } from "./client.js";
+export type { Database, DatabaseOptions, Db, PingResult } from "./client.js";
 export { databaseHealthCheck } from "./health.js";
+export { MIGRATIONS_FOLDER, runMigrations } from "./migrate.js";
+export { setTenant, withScope } from "./scope.js";
+export type { Scope, Tx } from "./scope.js";
+export * as schema from "./schema.js";
+export { INVITABLE_ROLES, ROLES } from "./schema.js";
+export type { InvitableRole, Role } from "./schema.js";
 export { SAMPLE_DATA_LABEL, SeedRefusedError, assertSeedAllowed, seedSets } from "./seed.js";
 export type { SeedSet } from "./seed.js";

@@ -5,6 +5,8 @@
 # Credentials below are fixed local-only values, published in the repository on
 # purpose. Ports bind to 127.0.0.1 so nothing is reachable from other machines.
 # Redis is intentionally absent: nothing uses it yet (ADR-003).
+# Mailpit catches every email the API sends (verification, password reset,
+# invitations); read them at http://127.0.0.1:8025. Nothing leaves the machine.
 
 name: originos
 
@@ -41,6 +43,21 @@ services:
       timeout: 3s
       retries: 30
 
+  # Local SMTP catcher (Phase 04). The API sends through SMTP_URL; Mailpit keeps the
+  # messages and never relays them.
+  mail:
+    image: axllent/mailpit:v1.34.0
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 volumes:
   postgres-data:
   object-storage-data:

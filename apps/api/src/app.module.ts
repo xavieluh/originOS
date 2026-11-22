@@ -1,9 +1,13 @@
 import { type DynamicModule, Module } from "@nestjs/common";
 import type { Database } from "@originos/db";
+import { type Auth, AuthModule, type Mailer } from "./modules/core/index.js";
 import { HealthModule } from "./modules/health/index.js";
 
 export interface AppModuleOptions {
   readonly database: Database | null;
+  readonly auth: Auth | null;
+  readonly mailer: Mailer;
+  readonly publicOrigin: string;
 }
 
 /**
@@ -15,7 +19,15 @@ export class AppModule {
   static register(options: AppModuleOptions): DynamicModule {
     return {
       module: AppModule,
-      imports: [HealthModule.register(options.database)],
+      imports: [
+        HealthModule.register(options.database),
+        AuthModule.register({
+          auth: options.auth,
+          db: options.database?.db ?? null,
+          mailer: options.mailer,
+          publicOrigin: options.publicOrigin,
+        }),
+      ],
     };
   }
 }

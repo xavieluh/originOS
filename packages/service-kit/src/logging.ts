@@ -41,10 +41,43 @@ export interface LogDestination {
   write(line: string): void;
 }
 
+/**
+ * Drop the query string from logged URLs. Links in emails (email verification,
+ * password reset) carry one-time tokens in the query, and a URL is logged on
+ * every request, so query strings are never written to logs.
+ */
+export function redactUrl(url: string | undefined): string | undefined {
+  if (url === undefined) return undefined;
+  const q = url.indexOf("?");
+  return q === -1 ? url : `${url.slice(0, q)}?[REDACTED]`;
+}
+
+interface LoggedRequest {
+  method?: string | undefined;
+  url?: string | undefined;
+  host?: string | undefined;
+  hostname?: string | undefined;
+  ip?: string | undefined;
+  socket?: { remotePort?: number | undefined } | undefined;
+}
+
 export function loggerOptions(level: LogLevel, stream?: LogDestination) {
   return {
     level,
     redact: { paths: [...REDACTED_LOG_PATHS], censor: "[REDACTED]" },
+    serializers: {
+      req: (req: LoggedRequest) => {
+        const out: Record<string, string | number> = {};
+        const url = redactUrl(req.url);
+        const host = req.host ?? req.hostname;
+        if (req.method) out.method = req.method;
+        if (url) out.url = url;
+        if (host) out.host = host;
+        if (req.ip) out.remoteAddress = req.ip;
+        if (req.socket?.remotePort !== undefined) out.remotePort = req.socket.remotePort;
+        return out;
+      },
+    },
     ...(stream ? { stream } : {}),
   };
 }

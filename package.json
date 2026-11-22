@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:seed": "pnpm --filter @originos/db seed",
-    "test:integration": "pnpm --filter @originos/db test:integration"
+    "test:integration": "pnpm --filter @originos/db test:integration",
+    "db:migrate": "pnpm --filter @originos/db migrate"
   },
   "devDependencies": {
     "@originos/config": "workspace:*",

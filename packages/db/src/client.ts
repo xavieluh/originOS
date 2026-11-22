@@ -1,15 +1,27 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
+import * as schema from "./schema.js";
+
+/** Non-superuser role created by migration 0001; row-level security applies to it. */
+export const APPLICATION_ROLE = "originos_app";
 
 export interface DatabaseOptions {
   /** postgres:// connection string. Treated as a secret: never logged. */
   readonly url: string;
   readonly maxConnections?: number;
   readonly connectTimeoutMs?: number;
+  /**
+   * Switch every pooled connection to this role (`SET ROLE`) before use, so
+   * row-level security is enforced. Services pass APPLICATION_ROLE; migrations
+   * and test fixtures connect without it.
+   */
+  readonly role?: string;
 }
 
+export type Db = NodePgDatabase<typeof schema>;
+
 export interface Database {
-  readonly db: NodePgDatabase;
+  readonly db: Db;
   readonly pool: pg.Pool;
   close(): Promise<void>;
 }
@@ -23,8 +35,15 @@ export function createDatabase(options: DatabaseOptions): Database {
   // Without a listener, an idle-client error would crash the process.
   // The error object from pg does not include the password.
   pool.on("error", () => undefined);
+  if (options.role) {
+    const statement = `SET ROLE ${pg.escapeIdentifier(options.role)}`;
+    // Queued on the new client before the pool hands it to any caller.
+    pool.on("connect", (client) => {
+      client.query(statement).catch(() => undefined);
+    });
+  }
   return {
-    db: drizzle({ client: pool }),
+    db: drizzle({ client: pool, schema }),
     pool,
     close: () => pool.end(),
   };
