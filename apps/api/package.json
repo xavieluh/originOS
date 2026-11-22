@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "test": "vitest run --exclude 'test/integration/**'",
-    "test:integration": "vitest run test/integration"
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.27",
