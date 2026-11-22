@@ -100,7 +100,7 @@ jobs:
         run: |
           set -a; . ./.env; set +a
           pnpm db:migrate
-      - name: Database (RLS) and API (auth, tenancy) integration tests
+      - name: Database (RLS, domain schema, rollback), API and worker (outbox) integration tests
         run: |
           set -a; . ./.env; set +a
           pnpm test:integration

@@ -9,6 +9,7 @@
 // 0001_core_rls.sql, because drizzle-kit does not express it.
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
@@ -242,8 +243,26 @@ export const auditEvents = core.table(
       .default({}),
     correlationId: text("correlation_id"),
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * Tamper-evident chain (Phase 06): per-tenant sequence number and SHA-256
+     * over this event and the previous event's hash. Set by a database trigger
+     * (migration 0005); never supplied by the application.
+     */
+    seq: bigint("seq", { mode: "number" }),
+    prevHash: text("prev_hash"),
+    hash: text("hash"),
+    /**
+     * SHA-256 of the actor's user id, set by the same trigger. The chain hashes
+     * this instead of actor_user_id, so erasing a person (actor_user_id set to
+     * null) keeps the chain verifiable. A pseudonym, not anonymization: anyone
+     * who still holds the user id can link it (docs/RETENTION.md).
+     */
+    actorDigest: text("actor_digest"),
   },
-  (t) => [index("audit_events_tenant_time_idx").on(t.tenantId, t.occurredAt)],
+  (t) => [
+    index("audit_events_tenant_time_idx").on(t.tenantId, t.occurredAt),
+    uniqueIndex("audit_events_tenant_seq_uq").on(t.tenantId, t.seq),
+  ],
 );
 
 // --- Authorization and consent (Phase 05, ADR-024) ---------------------------

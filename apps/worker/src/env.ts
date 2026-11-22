@@ -9,6 +9,7 @@ const WorkerEnvSchema = z
     WORKER_HEALTH_PORT: envFields.port(4050),
     WORKER_HEALTH_HOST: envFields.host,
     DATABASE_URL: envFields.url.optional(),
+    OUTBOX_POLL_MS: z.coerce.number().int().min(100).max(60_000).default(1_000),
   })
   .refine((env) => env.NODE_ENV !== "production" || env.DATABASE_URL !== undefined, {
     path: ["DATABASE_URL"],
