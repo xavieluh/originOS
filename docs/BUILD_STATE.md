@@ -1,6 +1,6 @@
 # OriginOS build state
 
-**Current phase:** 03 — checks passed locally, in review (PR open, CI pending)
+**Current phase:** 03 — passed locally and in CI, in review (PR #4)
 **Last fully completed phase:** 02 (local development and CI; PR #3 merged by owner 2026-11-22)
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
 **Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Health endpoints only on the backend: no product module, no database tables, no sign-in and no external integration exists.
@@ -12,7 +12,7 @@
 | 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
 | 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
-| 03 Distinctive UX system and app shell | PASSED locally, IN REVIEW | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. See Phase 03 handoff. CI `web-e2e` job not yet run. | Becomes COMPLETE when CI is green and the PR is merged |
+| 03 Distinctive UX system and app shell | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. | Becomes COMPLETE when PR #4 is merged |
 | 04 Authentication, teams and organizations | NOT STARTED | — | — |
 | 05 Authorization, policy baseline and consent | NOT STARTED | — | — |
 | 06 Core domain schema, ledger and outbox | NOT STARTED | — | — |
@@ -86,6 +86,7 @@
   - `pnpm --filter @originos/web test` → 15 passed (incl. gallery gating).
   - `scripts/e2e-docker.sh` (mcr.microsoft.com/playwright:v1.65.1-noble) → 78 passed: 20 route and dead-control tests, 23 axe tests (10 nav routes and the gallery, each in light and dark, plus open dialogs) with zero violations, 9 keyboard tests, 22 visual screenshots, plus gallery behaviour, 404 and status tests. Visual suite re-run against fresh baselines: 22/22 stable.
   - `docker compose up -d --wait && scripts/smoke.sh` → passed (Home shows the API as ready against the real database).
+- **CI:** GitHub Actions run 45069044008 on 543dff5: all 6 jobs green (gitleaks, lint/typecheck/test/build, Python, local stack + smoke, audit + SBOM, and the new `web-e2e` job in the Playwright image, so the visual baselines match CI).
 - **Acceptance checks:** responsive shell at 390/820/1440 px (visual baselines, no horizontal scroll test) ✓; all nav routes resolve and unbuilt features say "Not yet available · Phase NN" ✓; keyboard focus and contrast (axe in both themes, contrast unit tests, keyboard E2E) ✓; no dead buttons (allowlist test on every route, `Button` type requires behaviour) ✓.
 - **Security and privacy:** no new data, endpoints or secrets. The gallery is off in production unless `ORIGINOS_ENABLE_GALLERY=true`. The theme script is a fixed string with no user input. Fonts are self-hosted, so no third-party requests. Workspace pages are public until sign-in exists (Phase 04) and say so; they hold no data.
 - **External setup:** none.
