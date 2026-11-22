@@ -5,7 +5,7 @@ import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: ["./src/schema.ts", "./src/domain-schema.ts"],
+  schema: ["./src/schema.ts", "./src/domain-schema.ts", "./src/platform-schema.ts"],
   out: "./migrations",
   schemaFilter: ["core", "trust", "content", "evidence", "agents"],
   strict: true,

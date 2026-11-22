@@ -15,3 +15,5 @@ export * from "./domain/ids.js";
 export * from "./domain/vocabulary.js";
 export * from "./domain/entities.js";
 export * from "./domain/events.js";
+export * from "./ingest.js";
+export * from "./jobs.js";

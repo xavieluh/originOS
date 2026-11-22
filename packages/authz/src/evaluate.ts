@@ -27,12 +27,16 @@ const ROLE_PERMISSIONS: Record<Role, Readonly<Partial<Record<ResourceType, reado
     grants: ["read", "write", "admin"],
     agents: ["read", "write", "admin"],
     consents: ["read", "write"],
+    files: ["read", "write", "admin"],
+    jobs: ["read", "write", "admin"],
   },
   member: {
     organization: ["read"],
     members: ["read"],
     agents: ["read"],
     consents: ["read"],
+    // Members upload files and download clean ones; managing jobs is for owners and admins.
+    files: ["read", "write"],
   },
 };
 

@@ -11,6 +11,8 @@ export const RESOURCE_TYPES = [
   "grants",
   "agents",
   "consents",
+  "files",
+  "jobs",
 ] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
 
@@ -24,6 +26,8 @@ export const RESOURCE_LABELS: Record<ResourceType | "*", string> = {
   grants: "Permissions",
   agents: "Agents",
   consents: "Consent policies",
+  files: "Files",
+  jobs: "Background jobs",
   "*": "Everything",
 };
 

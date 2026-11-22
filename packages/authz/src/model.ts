@@ -20,6 +20,8 @@ export const RESOURCE_TYPES = [
   "grants",
   "agents",
   "consents",
+  "files",
+  "jobs",
 ] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
 
