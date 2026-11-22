@@ -1,6 +1,6 @@
 # OriginOS architecture
 
-**Status:** DRAFT v0.1 (Phase 00, 2026-11-22). Target architecture only. **Nothing in this document is implemented yet.** No repository, code, database or deployment exists.
+**Status:** v1.0, accepted by owner 2026-11-22 (Phase 00). Target architecture only. **Nothing in this document is implemented yet.** No repository, code, database or deployment exists.
 **Sources:** `docs/MASTER_SPEC.md` (authority), `CLAUDE.md`, `PHASES.json`, `prompts/00`–`47`.
 **Convention:** items tagged **[GUESS]** are proposals made in Phase 00 without a source in the spec. They need owner confirmation or will be settled by the ADR named next to them. Exact library versions are deliberately not pinned here; Phase 01 pins them from official docs (CLAUDE.md rule 9).
 
@@ -297,4 +297,4 @@ Gates are cumulative. A gate is passed only with linked evidence in `docs/ACCEPT
 
 ## 13. Open questions for the owner
 
-See `PHASE00_REVIEW.md` in the drafts folder; summarised in the thread.
+None outstanding. All [GUESS] items were accepted on 2026-11-22; they remain open to revision in the phases named in DECISIONS.md.

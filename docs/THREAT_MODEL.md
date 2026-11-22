@@ -1,6 +1,6 @@
 # OriginOS threat model — baseline
 
-**Status:** DRAFT v0.1 (Phase 00, 2026-11-22). Baseline only: threats and *planned* controls per trust boundary. No control below is implemented. Full STRIDE per subsystem happens in Phase 42 and must replace "planned" with tested evidence.
+**Status:** v1.0, accepted by owner 2026-11-22 (Phase 00). Baseline only: threats and *planned* controls per trust boundary. No control below is implemented. Full STRIDE per subsystem happens in Phase 42 and must replace "planned" with tested evidence.
 
 ## High-priority assets
 Agent histories and traces; unpublished manuscripts; creator personal information; private research and licensed full text; API keys, ingest keys and OAuth grants; signing keys; billing data; signed records and receipts; audit log integrity.

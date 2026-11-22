@@ -2,7 +2,7 @@
 
 **IMPORTANT:** everything below is a specification, not a completed test. A result changes from NOT RUN only when a test or review has actually been executed, with evidence linked.
 
-Draft v0.1 (Phase 00, 2026-11-22). Part A is new in Phase 00. Part B regenerates the per-phase table from `PHASES.json` in full (the previous table cut each row off mid-sentence).
+v1.0 (Phase 00, accepted 2026-11-22). Part A is new in Phase 00. Part B regenerates the per-phase table from `PHASES.json` in full (the previous table cut each row off mid-sentence).
 
 ## Part A — Capability traceability matrix
 
@@ -113,7 +113,7 @@ Each row traces a requirement in MASTER_SPEC to the module that owns it, the pha
 
 | Phase | Title | Required checks | Result | Evidence |
 |---|---|---|---|---|
-| 00 | Product contract and architecture | ☐ docs/ARCHITECTURE.md and docs/DECISIONS.md describe concrete service boundaries<br>☐ docs/PRODUCT_MAP.md accounts for all 15 modules<br>☐ docs/ACCEPTANCE_MATRIX.md maps each capability to verification<br>☐ no implementation claims without implementation | DRAFTED — awaiting owner review (docs only; not COMPLETE) | docs/ARCHITECTURE.md, DECISIONS.md, PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md, THREAT_MODEL.md |
+| 00 | Product contract and architecture | ☐ docs/ARCHITECTURE.md and docs/DECISIONS.md describe concrete service boundaries<br>☐ docs/PRODUCT_MAP.md accounts for all 15 modules<br>☐ docs/ACCEPTANCE_MATRIX.md maps each capability to verification<br>☐ no implementation claims without implementation | PASSED by document review; owner accepted 2026-11-22 | docs/ARCHITECTURE.md, DECISIONS.md, PRODUCT_MAP.md, THREAT_MODEL.md |
 | 01 | Production-shaped monorepo | ☐ clean install works with documented commands<br>☐ typecheck lint unit tests run<br>☐ web and api start locally and health endpoints respond<br>☐ code compiles without fake integrations | NOT RUN | — |
 | 02 | Local development, CI and conventions | ☐ fresh checkout bootstraps from README<br>☐ CI validates a real build<br>☐ secrets are excluded from git and logs<br>☐ a developer can start web api database and worker locally | NOT RUN | — |
 | 03 | Distinctive UX system and app shell | ☐ responsive polished shell renders at mobile/tablet/desktop<br>☐ all navigation routes resolve and unfinished modules clearly say not yet available<br>☐ accessible keyboard focus and contrast checks pass<br>☐ no dead buttons shown as working | NOT RUN | — |

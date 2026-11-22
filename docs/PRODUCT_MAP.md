@@ -1,6 +1,6 @@
 # OriginOS product map
 
-**Status:** DRAFT v0.1 (Phase 00, 2026-11-22). **Every module below is NOT BUILT.** Placement and MVP slices tagged **[GUESS]** are Phase 00 proposals.
+**Status:** v1.0, accepted by owner 2026-11-22 (Phase 00). **Every module below is NOT BUILT.** Placement and MVP slices tagged **[GUESS]** are Phase 00 proposals.
 Canonical object names follow ADR-002; module-specific aliases are shown in parentheses.
 
 ## Release surfaces

@@ -1,22 +1,22 @@
 # Architecture decision log
 
-**Status of this log:** every ADR below is **Proposed** (Phase 00 draft, 2026-11-22). None is Accepted until the owner reviews it. No decision has been validated by code or tests yet. Items tagged **[GUESS]** have no source in MASTER_SPEC and need confirmation.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
 |---|---|---|---|---|
-| ADR-001 | Modular monolith (`apps/api`) + isolated processes for worker, MCP, telemetry, Python AI worker, media validator | Microservices per module; single process for everything | Proposed | 01 |
-| ADR-002 | Canonical domain model, identity graph as `Subject` + typed `Relation` edges in Postgres | Graph database; per-module schemas | Proposed | 06, 13 |
-| ADR-003 | Transactional outbox in Postgres as the event bus; Postgres-backed job queue behind a `WorkflowRunner` interface | Kafka/NATS; Temporal from day one; Redis queue | Proposed | 06, 07, 35 |
-| ADR-004 | Single provider-agnostic AI gateway in the API; Python worker uses it, never providers directly | Direct SDK calls per feature; separate Python gateway | Proposed | 15 |
-| ADR-005 | C2PA validation in a sandboxed `services/media-validator` using the official CAI SDK | Validate inside API; third-party validation service | Proposed | 12 |
-| ADR-006 | One signer interface (KMS-backed) and key registry for receipts, credentials and verification records | Per-feature keys; blockchain anchoring | Proposed | 10, 14, 20, 36 |
-| ADR-007 | Claude integration only via remote MCP server, official hooks collector and opt-in SDK instrumentation | Scraping/claiming Claude account history; browser extension capture | Proposed | 17, 18, 23 |
-| ADR-008 | Separate telemetry ingest service and store for customer agent telemetry, OTLP-compatible | Store in core tables; vendor observability SaaS | Proposed | 16, 43 |
-| ADR-009 | All external providers through Origin Connect adapters (OAuth broker, token vault, webhook verifier, outbound delivery) | Each module integrates its own providers | Proposed | 08 |
-| ADR-010 | Tenancy and authorization: `tenant_id` everywhere, single authz evaluator, RLS as defense in depth | App-only checks; database-per-tenant | Proposed | 04, 05, 06 |
-| ADR-011 | Seven personas (split org admin into team admin and enterprise admin) | Spec's six | Proposed | 00 |
-| ADR-012 | Explicit non-goals | — | Proposed | 00, revisit at 47 |
+| ADR-001 | Modular monolith (`apps/api`) + isolated processes for worker, MCP, telemetry, Python AI worker, media validator | Microservices per module; single process for everything | Accepted 2026-11-22 | 01 |
+| ADR-002 | Canonical domain model, identity graph as `Subject` + typed `Relation` edges in Postgres | Graph database; per-module schemas | Accepted 2026-11-22 | 06, 13 |
+| ADR-003 | Transactional outbox in Postgres as the event bus; Postgres-backed job queue behind a `WorkflowRunner` interface | Kafka/NATS; Temporal from day one; Redis queue | Accepted 2026-11-22 | 06, 07, 35 |
+| ADR-004 | Single provider-agnostic AI gateway in the API; Python worker uses it, never providers directly | Direct SDK calls per feature; separate Python gateway | Accepted 2026-11-22 | 15 |
+| ADR-005 | C2PA validation in a sandboxed `services/media-validator` using the official CAI SDK | Validate inside API; third-party validation service | Accepted 2026-11-22 | 12 |
+| ADR-006 | One signer interface (KMS-backed) and key registry for receipts, credentials and verification records | Per-feature keys; blockchain anchoring | Accepted 2026-11-22 | 10, 14, 20, 36 |
+| ADR-007 | Claude integration only via remote MCP server, official hooks collector and opt-in SDK instrumentation | Scraping/claiming Claude account history; browser extension capture | Accepted 2026-11-22 | 17, 18, 23 |
+| ADR-008 | Separate telemetry ingest service and store for customer agent telemetry, OTLP-compatible | Store in core tables; vendor observability SaaS | Accepted 2026-11-22 | 16, 43 |
+| ADR-009 | All external providers through Origin Connect adapters (OAuth broker, token vault, webhook verifier, outbound delivery) | Each module integrates its own providers | Accepted 2026-11-22 | 08 |
+| ADR-010 | Tenancy and authorization: `tenant_id` everywhere, single authz evaluator, RLS as defense in depth | App-only checks; database-per-tenant | Accepted 2026-11-22 | 04, 05, 06 |
+| ADR-011 | Seven personas (split org admin into team admin and enterprise admin) | Spec's six | Accepted 2026-11-22 | 00 |
+| ADR-012 | Explicit non-goals | — | Accepted 2026-11-22 | 00, revisit at 47 |
 
 ---
 
