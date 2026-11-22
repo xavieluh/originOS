@@ -4,9 +4,16 @@ This package is a **build specification, 48 execution prompts, project skills an
 
 ## Developing the code
 
-Phase 01 added the monorepo scaffold. Install, run and check it with the commands in
-[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Build progress is tracked in
-[`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
+Fresh checkout to running stack (Node 22.13+, Docker, optionally uv):
+
+```bash
+scripts/bootstrap.sh   # checks tools, creates .env, installs deps, builds, starts Postgres + object storage
+scripts/dev.sh         # web :3000, api :4000, worker, mcp-server, telemetry, media-validator in watch mode
+scripts/check.sh       # the same checks CI runs (add --db for database integration tests)
+```
+
+Details, ports and conventions: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Secrets policy:
+[`docs/SECRETS.md`](docs/SECRETS.md). Build progress: [`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
 
 ## Quick start (recommended)
 

@@ -45,4 +45,4 @@ Run every applicable check — typecheck, lint, unit, integration, migrations up
 ## 8. Final report (format required by the phase prompt)
 1. Files and modules changed. 2. Working user journeys. 3. Exact checks executed and results. 4. Security and permissions. 5. External credentials/blockers. 6. Remaining gaps. 7. Acceptance status and next phase.
 
-End by suggesting `/origin-audit NN` before moving on, and recommend committing (do not commit or push unless the user asks).
+End by suggesting `/origin-audit NN` before moving on. Commit on a feature branch, push it and open a pull request for review; never commit to `main`, never merge, and never force-push or rewrite history without the user's approval.

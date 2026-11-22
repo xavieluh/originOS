@@ -36,10 +36,16 @@ export const REDACTED_LOG_PATHS: readonly string[] = [
 
 export type LogLevel = "fatal" | "error" | "warn" | "info" | "debug" | "trace" | "silent";
 
-export function loggerOptions(level: LogLevel) {
+/** Where log lines go. Defaults to stdout; tests pass a capturing stream. */
+export interface LogDestination {
+  write(line: string): void;
+}
+
+export function loggerOptions(level: LogLevel, stream?: LogDestination) {
   return {
     level,
     redact: { paths: [...REDACTED_LOG_PATHS], censor: "[REDACTED]" },
+    ...(stream ? { stream } : {}),
   };
 }
 
@@ -47,9 +53,9 @@ export function loggerOptions(level: LogLevel) {
  * Fastify constructor options shared by every OriginOS HTTP process, including
  * the NestJS API's FastifyAdapter: redacted logger and correlation IDs as request IDs.
  */
-export function fastifyBaseOptions(level: LogLevel) {
+export function fastifyBaseOptions(level: LogLevel, stream?: LogDestination) {
   return {
-    logger: loggerOptions(level),
+    logger: loggerOptions(level, stream),
     genReqId: (req: IncomingMessage) => resolveCorrelationId(req.headers[CORRELATION_ID_HEADER]),
     logController: new LogController({ requestIdLogLabel: "correlationId" }),
   };

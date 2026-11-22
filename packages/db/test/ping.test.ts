@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDatabase, pingDatabase } from "../src/index.js";
+import { pingDatabase } from "../src/index.js";
 
 const clock = () => {
   let t = 0;
@@ -33,30 +33,5 @@ describe("pingDatabase", () => {
     const result = await pingDatabase(pool as never, clock());
     expect(result).toEqual({ ok: false, reason: "error", latencyMs: 5 });
     expect(JSON.stringify(result)).not.toContain("admin");
-  });
-});
-
-// Runs only when a real database is provided, e.g.
-// TEST_DATABASE_URL=postgres://... pnpm --filter @originos/db test
-const realUrl = process.env.TEST_DATABASE_URL;
-describe.skipIf(!realUrl)("pingDatabase against a real PostgreSQL", () => {
-  it("round-trips select 1", async () => {
-    const database = createDatabase({ url: realUrl ?? "" });
-    try {
-      const result = await pingDatabase(database.pool);
-      expect(result.ok).toBe(true);
-    } finally {
-      await database.close();
-    }
-  });
-
-  it("reports unreachable for a closed port", async () => {
-    const database = createDatabase({ url: "postgres://nobody:x@127.0.0.1:1/none" });
-    try {
-      const result = await pingDatabase(database.pool);
-      expect(result).toMatchObject({ ok: false, reason: "unreachable" });
-    } finally {
-      await database.close();
-    }
   });
 });

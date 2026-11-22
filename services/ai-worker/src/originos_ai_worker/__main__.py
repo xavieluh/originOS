@@ -7,6 +7,7 @@ import sys
 
 from .config import EnvValidationError, load_config
 from .health import health_report
+from .logging_setup import configure_logging
 
 
 def main() -> int:
@@ -15,6 +16,8 @@ def main() -> int:
     except EnvValidationError as error:
         print(str(error), file=sys.stderr)
         return 1
+    logger = configure_logging(config.log_level)
+    logger.info("ai-worker scaffold started; no pipelines registered until Phase 24")
     print(json.dumps(health_report(config)))
     return 0
 
