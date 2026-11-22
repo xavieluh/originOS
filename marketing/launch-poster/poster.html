@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OriginOS Launch Poster</title>
+<meta name="viewport" content="width=1200">
+<style>
+  @font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400; src: url(fonts/instrument-serif-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; src: url(fonts/instrument-serif-latin-400-italic.woff2) format("woff2"); }
+  @font-face { font-family: "Plex Mono"; font-weight: 400; src: url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Plex Mono"; font-weight: 500; src: url(fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Plex Mono"; font-weight: 600; src: url(fonts/ibm-plex-mono-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Inter Poster"; font-weight: 400; src: url(fonts/inter-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Inter Poster"; font-weight: 500; src: url(fonts/inter-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Inter Poster"; font-weight: 600; src: url(fonts/inter-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Inter Poster"; font-weight: 700; src: url(fonts/inter-latin-700-normal.woff2) format("woff2"); }
+
+  /* Poster canvas: 1200 x 1800 CSS px = 24 x 36 in (2:3). Exported at 3x for 3600 x 5400 px. */
+  :root {
+    --ink: #0A0B0F;
+    --fg: #F2EFE8;
+    --muted: #A9ABB6;      /* 8.6:1 on --ink */
+    --faint: #6E7180;
+    --accent: #FF6B3D;     /* 6.95:1 on --ink */
+    --paper: #F4F0E7;
+    --print: #18171B;
+    --print-2: #5B5850;
+    --serif: "Instrument Serif", Georgia, serif;
+    --sans: "Inter Poster", "Inter", system-ui, sans-serif;
+    --mono: "Plex Mono", "IBM Plex Mono", ui-monospace, monospace;
+  }
+  @page { size: 24in 36in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 1800px; background: var(--ink); }
+  body { -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+
+  .poster { position: relative; width: 1200px; height: 1800px; overflow: hidden; color: var(--fg); font-family: var(--sans);
+    background:
+      radial-gradient(52% 34% at 50% 55%, rgba(255,107,61,.50) 0%, rgba(214,72,108,.32) 34%, rgba(88,58,190,.20) 62%, rgba(10,11,15,0) 100%),
+      radial-gradient(90% 40% at 50% 100%, rgba(60,44,150,.22) 0%, rgba(10,11,15,0) 70%),
+      linear-gradient(180deg, #0B0C11 0%, #0A0B0F 40%, #0C0B12 100%);
+  }
+  /* Ripples from the point of origin: faint rings centred on the record */
+  .rings { position: absolute; left: 0; top: 0; width: 1200px; height: 1800px; pointer-events: none; }
+  .grain { position: absolute; inset: 0; opacity: .10; mix-blend-mode: overlay; pointer-events: none; }
+
+  /* Top bar */
+  .top { position: absolute; left: 72px; right: 72px; top: 62px; height: 40px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 14px; font-weight: 600; font-size: 31px; letter-spacing: -0.015em; }
+  .brand svg { width: 40px; height: 40px; }
+  .status { font-family: var(--mono); font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+  .status i { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px rgba(255,107,61,.18); display: inline-block; }
+  .toprule { position: absolute; left: 72px; right: 72px; top: 126px; height: 1px; background: rgba(242,239,232,.16); }
+
+  /* Headline */
+  .kicker { position: absolute; left: 72px; top: 166px; font-size: 31px; line-height: 1.25; font-weight: 500; color: var(--muted); letter-spacing: -0.01em; }
+  .kicker b { color: var(--fg); font-weight: 500; }
+  h1 { position: absolute; z-index: 3; left: 63px; top: 212px; font-family: var(--serif); font-weight: 400; font-size: 212px; line-height: .9; letter-spacing: -0.025em; color: var(--fg); white-space: nowrap; }
+  h1 em { font-style: italic; color: var(--accent); letter-spacing: -0.02em; }
+
+  /* The record */
+  .stage { position: absolute; left: 0; top: 0; width: 1200px; height: 1800px; }
+  .receipt-wrap { position: absolute; left: 370px; top: 618px; width: 440px; transform: rotate(-3deg) scale(1.045); transform-origin: 50% 0;
+    filter: drop-shadow(0 46px 60px rgba(0,0,0,.55)) drop-shadow(0 10px 18px rgba(0,0,0,.35)); }
+  .receipt { position: relative; width: 440px; padding: 30px 32px 44px; color: var(--print); font-family: var(--mono); font-size: 15px; line-height: 1.45;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.05) 0%, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 90%, rgba(0,0,0,.06) 100%),
+      linear-gradient(180deg, #FBF8F1 0%, var(--paper) 55%, #ECE7DC 100%); }
+  .r-top { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; letter-spacing: .16em; font-weight: 600; }
+  .r-top span { display: flex; align-items: center; gap: 8px; }
+  .r-top svg { width: 18px; height: 18px; }
+  .r-top .sample { color: var(--print-2); font-weight: 500; }
+  .r-title { font-family: var(--serif); font-style: italic; font-size: 35px; line-height: 1.02; margin-top: 22px; letter-spacing: -0.01em; }
+  .r-meta { margin-top: 10px; font-size: 13px; letter-spacing: .06em; color: var(--print-2); text-transform: uppercase; }
+  .r-rule { height: 0; border-top: 1.5px dashed rgba(24,23,27,.5); margin: 18px 0 16px; }
+  .r-rule.double { border-top: 1.5px solid var(--print); height: 4px; border-bottom: 1.5px solid var(--print); margin: 16px 0 14px; }
+  .r-item { position: relative; margin-bottom: 11px; }
+  .r-item:last-of-type { margin-bottom: 0; }
+  .r-row { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: .08em; }
+  .r-row .g { width: 16px; height: 16px; flex: none; display: inline-flex; }
+  .r-row .g svg { width: 16px; height: 16px; }
+  .r-row .lbl { flex: none; }
+  .r-row .dots { flex: 1; border-bottom: 1.5px dotted rgba(24,23,27,.45); transform: translateY(-4px); margin: 0 2px; }
+  .r-row .t { font-weight: 500; letter-spacing: .04em; }
+  .r-sub { padding-left: 26px; color: #34322E; }
+  .anchor { position: absolute; top: 11px; width: 0; height: 0; }
+  .anchor.l { left: -32px; } .anchor.r { right: -32px; }
+  .r-total { display: flex; justify-content: space-between; letter-spacing: .08em; }
+  .r-total.strong { font-weight: 600; font-size: 16.5px; margin-top: 4px; }
+  .r-total.strong span:last-child { background: var(--print); color: var(--paper); padding: 0 8px; }
+  .barcode { display: block; width: 100%; height: 46px; margin-top: 4px; }
+  .r-id { display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: .14em; margin-top: 8px; color: var(--print-2); }
+  .r-thanks { text-align: center; margin-top: 16px; font-size: 13px; letter-spacing: .3em; font-weight: 600; }
+
+  /* Annotations: what each part of the record means */
+  .note { position: absolute; width: 250px; }
+  .note.left { text-align: right; }
+  .note.left .gl { margin-left: auto; }
+  .note .gl { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(10,11,15,.72); border: 1.5px solid rgba(242,239,232,.55); margin-bottom: 14px; }
+  .note .gl svg { width: 16px; height: 16px; }
+  .note h3 { text-wrap: balance; font-size: 26px; line-height: 1.12; font-weight: 600; letter-spacing: -0.015em; color: var(--fg); }
+  .note p { text-wrap: balance; margin-top: 8px; font-size: 19px; line-height: 1.36; color: var(--muted); }
+    .wires { position: absolute; left: 0; top: 0; width: 1200px; height: 1800px; pointer-events: none; overflow: visible; }
+
+  /* Supporting copy */
+  .support { position: absolute; left: 72px; top: 1460px; width: 745px; }
+  .support p { text-wrap: pretty; font-size: 31px; line-height: 1.3; font-weight: 500; letter-spacing: -0.012em; color: var(--fg); }
+  .support .punch { margin-top: 18px; font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; color: var(--accent); }
+
+  .reserve { position: absolute; left: 948px; top: 1460px; width: 180px; height: 180px; }
+  .reserve .tick { position: absolute; width: 18px; height: 18px; border-color: rgba(242,239,232,.38); border-style: solid; }
+  .reserve .tl { left: 0; top: 0; border-width: 1.5px 0 0 1.5px; }
+  .reserve .tr { right: 0; top: 0; border-width: 1.5px 1.5px 0 0; }
+  .reserve .bl { left: 0; bottom: 0; border-width: 0 0 1.5px 1.5px; }
+  .reserve .br { right: 0; bottom: 0; border-width: 0 1.5px 1.5px 0; }
+  .reserve .lab { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 12px; letter-spacing: .18em; color: var(--faint); text-align: center; line-height: 1.7; }
+  .clean .reserve .lab { display: none; }
+
+  /* Footer */
+  .footrule { position: absolute; left: 72px; right: 72px; top: 1664px; height: 1px; background: rgba(242,239,232,.16); }
+  .cta { position: absolute; left: 72px; top: 1688px; display: flex; align-items: baseline; gap: 22px; }
+  .cta .big { font-family: var(--serif); font-size: 54px; line-height: 1; letter-spacing: -0.015em; }
+  .cta .big em { font-style: italic; color: var(--accent); }
+  .fine { position: absolute; right: 72px; top: 1688px; width: 430px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="poster" id="poster">
+  <svg class="rings" id="rings" aria-hidden="true"></svg>
+
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="17" cy="23" r="12.5" fill="none" stroke="#F2EFE8" stroke-width="3"/>
+        <circle cx="17" cy="23" r="4" fill="#FF6B3D"/>
+        <path d="M26 14 L33.5 6.5" stroke="#F2EFE8" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="34.5" cy="5.5" r="3.2" fill="#F2EFE8"/>
+      </svg>
+      OriginOS
+    </div>
+    <div class="status"><i></i>Now in development</div>
+  </div>
+  <div class="toprule"></div>
+
+  <div class="kicker">AI can make almost anything now. <b>Can you tell where it came from?</b></div>
+  <h1 id="headline">The internet<br>needs <em>receipts.</em></h1>
+
+  <div class="stage">
+    <div class="receipt-wrap" id="receiptWrap">
+      <div class="receipt" id="receipt">
+        <div class="r-top">
+          <span>
+            <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="17" cy="23" r="12.5" fill="none" stroke="#18171B" stroke-width="3.4"/><circle cx="17" cy="23" r="4.2" fill="#18171B"/><path d="M26 14 L33.5 6.5" stroke="#18171B" stroke-width="3.4" stroke-linecap="round"/><circle cx="34.5" cy="5.5" r="3.4" fill="#18171B"/></svg>
+            ORIGIN RECORD
+          </span>
+          <span class="sample">SAMPLE</span>
+        </div>
+        <div class="r-title">Field Notes on a<br>Vanishing Glacier</div>
+        <div class="r-meta">Photo essay &middot; Version 4 &middot; Published</div>
+        <div class="r-rule"></div>
+
+        <div class="r-item"><span class="anchor l" data-key="creator"></span>
+          <div class="r-row"><span class="g"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="8" r="2.2" fill="currentColor"/></svg></span><span class="lbl">CREATED BY</span><span class="dots"></span><span class="t">09:14</span></div>
+          <div class="r-sub">Photographer &middot; identity reviewed</div>
+        </div>
+        <div class="r-item"><span class="anchor l" data-key="sources"></span>
+          <div class="r-row"><span class="g"><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="6" y="6" width="4" height="4" fill="currentColor"/></svg></span><span class="lbl">SOURCES</span><span class="dots"></span><span class="t">10:02</span></div>
+          <div class="r-sub">9 linked &middot; 1 contradicts a claim</div>
+        </div>
+        <div class="r-item"><span class="anchor r" data-key="ai"></span>
+          <div class="r-row"><span class="g"><svg viewBox="0 0 16 16"><path d="M8 1.6 L14.4 8 L8 14.4 L1.6 8 Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg></span><span class="lbl">AI ASSIST</span><span class="dots"></span><span class="t">10:47</span></div>
+          <div class="r-sub">Drafted captions &middot; logged</div>
+        </div>
+        <div class="r-item"><span class="anchor l" data-key="changes"></span>
+          <div class="r-row"><span class="g"><svg viewBox="0 0 16 16"><path d="M8 2 L14.5 13.5 L1.5 13.5 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lbl">EDITED</span><span class="dots"></span><span class="t">11:30</span></div>
+          <div class="r-sub">4 versions &middot; 37 changes</div>
+        </div>
+        <div class="r-item"><span class="anchor r" data-key="approved"></span>
+          <div class="r-row"><span class="g"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.4" fill="currentColor"/><path d="M5 8.2 L7.1 10.3 L11.2 5.9" fill="none" stroke="#F4F0E7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lbl">APPROVED</span><span class="dots"></span><span class="t">14:02</span></div>
+          <div class="r-sub">Editor sign-off &middot; signed</div>
+        </div>
+
+        <div class="r-rule double"></div>
+        <div class="r-total"><span>EVIDENCE ON RECORD</span><span>5 ENTRIES</span></div>
+        <div class="r-total strong"><span>VERDICT</span><span>YOURS TO MAKE</span></div>
+        <div class="r-rule"></div>
+        <svg class="barcode" id="barcode" viewBox="0 0 376 46" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="r-id"><span>REC 7F3A&middot;91C2&middot;0E4D</span><span>V4/4</span></div>
+        <div class="r-thanks">THANK YOU FOR CHECKING</div>
+      </div>
+    </div>
+
+    <svg class="wires" id="wires" aria-hidden="true"></svg>
+
+    <div class="note left" id="note-creator">
+      <div class="gl"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#F2EFE8" stroke-width="1.8"/><circle cx="8" cy="8" r="2.2" fill="#FF6B3D"/></svg></div>
+      <h3>Trace where it came from</h3>
+      <p>Who made it, and every version since.</p>
+    </div>
+    <div class="note left" id="note-sources">
+      <div class="gl"><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" fill="none" stroke="#F2EFE8" stroke-width="1.8"/><rect x="6" y="6" width="4" height="4" fill="#FF6B3D"/></svg></div>
+      <h3>Check the evidence</h3>
+      <p>Follow claims to their sources, even the ones that disagree.</p>
+    </div>
+    <div class="note right" id="note-ai">
+      <div class="gl"><svg viewBox="0 0 16 16"><path d="M8 1.6 L14.4 8 L8 14.4 L1.6 8 Z" fill="none" stroke="#F2EFE8" stroke-width="1.8"/><circle cx="8" cy="8" r="2" fill="#FF6B3D"/></svg></div>
+      <h3>See how AI was involved</h3>
+      <p>What it did, when, and who checked it.</p>
+    </div>
+    <div class="note right" id="note-approved">
+      <div class="gl"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.4" fill="#FF6B3D"/><path d="M5 8.2 L7.1 10.3 L11.2 5.9" fill="none" stroke="#0A0B0F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Know who signed off</h3>
+      <p>The approvals behind the final version.</p>
+    </div>
+  </div>
+
+  <div class="support">
+    <p>OriginOS will keep a verifiable record of how work gets made: who created it, what backs it up, what AI did, and who approved it.</p>
+    <div class="punch">Not a guess. Not an AI detector. A record you can inspect.</div>
+  </div>
+
+  <div class="reserve" aria-label="Reserved space for website address or QR code">
+    <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
+    <div class="lab">URL / QR<br>RESERVED</div>
+  </div>
+
+  <div class="footrule"></div>
+  <div class="cta"><span class="big">Discover OriginOS. <em>Coming soon.</em></span></div>
+  <div class="fine">OriginOS is in development; the record shown is an illustrative sample. Records show evidence of how work was made. They don&rsquo;t certify truth or guarantee that something is human-made.</div>
+
+  <svg class="grain" aria-hidden="true">
+    <filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0"/></filter>
+    <rect width="100%" height="100%" filter="url(#n)"/>
+  </svg>
+</div>
+
+<script>
+document.fonts.ready.then(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; };
+  if (new URLSearchParams(location.search).has("clean")) document.getElementById("poster").classList.add("clean");
+
+  // Torn bottom edge for the receipt.
+  const receipt = document.getElementById("receipt");
+  const w = receipt.offsetWidth, h = receipt.offsetHeight, tooth = 11, depth = 10;
+  const pts = ["0px 0px", w + "px 0px", w + "px " + (h - depth) + "px"];
+  for (let x = w, i = 0; x > 0; x -= tooth, i++) pts.push(Math.max(0, x - tooth / 2) + "px " + (h - (i % 2 ? depth : 0)) + "px", Math.max(0, x - tooth) + "px " + (h - depth) + "px");
+  receipt.style.clipPath = "polygon(" + pts.join(",") + ")";
+
+  // Deterministic barcode (decorative record ID).
+  const bc = document.getElementById("barcode");
+  let seed = 0x7f3a91c2, x = 0;
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+  while (x < 376) { const bw = [1.5, 1.5, 3, 4.5][Math.floor(rnd() * 4)]; const gap = [1.5, 3, 3, 4.5][Math.floor(rnd() * 4)]; if (x + bw > 376) break; el("rect", { x: x.toFixed(2), y: 0, width: bw, height: 46, fill: "#18171B" }, bc); x += bw + gap; }
+
+  // Wire each annotation to the line of the record it explains.
+  const stage = document.querySelector(".stage").getBoundingClientRect();
+  const wires = document.getElementById("wires");
+  const anchor = k => { const r = document.querySelector('.anchor[data-key="' + k + '"]').getBoundingClientRect(); return { x: r.left - stage.left, y: r.top - stage.top }; };
+  const links = [
+    { k: "creator", note: "note-creator", side: "l", dy: -96 },
+    { k: "sources", note: "note-sources", side: "l", dy: 118 },
+    { k: "ai", note: "note-ai", side: "r", dy: -150 },
+    { k: "approved", note: "note-approved", side: "r", dy: 64 }
+  ];
+  links.forEach(L => {
+    const a = anchor(L.k), n = document.getElementById(L.note);
+    n.style.left = (L.side === "l" ? 72 : 1200 - 72 - 250) + "px";
+    n.style.top = (a.y + L.dy - 17) + "px";
+    const g = n.querySelector(".gl").getBoundingClientRect();
+    const gx = (L.side === "l" ? g.right : g.left) - stage.left, gy = g.top + g.height / 2 - stage.top;
+    const elbowX = L.side === "l" ? a.x - 34 : a.x + 34;
+    el("path", { d: `M${gx} ${gy} H${elbowX} L${a.x} ${a.y}`, fill: "none", stroke: "rgba(242,239,232,.5)", "stroke-width": 1.5 }, wires);
+    el("circle", { cx: a.x, cy: a.y, r: 7.5, fill: "#0A0B0F", stroke: "#FF6B3D", "stroke-width": 2 }, wires);
+    el("circle", { cx: a.x, cy: a.y, r: 2.6, fill: "#FF6B3D" }, wires);
+  });
+
+  // Faint rings radiating from the record: the point of origin.
+  const wr = document.getElementById("receiptWrap").getBoundingClientRect();
+  const cx = wr.left + wr.width / 2, cy = wr.top + wr.height * 0.46;
+  const rings = document.getElementById("rings");
+  const defs = el("defs", {}, rings);
+  const rg = el("radialGradient", { id: "fade", cx: cx, cy: cy, r: 760, gradientUnits: "userSpaceOnUse" }, defs);
+  el("stop", { offset: "0", "stop-color": "#fff", "stop-opacity": ".9" }, rg);
+  el("stop", { offset: "1", "stop-color": "#fff", "stop-opacity": "0" }, rg);
+  const mask = el("mask", { id: "m" }, defs); el("rect", { width: 1200, height: 1800, fill: "url(#fade)" }, mask);
+  const gr = el("g", { mask: "url(#m)", fill: "none", stroke: "rgba(242,239,232,.10)", "stroke-width": 1.2 }, rings);
+  for (let r = 300; r < 900; r += 64) el("circle", { cx, cy, r }, gr);
+
+  document.documentElement.dataset.ready = "1";
+});
+</script>
+</body>
+</html>
