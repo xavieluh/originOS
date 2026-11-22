@@ -18,7 +18,8 @@
     "format:check": "prettier --check .",
     "db:seed": "pnpm --filter @originos/db seed",
     "test:integration": "pnpm --workspace-concurrency=1 --filter @originos/db --filter @originos/api --filter @originos/worker test:integration",
-    "db:migrate": "pnpm --filter @originos/db migrate"
+    "db:migrate": "pnpm --filter @originos/db migrate",
+    "db:status": "pnpm --silent --filter @originos/db status"
   },
   "devDependencies": {
     "@originos/config": "workspace:*",

@@ -28,3 +28,31 @@ compose() {
   elif have docker-compose; then docker-compose "$@";
   else die "Docker Compose is required (https://docs.docker.com/compose/install/)."; fi
 }
+
+# Warn when DATABASE_URL points at a different local port than the one compose
+# publishes Postgres on: the services would reach another Postgres, or none.
+check_db_port() {
+  local url="${DATABASE_URL:-}" port
+  [[ -n "$url" ]] || return 0
+  if [[ "$url" =~ @(127\.0\.0\.1|localhost):([0-9]+)/ ]]; then
+    port="${BASH_REMATCH[2]}"
+    if [[ "$port" != "${POSTGRES_HOST_PORT:-5432}" ]]; then
+      warn "DATABASE_URL uses port $port, but compose publishes Postgres on ${POSTGRES_HOST_PORT:-5432} (POSTGRES_HOST_PORT). Make them match in .env."
+    fi
+  fi
+}
+
+# Stop before starting the services if the database is unreachable or not
+# migrated, with the fix, instead of failing later on the first sign-up.
+require_db_ready() {
+  [[ -n "${DATABASE_URL:-}" ]] || { warn "DATABASE_URL is not set: the API and worker start without a database."; return 0; }
+  [[ -f packages/db/dist/status-cli.js ]] || die "Workspace packages are not built. Run scripts/bootstrap.sh (or pnpm build) first."
+  check_db_port
+  local code=0
+  pnpm --silent db:status || code=$?
+  case $code in
+    0) ;;
+    2) die "Not starting: the database needs migrations. Run: pnpm db:migrate" ;;
+    *) die "Not starting: fix the database problem above, then run scripts/dev.sh again." ;;
+  esac
+}

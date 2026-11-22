@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time setup of a fresh checkout. Safe to re-run.
-#   scripts/bootstrap.sh            install deps, create .env, start Postgres + object storage
+#   scripts/bootstrap.sh            install deps, create .env, start Postgres + object storage, migrate
 #   scripts/bootstrap.sh --no-docker   skip containers (readiness then reports the DB as not configured)
 source "$(dirname "$0")/lib.sh"
 
@@ -42,6 +42,10 @@ pnpm build
 if [[ $with_docker == 1 ]]; then
   info "Starting Postgres (pgvector) and object storage"
   compose up -d --wait
+  load_env
+  check_db_port
+  info "Applying database migrations (creates the service roles and tables)"
+  pnpm --silent db:migrate || die "Migrations failed (see above). Fix it, then run: pnpm db:migrate"
 fi
 
 info "Done. Start everything with: scripts/dev.sh"

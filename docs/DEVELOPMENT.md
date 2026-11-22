@@ -15,11 +15,11 @@ Scripts are bash (macOS, Linux, WSL).
 ## Fresh checkout
 
 ```bash
-scripts/bootstrap.sh     # once: .env from .env.example, pnpm install, uv sync, build, docker compose up
-scripts/dev.sh           # every day: containers + all TypeScript processes in watch mode, .env exported
+scripts/bootstrap.sh     # once: .env from .env.example, pnpm install, uv sync, build, docker compose up, pnpm db:migrate
+scripts/dev.sh           # every day: containers, pnpm db:status, then all TypeScript processes in watch mode, .env exported
 ```
 
-Then run `pnpm db:migrate` once (and after pulling new migrations), open **http://localhost:3000** (use `localhost`, not `127.0.0.1`: cookies and passkeys are bound to `ORIGINOS_PUBLIC_URL`), and create an account. The verification email lands in Mailpit at http://127.0.0.1:8025; nothing is sent to real addresses. `scripts/db-reset-local.sh` drops and re-migrates the local databases (local compose only).
+Run `pnpm db:migrate` after pulling new migrations (`scripts/dev.sh` stops and says so when one is pending; `pnpm db:status` checks on its own). Then open **http://localhost:3000** (use `localhost`, not `127.0.0.1`: cookies and passkeys are bound to `ORIGINOS_PUBLIC_URL`), and create an account. The verification email lands in Mailpit at http://127.0.0.1:8025; nothing is sent to real addresses. `scripts/db-reset-local.sh` drops and re-migrates the local databases (local compose only).
 
 | Process | Package | Address | Health |
 |---|---|---|---|

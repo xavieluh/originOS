@@ -7,8 +7,8 @@ This package is a **build specification, 48 execution prompts, project skills an
 Fresh checkout to running stack (Node 22.13+, Docker, optionally uv):
 
 ```bash
-scripts/bootstrap.sh   # checks tools, creates .env, installs deps, builds, starts Postgres + object storage
-scripts/dev.sh         # web :3000, api :4000, worker, mcp-server, telemetry, media-validator in watch mode
+scripts/bootstrap.sh   # checks tools, creates .env, installs deps, builds, starts Postgres + object storage, migrates
+scripts/dev.sh         # checks the database is migrated, then web :3000, api :4000, worker, mcp-server, telemetry, media-validator in watch mode
 scripts/check.sh       # the same checks CI runs (add --db for database integration tests)
 ```
 
@@ -22,6 +22,15 @@ The scripts are Bash, and the package scripts run on Windows too (environment va
 - **"ports are not available … 127.0.0.1:5432 … forbidden by its access permissions"** means Windows has reserved that port (Hyper-V/WSL often reserve ranges; `netsh interface ipv4 show excludedportrange protocol=tcp` lists them) or another Postgres is using it. Pick a free port in `.env`, for example `POSTGRES_HOST_PORT=55432`, change `5432` to `55432` in `DATABASE_URL` and `TEST_DATABASE_URL`, then run `bash scripts/dev.sh` again. The same works for `S3_HOST_PORT`, `SMTP_HOST_PORT` and `MAILPIT_HOST_PORT`.
 - **uv** is optional: without it the Python ai-worker is skipped.
 - `pnpm` may print "Ignored build scripts: esbuild…". That is expected: esbuild ships its binaries as optional packages, so the skipped install script is not needed.
+
+### Troubleshooting the local database
+
+`pnpm db:status` says whether the database in `DATABASE_URL` is reachable and migrated, and prints the fix. `scripts/dev.sh` runs it before starting anything.
+
+- **Sign-up fails with "something went wrong", and the API log shows `role "originos_app" does not exist`.** The database has not been migrated: migrations create that role, the tables and the row-level security policies. Run `pnpm db:migrate` from the repository root, then `scripts/dev.sh` again. `scripts/bootstrap.sh` now does this for you; checkouts set up before that change need it once.
+- **`Cannot reach the database`, or `password authentication failed`.** The services are not reaching the compose Postgres. Check that the port in `DATABASE_URL` (and `TEST_DATABASE_URL`) matches `POSTGRES_HOST_PORT` in `.env`; if another Postgres is installed on your machine, it may be the one answering on 5432.
+- **`migration(s) this checkout does not know`.** The database was migrated by newer code (for example another branch). Pull the latest code, or reset local data with `scripts/db-reset-local.sh`.
+- **Start over completely:** `docker compose down -v` deletes the local containers' data, then `scripts/bootstrap.sh` recreates and migrates it. Only local development data is lost.
 
 Details, ports and conventions: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Secrets policy:
 [`docs/SECRETS.md`](docs/SECRETS.md). Build progress: [`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
