@@ -21,6 +21,9 @@ load_env() {
 }
 
 compose() {
+  if have docker && ! docker info >/dev/null 2>&1; then
+    die "Docker is installed but not running. Start Docker Desktop (or the Docker daemon) and try again."
+  fi
   if docker compose version >/dev/null 2>&1; then docker compose "$@";
   elif have docker-compose; then docker-compose "$@";
   else die "Docker Compose is required (https://docs.docker.com/compose/install/)."; fi
