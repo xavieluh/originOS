@@ -21,6 +21,8 @@
 | ADR-014 | NestJS DI uses explicit `@Inject(Token)` on every constructor parameter | Rely on `emitDecoratorMetadata` (needs SWC/tsc in tests and dev) | Proposed 2026-11-22 (Phase 01) | 01 |
 | ADR-015 | Phase 01 toolchain and pinned versions (TypeScript 6.0, ESLint 9, ESM, compiled workspace packages) | TypeScript 7.0; ESLint 10; CommonJS; source-only internal packages | Proposed 2026-11-22 (Phase 01) | 01, revisit at 02 |
 | ADR-016 | Add `packages/service-kit` for the shared Fastify bootstrap | Copy the bootstrap into each service | Proposed 2026-11-22 (Phase 01) | 01 |
+| ADR-017 | Local stack: Docker Compose with Postgres 18 + pgvector 0.8.7 and SeaweedFS 4.54 as the S3 emulator; apps run on the host | Postgres 16/17; MinIO, RustFS or S3Mock; apps in containers | Proposed 2026-11-22 (Phase 02) | 02, revisit at 07 and 44 |
+| ADR-018 | CI on GitHub Actions: SHA-pinned actions, gitleaks binary with checksum, compose-based smoke job, `pnpm audit` + Syft CycloneDX SBOM | gitleaks-action; dependency-review-action; separate Postgres service container | Proposed 2026-11-22 (Phase 02) | 02, revisit at 42 |
 
 ---
 
@@ -191,6 +193,24 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 ## ADR-016 — `packages/service-kit`
 
 **Decision.** The Fastify bootstrap shared by the worker's health server, MCP server, telemetry ingest and media validator (redacted logger, correlation IDs as request IDs, `GET /health/live` and `GET /health/ready`, JSON 404) lives in `packages/service-kit`. The API's `FastifyAdapter` uses the same `fastifyBaseOptions`, so logging and correlation behave identically in all processes. It holds no business logic and may not import `@originos/db`.
+
+## ADR-017 — Local development stack
+
+**Decision.** `compose.yaml` runs only infrastructure; app processes run on the host through `pnpm dev` (fast reloads, no image builds). Services: `pgvector/pgvector:0.8.7-pg18-trixie` (PostgreSQL 18.7 with pgvector 0.8.7; an init script enables `vector` and `pgcrypto` and creates `originos_test`), and `chrislusf/seaweedfs:4.54` with its S3 gateway on port 8333 and a static local identity. Both bind to 127.0.0.1 with labeled local-only credentials. No Redis until a measured need (ADR-003).
+
+**Why.** PostgreSQL 18 is the newest major with more than a year of releases (the pgvector image also publishes pg19, released recently); production must use the same major, decided in Phase 44. SeaweedFS is Apache-2.0 licensed, publishes versioned images and implements the S3 API with signed requests (anonymous access returns 403, checked 2026-11-22). The object-storage choice is revisited in Phase 07 when the first S3 client code runs against it.
+
+**Verification (2026-11-22).** `docker compose up -d --wait` → both healthy; `select version()` → PostgreSQL 18.7; extensions `vector 0.8.7`, `pgcrypto 1.4` present in both databases; DB integration tests 3/3; `scripts/smoke.sh` passed. In this cloud sandbox Docker Hub rate-limited anonymous pulls, so the same images were pulled through `mirror.gcr.io` and tagged with their Docker Hub names; `compose.yaml` itself references Docker Hub.
+
+## ADR-018 — Continuous integration
+
+**Decision.** One workflow, `.github/workflows/ci.yml`, on pushes to `main` and on pull requests, with `permissions: contents: read`. Jobs: secret scan (gitleaks 8.30.1 release binary, SHA-256 verified against the release checksum file, full history), Node (frozen install, prettier, lint, typecheck, unit tests, build), Python (uv 0.11.32, ruff, pytest), local stack (`docker compose up --wait`, DB integration tests, seed guard, `scripts/smoke.sh`), and supply chain (`pnpm audit --prod --audit-level high`, CycloneDX SBOM via `anchore/sbom-action` uploaded as an artifact). Every action is pinned to the commit SHA its release tag pointed to on 2026-11-22: `actions/checkout` v7.0.1, `actions/setup-node` v7.1.0, `pnpm/action-setup` v6.1.1, `astral-sh/setup-uv` v10.4.0, `anchore/sbom-action` v0.24.3, `actions/upload-artifact` v7.0.2.
+
+**Why not the alternatives.** `gitleaks-action` needs a license key for organization-owned repositories; the binary works for any owner. `dependency-review-action` needs the dependency graph, which private repositories only get with GitHub Advanced Security; `pnpm audit` works everywhere. Using the compose file in CI (instead of a separate service container) tests the same stack developers run.
+
+**Not yet covered.** Migration checks (no migrations until Phase 06), Python dependency audit (the ai-worker has no runtime dependencies), container image scanning (no images until Phase 44), and turbo remote caching.
+
+**Turborepo env.** Turbo 2 runs tasks in strict env mode, so `turbo.json` lists the runtime variables in `dev.passThroughEnv`; without it `scripts/dev.sh` started the API with no `DATABASE_URL` (found and fixed 2026-11-22).
 
 ---
 
