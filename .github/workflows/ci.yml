@@ -90,17 +90,21 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - name: Start Postgres (pgvector), object storage and Mailpit from compose.yaml
+      - name: Start Postgres (pgvector), object storage, Mailpit and ClamAV from compose.yaml
         run: |
           cp .env.example .env
-          docker compose up -d --wait
+          docker compose --profile scanner up -d --wait
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Apply migrations to the development database
         run: |
           set -a; . ./.env; set +a
           pnpm db:migrate
-      - name: Database (RLS, domain schema, rollback), API and worker (outbox) integration tests
+      - name: Database status and storage buckets
+        run: |
+          pnpm db:status
+          pnpm storage:setup
+      - name: Database (RLS, domain schema, rollback), storage (S3, ClamAV), API and worker (outbox, jobs, scans) integration tests
         run: |
           set -a; . ./.env; set +a
           pnpm test:integration
@@ -141,11 +145,29 @@ jobs:
         options: >-
           --health-cmd "/mailpit readyz"
           --health-interval 3s --health-timeout 3s --health-retries 20
+      # Phase 07: uploads are stored, scanned and served for real. Services
+      # cannot mount the repository, so SeaweedFS takes its local-only
+      # credentials from the environment instead of infra/local/seaweedfs-s3.json.
+      object-storage:
+        image: chrislusf/seaweedfs:4.54
+        env:
+          AWS_ACCESS_KEY_ID: originos-local-access-key
+          AWS_SECRET_ACCESS_KEY: originos-local-only-secret
+        options: >-
+          --health-cmd "wget -q -O /dev/null http://127.0.0.1:8333/healthz || exit 1"
+          --health-interval 3s --health-timeout 3s --health-retries 40
+      scanner:
+        image: clamav/clamav:1.4
+        options: >-
+          --health-cmd "clamdcheck.sh"
+          --health-interval 10s --health-timeout 5s --health-start-period 180s --health-retries 30
     env:
       HOME: /root
       E2E_DATABASE_URL: postgres://originos:originos-local-only@postgres:5432/originos_test
       E2E_SMTP_URL: smtp://mail:1025
       E2E_MAILPIT_URL: http://mail:8025
+      E2E_S3_ENDPOINT: http://object-storage:8333
+      E2E_CLAMAV_HOST: scanner
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -154,7 +176,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build --filter=@originos/web --filter=@originos/api
+      - run: pnpm turbo run build --filter=@originos/web --filter=@originos/api --filter=@originos/worker
       - name: Playwright (auth journeys, routes, dead controls, axe, keyboard, visual)
         working-directory: apps/web
         run: pnpm exec playwright test

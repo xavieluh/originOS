@@ -56,3 +56,23 @@ require_db_ready() {
     *) die "Not starting: fix the database problem above, then run scripts/dev.sh again." ;;
   esac
 }
+
+# Containers for local development. The malware scanner (ClamAV) needs about
+# 1.5 GB of memory and a minute to start; pass with_scanner=0 to leave it out
+# (uploads then stay in quarantine as "not scanned").
+start_containers() {
+  if [[ "${1:-1}" == 1 ]]; then
+    info "Starting Postgres (pgvector), object storage, Mailpit and the malware scanner (first start takes a minute)"
+    compose --profile scanner up -d --wait
+  else
+    info "Starting Postgres (pgvector), object storage and Mailpit (no malware scanner)"
+    compose up -d --wait
+  fi
+}
+
+# Create the local storage buckets (idempotent). Warns instead of failing:
+# everything except uploads works without them.
+ensure_buckets() {
+  [[ -n "${S3_ENDPOINT:-}" ]] || return 0
+  pnpm --silent storage:setup || warn "Could not create the storage buckets; uploads will fail until: pnpm storage:setup"
+}

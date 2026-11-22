@@ -201,6 +201,20 @@ export class UploadsService {
     return toView(row, p.name);
   }
 
+  /** What the upload form needs to know, so it can say "not set up" up front. */
+  settings() {
+    return {
+      storage: this.storage.store ? ("configured" as const) : ("not_configured" as const),
+      scanner: this.storage.scanner ? ("configured" as const) : ("not_configured" as const),
+      maxUploadBytes: this.storage.maxUploadBytes,
+      acceptedTypes: Object.entries(ACCEPTED_MEDIA_TYPES).map(([type, info]) => ({
+        type,
+        label: info.label,
+        extensions: [...info.extensions],
+      })),
+    };
+  }
+
   async list(p: Principal, t: TenantContext): Promise<UploadView[]> {
     const rows = await withScope(this.database, { userId: p.userId, tenantId: t.tenantId }, (tx) =>
       tx

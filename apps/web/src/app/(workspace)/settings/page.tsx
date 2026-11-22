@@ -42,6 +42,14 @@ export default async function SettingsPage() {
         <Button action="settings.consent" href="/settings/consent">
           Consent
         </Button>
+        <Button action="settings.files" href="/settings/files">
+          Files
+        </Button>
+        {can(permissions, "read", "jobs") ? (
+          <Button action="settings.jobs" href="/settings/jobs">
+            Background jobs
+          </Button>
+        ) : null}
       </div>
       <div className="mb-10">
         {detail.ok ? (

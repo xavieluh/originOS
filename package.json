@@ -17,9 +17,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:seed": "pnpm --filter @originos/db seed",
-    "test:integration": "pnpm --workspace-concurrency=1 --filter @originos/db --filter @originos/api --filter @originos/worker test:integration",
+    "test:integration": "pnpm --workspace-concurrency=1 --filter @originos/db --filter @originos/storage --filter @originos/api --filter @originos/worker test:integration",
     "db:migrate": "pnpm --filter @originos/db migrate",
-    "db:status": "pnpm --silent --filter @originos/db status"
+    "db:status": "pnpm --silent --filter @originos/db status",
+    "storage:setup": "pnpm --silent --filter @originos/storage run setup"
   },
   "devDependencies": {
     "@originos/config": "workspace:*",

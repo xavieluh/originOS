@@ -46,10 +46,7 @@ const UNSAFE_NAME_CHARS = /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g;
  */
 export function sanitizeFilename(raw: string): string {
   const base = raw.split(/[\\/]/).pop() ?? "";
-  const cleaned = base
-    .normalize("NFC")
-    .replace(UNSAFE_NAME_CHARS, "")
-    .trim();
+  const cleaned = base.normalize("NFC").replace(UNSAFE_NAME_CHARS, "").trim();
   if (!cleaned || cleaned === "." || cleaned === "..") {
     throw new UploadRefused("invalid_filename", "The file needs a name.");
   }

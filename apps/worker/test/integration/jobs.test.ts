@@ -17,7 +17,7 @@ import {
   withScope,
 } from "@originos/db";
 import { sha256Hex, storageFromEnv, uploadKey } from "@originos/storage";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type JobHandler, PermanentJobError, createJobRunner } from "../../src/job-runner.js";
 import { SCAN_UPLOAD_JOB, scanUploadHandler } from "../../src/jobs/scan-upload.js";
@@ -261,6 +261,15 @@ describe("durable jobs", () => {
 });
 
 describe("upload scanning (real S3 store and ClamAV)", () => {
+  // The API integration tests share this database and leave scan jobs queued
+  // (no worker runs there). Settle them so these counts only see this suite's jobs.
+  beforeAll(async () => {
+    await owner.db
+      .update(s.jobs)
+      .set({ status: "cancelled", finishedAt: new Date() })
+      .where(and(eq(s.jobs.type, SCAN_UPLOAD_JOB), inArray(s.jobs.status, ["pending", "running"])));
+  });
+
   /** What the API does: store in quarantine, record the upload and enqueue its scan. */
   async function upload(filename: string, declaredType: string, body: string | Uint8Array) {
     const bytes = typeof body === "string" ? new TextEncoder().encode(body) : body;

@@ -84,6 +84,10 @@ describe("uploads", () => {
     });
     expect(up.sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(up.jobId).toMatch(/^job_/);
+    expect(json(await member.request("GET", "/v1/files/settings"))).toMatchObject({
+      storage: "configured",
+      maxUploadBytes: MAX,
+    });
 
     const [row] = await h.owner.db
       .select()
@@ -156,6 +160,10 @@ describe("uploads", () => {
     const res = await c.upload("a.txt", "text/plain", "hello");
     expect(res.statusCode).toBe(503);
     expect(json(res).error).toBe("storage_not_configured");
+    expect(json(await c.request("GET", "/v1/files/settings"))).toMatchObject({
+      storage: "not_configured",
+      scanner: "not_configured",
+    });
   });
 
   it("only accepts the binary body on the upload route, and still checks the origin", async () => {

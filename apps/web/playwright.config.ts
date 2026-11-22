@@ -11,6 +11,20 @@ import { E2E } from "./e2e/env";
  * The browser uses http://localhost (not 127.0.0.1) because passkeys need a
  * hostname as their relying-party ID, and it must equal ORIGINOS_PUBLIC_URL.
  */
+/** Local-only credentials from infra/local and .env.example; never real ones. */
+const storageEnv = {
+  S3_ENDPOINT: E2E.s3Endpoint,
+  S3_PUBLIC_ENDPOINT: E2E.s3Endpoint,
+  S3_REGION: "us-east-1",
+  S3_ACCESS_KEY_ID: "originos-local-access-key",
+  S3_SECRET_ACCESS_KEY: "originos-local-only-secret",
+  S3_BUCKET_QUARANTINE: "originos-e2e-quarantine",
+  S3_BUCKET_FILES: "originos-e2e-files",
+  UPLOAD_MAX_BYTES: String(E2E.uploadMaxBytes),
+  CLAMAV_HOST: E2E.clamavHost,
+  CLAMAV_PORT: "3310",
+};
+
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
@@ -29,8 +43,9 @@ export default defineConfig({
   ],
   webServer: [
     {
-      // Migrate the test database, then start the API exactly as in production.
-      command: "node ../../packages/db/dist/migrate-cli.js && node ../api/dist/main.js",
+      // Migrate the test database and create the buckets, then start the API exactly as in production.
+      command:
+        "node ../../packages/db/dist/migrate-cli.js && node ../../packages/storage/dist/setup-cli.js && node ../api/dist/main.js",
       url: `${E2E.apiUrl}/health/live`,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
@@ -46,6 +61,23 @@ export default defineConfig({
         MAIL_FROM: "OriginOS E2E <no-reply@localhost>",
         // Every test request comes from one address; per-IP limits would make runs flaky.
         AUTH_RATE_LIMIT: "off",
+        ...storageEnv,
+      },
+    },
+    {
+      // The worker scans uploads; it starts after the API has migrated the database.
+      command: "node ../worker/dist/main.js",
+      url: `${E2E.workerUrl}/health/live`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 90_000,
+      env: {
+        NODE_ENV: "test",
+        LOG_LEVEL: "warn",
+        WORKER_HEALTH_HOST: "127.0.0.1",
+        WORKER_HEALTH_PORT: String(E2E.workerPort),
+        DATABASE_URL: E2E.databaseUrl,
+        JOB_POLL_MS: "300",
+        ...storageEnv,
       },
     },
     {

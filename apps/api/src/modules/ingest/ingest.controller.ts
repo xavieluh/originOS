@@ -61,6 +61,12 @@ export class FilesController {
     return this.uploads.list(p, t);
   }
 
+  @Get("settings")
+  @RequirePermission("read", "files")
+  settings() {
+    return this.uploads.settings();
+  }
+
   @Get(":id")
   @RequirePermission("read", "files")
   get(
