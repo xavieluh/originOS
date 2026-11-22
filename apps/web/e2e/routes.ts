@@ -66,6 +66,19 @@ export const BUTTON_ACTIONS = new Set([
   "member.remove",
   "member.remove.confirm",
   "member.remove.cancel",
+  // Phase 05: permissions, agents, grants and consent
+  "agent.create",
+  "agent.disable",
+  "agent.disable.confirm",
+  "agent.disable.cancel",
+  "grant.create",
+  "grant.revoke",
+  "grant.revoke.confirm",
+  "grant.revoke.cancel",
+  "consent.give",
+  "consent.revoke",
+  "consent.revoke.confirm",
+  "consent.revoke.cancel",
 ]);
 
 /** Account screens. Signed-out ones are checked without a session. */
@@ -77,4 +90,9 @@ export const SIGNED_OUT_ROUTES = [
   "/two-factor",
   "/invitations/accept",
 ];
-export const SIGNED_IN_ROUTES = ["/settings/account", "/onboarding"];
+export const SIGNED_IN_ROUTES = [
+  "/settings/account",
+  "/settings/access",
+  "/settings/consent",
+  "/onboarding",
+];

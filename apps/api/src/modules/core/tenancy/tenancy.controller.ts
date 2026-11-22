@@ -10,12 +10,16 @@ import {
   Post,
   Put,
 } from "@nestjs/common";
+import type { HumanActor } from "@originos/authz";
 import {
   CorrelationId,
+  CurrentActor,
   CurrentPrincipal,
   CurrentTenant,
+  RequirePermission,
   RequireTenant,
 } from "../auth/decorators.js";
+import { AuthzService } from "../authz/authz.service.js";
 import type { Principal, TenantContext } from "../auth/principal.js";
 import { TenancyService } from "./tenancy.service.js";
 import {
@@ -76,10 +80,16 @@ export class OrganizationsController {
   }
 }
 
-/** The active organization. Every route needs a current membership; management needs owner or admin. */
+/**
+ * The active organization. Every route needs a current membership; management
+ * routes name the permission they need (decided by @originos/authz, ADR-024).
+ */
 @Controller("v1/organization")
 export class CurrentOrganizationController {
-  constructor(@Inject(TenancyService) private readonly tenancy: TenancyService) {}
+  constructor(
+    @Inject(TenancyService) private readonly tenancy: TenancyService,
+    @Inject(AuthzService) private readonly authz: AuthzService,
+  ) {}
 
   @Get()
   @RequireTenant()
@@ -88,7 +98,7 @@ export class CurrentOrganizationController {
   }
 
   @Patch()
-  @RequireTenant("owner", "admin")
+  @RequirePermission("write", "organization")
   @HttpCode(204)
   async rename(
     @CurrentPrincipal() p: Principal,
@@ -100,13 +110,13 @@ export class CurrentOrganizationController {
   }
 
   @Get("invitations")
-  @RequireTenant("owner", "admin")
+  @RequirePermission("read", "invitations")
   invitations(@CurrentPrincipal() p: Principal, @CurrentTenant() t: TenantContext) {
     return this.tenancy.listInvitations(p, t);
   }
 
   @Post("invitations")
-  @RequireTenant("owner", "admin")
+  @RequirePermission("write", "invitations")
   invite(
     @CurrentPrincipal() p: Principal,
     @CurrentTenant() t: TenantContext,
@@ -118,7 +128,7 @@ export class CurrentOrganizationController {
   }
 
   @Post("invitations/:id/revoke")
-  @RequireTenant("owner", "admin")
+  @RequirePermission("write", "invitations")
   @HttpCode(204)
   async revoke(
     @CurrentPrincipal() p: Principal,
@@ -130,7 +140,7 @@ export class CurrentOrganizationController {
   }
 
   @Patch("members/:userId")
-  @RequireTenant("owner", "admin")
+  @RequirePermission("admin", "members")
   @HttpCode(204)
   async changeRole(
     @CurrentPrincipal() p: Principal,
@@ -155,14 +165,17 @@ export class CurrentOrganizationController {
   async remove(
     @CurrentPrincipal() p: Principal,
     @CurrentTenant() t: TenantContext,
+    @CurrentActor() actor: HumanActor,
     @Param("userId") userId: string,
     @CorrelationId() c: string,
   ) {
-    await this.tenancy.removeMember(p, t, parse(UuidParam, userId), c);
+    const target = parse(UuidParam, userId);
+    if (target !== p.userId) this.authz.require(actor, "admin", { type: "members" });
+    await this.tenancy.removeMember(p, t, target, c);
   }
 
   @Post("transfer-ownership")
-  @RequireTenant("owner")
+  @RequirePermission("admin", "organization")
   @HttpCode(204)
   async transfer(
     @CurrentPrincipal() p: Principal,
@@ -174,7 +187,7 @@ export class CurrentOrganizationController {
   }
 
   @Get("audit-events")
-  @RequireTenant("owner", "admin")
+  @RequirePermission("read", "audit_log")
   audit(@CurrentPrincipal() p: Principal, @CurrentTenant() t: TenantContext) {
     return this.tenancy.listAuditEvents(p, t);
   }

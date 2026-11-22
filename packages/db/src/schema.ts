@@ -245,3 +245,138 @@ export const auditEvents = core.table(
   },
   (t) => [index("audit_events_tenant_time_idx").on(t.tenantId, t.occurredAt)],
 );
+
+// --- Authorization and consent (Phase 05, ADR-024) ---------------------------
+
+export const AGENT_STATUSES = ["active", "disabled"] as const;
+export type AgentStatus = (typeof AGENT_STATUSES)[number];
+
+/**
+ * Agent principals: software acting for a person inside one organization.
+ * Every agent has an accountable owner and can never do more than that owner
+ * (enforced by @originos/authz). Agents are disabled, never deleted, so audit
+ * history keeps its subject.
+ */
+export const agents = core.table(
+  "agents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    ownerUserId: uuid("owner_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: text("status", { enum: AGENT_STATUSES }).notNull().default("active"),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    disabledBy: uuid("disabled_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("agents_tenant_id_idx").on(t.tenantId),
+    check("agents_status_ck", sql`${t.status} in ('active', 'disabled')`),
+  ],
+);
+
+export const GRANT_SUBJECT_TYPES = ["user", "agent", "service"] as const;
+export type GrantSubjectType = (typeof GRANT_SUBJECT_TYPES)[number];
+
+/**
+ * Resource-scoped grants and explicit denies. Revoked, never deleted or
+ * edited: the application role may only set revoked_at / revoked_by.
+ */
+export const permissionGrants = core.table(
+  "permission_grants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    subjectType: text("subject_type", { enum: GRANT_SUBJECT_TYPES }).notNull(),
+    /** users.id or agents.id (services arrive with API credentials in a later phase). */
+    subjectId: uuid("subject_id").notNull(),
+    effect: text("effect", { enum: ["allow", "deny"] }).notNull(),
+    /** A resource type from @originos/authz, or "*". */
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id"),
+    actions: text("actions").array().notNull(),
+    reason: text("reason"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    revokedBy: uuid("revoked_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("permission_grants_subject_idx").on(t.tenantId, t.subjectType, t.subjectId),
+    check(
+      "permission_grants_subject_type_ck",
+      sql`${t.subjectType} in ('user', 'agent', 'service')`,
+    ),
+    check("permission_grants_effect_ck", sql`${t.effect} in ('allow', 'deny')`),
+    check(
+      "permission_grants_actions_ck",
+      sql`cardinality(${t.actions}) > 0 and ${t.actions} <@ array['read','write','publish','export','admin']::text[]`,
+    ),
+  ],
+);
+
+export const CONSENT_PURPOSES = [
+  "identity_directory",
+  "telemetry_collection",
+  "data_sharing",
+  "provider_scopes",
+  "cross_org_policy",
+] as const;
+export type ConsentPurpose = (typeof CONSENT_PURPOSES)[number];
+
+/**
+ * Consent records. Personal consents (subject_type "user") are given and
+ * revoked by that person; organization policies by owners and admins. A
+ * revoked record is kept for history; giving consent again adds a new row.
+ */
+export const consents = core.table(
+  "consents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    subjectType: text("subject_type", { enum: ["user", "organization"] }).notNull(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    purpose: text("purpose", { enum: CONSENT_PURPOSES }).notNull(),
+    /** Identifies what the consent covers within its purpose, e.g. a provider name or partner organization id. */
+    scopeKey: text("scope_key").notNull().default(""),
+    /** Non-secret details shown to the person (e.g. provider scopes). */
+    scope: jsonb("scope").$type<Record<string, string | string[]>>().notNull().default({}),
+    /** Version of the wording the person agreed to. */
+    policyVersion: text("policy_version").notNull(),
+    grantedAt: timestamp("granted_at", { withTimezone: true }).notNull().defaultNow(),
+    grantedBy: uuid("granted_by").references(() => users.id, { onDelete: "set null" }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    revokedBy: uuid("revoked_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("consents_tenant_idx").on(t.tenantId, t.purpose),
+    uniqueIndex("consents_one_active_uq")
+      .on(
+        t.tenantId,
+        t.subjectType,
+        sql`coalesce(${t.userId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+        t.purpose,
+        t.scopeKey,
+      )
+      .where(sql`${t.revokedAt} is null`),
+    check(
+      "consents_subject_ck",
+      sql`(${t.subjectType} = 'user' and ${t.userId} is not null) or (${t.subjectType} = 'organization' and ${t.userId} is null)`,
+    ),
+    check(
+      "consents_purpose_ck",
+      sql`${t.purpose} in ('identity_directory', 'telemetry_collection', 'data_sharing', 'provider_scopes', 'cross_org_policy')`,
+    ),
+  ],
+);

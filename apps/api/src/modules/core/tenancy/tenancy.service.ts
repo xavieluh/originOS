@@ -15,6 +15,7 @@ import { badRequest, conflict, forbidden, notFound } from "../auth/errors.js";
 import { APP_DB, MAILER, PUBLIC_ORIGIN } from "../auth/tokens.js";
 import type { Mailer } from "../mail/mailer.js";
 import { invitationMessage } from "../mail/templates.js";
+import { type AuditInput, recordAudit } from "../audit/audit.js";
 
 const { organizations, memberships, invitations, users, sessions, auditEvents } = schema;
 
@@ -44,16 +45,6 @@ export function slugify(name: string): string {
   return `${base || "org"}-${randomBytes(3).toString("hex")}`;
 }
 
-interface AuditInput {
-  readonly tenantId: string;
-  readonly actorUserId: string;
-  readonly action: string;
-  readonly targetType: string;
-  readonly targetId: string;
-  readonly metadata?: Record<string, string | number | boolean | null>;
-  readonly correlationId: string;
-}
-
 /**
  * Organizations, memberships, invitations and ownership. Every query runs
  * inside withScope(), so Postgres row-level security enforces the tenant
@@ -73,7 +64,7 @@ export class TenancyService {
   }
 
   private audit(tx: Tx, input: AuditInput) {
-    return tx.insert(auditEvents).values({ ...input, metadata: input.metadata ?? {} });
+    return recordAudit(tx, input);
   }
 
   /** The active organization, only if the person is still a member of it. */

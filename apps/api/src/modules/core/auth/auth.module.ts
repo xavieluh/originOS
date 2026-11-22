@@ -12,6 +12,10 @@ import type { Mailer } from "../mail/mailer.js";
 import type { Auth } from "./auth.js";
 import { AuthConfigController } from "./auth-config.controller.js";
 import { AuthGuard } from "./auth.guard.js";
+import { MyAccessController, OrganizationAccessController } from "../authz/authz.controller.js";
+import { AccessService } from "../authz/access.service.js";
+import { AuthzService } from "../authz/authz.service.js";
+import { ConsentService } from "../authz/consent.service.js";
 import { APP_DB, AUTH, MAILER, PUBLIC_ORIGIN } from "./tokens.js";
 
 export interface AuthModuleOptions {
@@ -21,7 +25,10 @@ export interface AuthModuleOptions {
   readonly publicOrigin: string;
 }
 
-/** Sessions, the global deny-by-default guard, and tenancy (organizations, memberships, invitations). */
+/**
+ * Sessions, the global deny-by-default guard, tenancy (organizations, memberships,
+ * invitations) and authorization (permissions, agents, grants, consent).
+ */
 @Module({})
 export class AuthModule {
   static register(options: AuthModuleOptions): DynamicModule {
@@ -33,6 +40,8 @@ export class AuthModule {
         OrganizationsController,
         CurrentOrganizationController,
         InvitationsController,
+        MyAccessController,
+        OrganizationAccessController,
       ],
       providers: [
         { provide: AUTH, useValue: options.auth },
@@ -40,6 +49,9 @@ export class AuthModule {
         { provide: MAILER, useValue: options.mailer },
         { provide: PUBLIC_ORIGIN, useValue: options.publicOrigin },
         TenancyService,
+        AuthzService,
+        AccessService,
+        ConsentService,
         { provide: APP_GUARD, useClass: AuthGuard },
       ],
     };

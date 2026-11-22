@@ -9,9 +9,15 @@ import { Reflector } from "@nestjs/core";
 import type { Role } from "@originos/db";
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyRequest } from "fastify";
+import { AuthzService } from "../authz/authz.service.js";
 import { TenancyService } from "../tenancy/tenancy.service.js";
 import type { Auth } from "./auth.js";
-import { PUBLIC_KEY, TENANT_ROLES_KEY } from "./decorators.js";
+import {
+  PERMISSION_KEY,
+  PUBLIC_KEY,
+  type RequiredPermission,
+  TENANT_ROLES_KEY,
+} from "./decorators.js";
 import { ApiError, authNotConfigured, forbidden, unauthenticated } from "./errors.js";
 import { AUTH, PUBLIC_ORIGIN } from "./tokens.js";
 
@@ -22,7 +28,8 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * State-changing requests must also come from the web app's origin with a JSON
  * body (CSRF defense alongside SameSite=Lax cookies). Routes marked
  * @RequireTenant() additionally need a current membership in the session's
- * active organization, re-read from the database on every request.
+ * active organization, re-read from the database on every request; routes
+ * marked @RequirePermission() are then decided by @originos/authz.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,6 +38,7 @@ export class AuthGuard implements CanActivate {
     @Inject(AUTH) private readonly auth: Auth | null,
     @Inject(PUBLIC_ORIGIN) private readonly publicOrigin: string,
     @Inject(TenancyService) private readonly tenancy: TenancyService,
+    @Inject(AuthzService) private readonly authz: AuthzService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -56,7 +64,11 @@ export class AuthGuard implements CanActivate {
     };
 
     const roles = this.reflector.getAllAndOverride<Role[] | undefined>(TENANT_ROLES_KEY, targets);
-    if (roles) {
+    const permission = this.reflector.getAllAndOverride<RequiredPermission | undefined>(
+      PERMISSION_KEY,
+      targets,
+    );
+    if (roles || permission) {
       const tenant = await this.tenancy.resolveTenant(request.principal);
       if (!tenant) {
         throw new ApiError(
@@ -65,8 +77,12 @@ export class AuthGuard implements CanActivate {
           "Choose or create an organization first.",
         );
       }
-      if (roles.length > 0 && !roles.includes(tenant.role)) throw forbidden();
+      if (roles && roles.length > 0 && !roles.includes(tenant.role)) throw forbidden();
       request.tenant = tenant;
+      request.actor = await this.authz.humanActor(request.principal, tenant);
+      if (permission) {
+        this.authz.require(request.actor, permission.action, { type: permission.resourceType });
+      }
     }
     return true;
   }

@@ -1,9 +1,9 @@
 # OriginOS build state
 
-**Current phase:** 04 — in progress
-**Last fully completed phase:** 03 (design system and app shell; PR #4 merged by owner 2026-11-22). Phase 04 acceptance checks pass locally; its PR is in review.
+**Current phase:** 05 — acceptance checks pass locally; PR in review
+**Last fully completed phase:** 04 (authentication, teams and organizations; PR #5 merged by owner 2026-11-22).
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
-**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. No product module and no external integration exists yet; production email delivery is not configured.
+**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. Phase 05 adds the single permission evaluator (`packages/authz`: roles, resource-scoped grants, explicit deny, agent and service actors), agents capped by their owner, and consent records with history, with API guards, settings pages and audit events. No product module and no external integration exists yet; production email delivery is not configured.
 
 ## Phase progress
 
@@ -13,8 +13,8 @@
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
 | 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
 | 03 Distinctive UX system and app shell | COMPLETE | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. PR #4 merged 2026-11-22. | — |
-| 04 Authentication, teams and organizations | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: DB RLS integration 15/15, API integration 16/16, Playwright 119/119 in the pinned container against the real API, Postgres and Mailpit (auth journeys, routes, axe, keyboard, 24 visual baselines), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 04 handoff. | Production SMTP provider not chosen (BLOCKED, see handoff); CI result pending on the PR |
-| 05 Authorization, policy baseline and consent | NOT STARTED | — | — |
+| 04 Authentication, teams and organizations | COMPLETE | All 4 checks passed locally 2026-11-22: DB RLS integration 15/15, API integration 16/16, Playwright 119/119 in the pinned container against the real API, Postgres and Mailpit (auth journeys, routes, axe, keyboard, 24 visual baselines), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 04 handoff. PR #5 merged 2026-11-22. | Production SMTP provider not chosen (BLOCKED, see handoff) |
+| 05 Authorization, policy baseline and consent | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: authz unit 16/16, DB RLS integration 23/23, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 05 handoff. | ADR-024 Accepted. GitHub Actions run 45078282778: 6/6 jobs green |
 | 06 Core domain schema, ledger and outbox | NOT STARTED | — | — |
 | 07 Object storage, ingestion queues and workflow core | NOT STARTED | — | — |
 | 08 Origin Connect OAuth and integration broker | NOT STARTED | — | — |
@@ -71,6 +71,34 @@
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
 2. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+
+## Phase 05 handoff (2026-11-22)
+
+- **Phase:** 05 Authorization, policy baseline and consent. Procedure: origin-build, followed by hand. Started on the Phase 04 branch while PR #5 was open; moved onto main after it merged.
+- **Files added/changed:**
+  - `packages/authz` (new): `src/model.ts` (actor types, actions, roles, resource types, grant and decision types), `src/evaluate.ts` (`evaluate`, `effectivePermissions`, `rolePermits`), `src/grants.ts` (`checkGrant`), `test/evaluate.test.ts`. Added to the import boundary table as a leaf package.
+  - `packages/db`: `src/schema.ts` (`agents`, `permission_grants`, `consents`), `migrations/0002_core_authz_consent.sql` (generated), `0003_core_authz_rls.sql` (grants, column-level UPDATE for revocation only, `core.grant_subject_in_tenant`, `core.owns_agent`, policies), `test/integration/rls-authz.test.ts`.
+  - `apps/api`: `src/modules/core/authz/` (`AuthzService`, `AccessService`, `ConsentService`, controllers, validation), `audit/audit.ts` (shared `recordAudit`), `@RequirePermission` and `@CurrentActor` decorators, guard loads the actor and decides permissions, tenancy routes moved from role lists to permissions, `test/integration/authz.test.ts`.
+  - `apps/web`: `/settings/access` (your permissions, agents, grants and denies), `/settings/consent` (personal consent and organization policies with history), settings controls follow `GET /v1/me/permissions`, `components/action-helpers.tsx` (shared from organization settings), `lib/access-types.ts`, `app/actions/access.ts`, new audit labels, `e2e/access.spec.ts`, routes and button allowlist; the "Consent and retention" placeholder became "Data retention and deletion" (Phase 41).
+  - `scripts/smoke.sh` (new endpoints answer 401 signed out), DECISIONS (ADR-024, Accepted by the owner 2026-11-22).
+- **Migrations:** `0002_core_authz_consent`, `0003_core_authz_rls` (`pnpm db:migrate`). Additive only.
+- **API changes:** `GET /v1/me/permissions`; `GET|POST /v1/me/consents`, `POST /v1/me/consents/:id/revoke`; `GET|POST /v1/organization/agents`, `POST /v1/organization/agents/:id/disable`, `GET /v1/organization/agents/:id/permissions`; `GET|POST /v1/organization/grants`, `POST /v1/organization/grants/:id/revoke`; `GET|POST /v1/organization/consents`, `POST /v1/organization/consents/:id/revoke`. Existing management routes now answer 403 with `{ error: "forbidden", reason }`.
+- **Commands executed and results (2026-11-22):**
+  - `pnpm --filter @originos/authz test` → 16/16.
+  - `scripts/check.sh --db` → "All checks passed" (format, lint, typecheck, unit tests, build, DB integration 23/23, API integration 29/29).
+  - `scripts/smoke.sh` → passed (adds 401 checks for the new endpoints).
+  - `CI=1 scripts/e2e-docker.sh` → 128/128 (the new spec failed once first on an ambiguous label, "Effect" also matched "Your effective permissions"; fixed with exact labels).
+- **CI:** the first run failed in "Local stack": with two DB integration files, their parallel first-time migrations on CI's empty database raced on creating drizzle's journal table (reproduced locally 6/6 on fresh databases). Fixed with a vitest `globalSetup` that migrates once (`vitest.integration.config.ts` in `packages/db` and `apps/api`); verified 4× on fresh databases, then run 45078282778: 6/6 green.
+- **Acceptance checks:** role change triggers audit record ✓; backend rejects forbidden reads and writes with the UI bypassed ✓; agent permissions narrower than the owner by default ✓; consent can be inspected and revoked ✓ (evidence in ACCEPTANCE_MATRIX row 05).
+- **Security and privacy:** one evaluator, deny by default, explicit deny wins; membership and grants re-read on every request; escalation refused (no granting what you lack, no ownership grants, no denying the owner, no self-grants or self-revocation); grants and consents are revoked, never edited (database privileges); personal consent is visible only to the person; database policies still require membership and owner/admin for management, under the API checks.
+- **External setup required:** none new. The Phase 04 production SMTP item is still BLOCKED on the owner.
+- **Known gaps:**
+  - Agents cannot authenticate yet, so agent permissions are computed and shown but no agent traffic exists to enforce them on (AgentTrust and MCP, Phases 16–18).
+  - Allow grants to people cover the audit log only until database policies consult grants (ADR-024).
+  - Consent records are not yet checked by any feature, because the directory, telemetry and connectors don't exist yet; each of those phases must check for an active record.
+  - Service actors exist in the evaluator only (API credentials are a later phase).
+  - Retention and account deletion are Phase 41.
+- **Next phase:** 06 Core domain schema, ledger and outbox, after the Phase 05 PR is reviewed.
 
 ## Phase 04 handoff (2026-11-22)
 

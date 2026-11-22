@@ -17,6 +17,7 @@ export const WORKSPACE_PACKAGES = {
   "apps/mcp-server": "@originos/mcp-server",
   "packages/ui": "@originos/ui",
   "packages/contracts": "@originos/contracts",
+  "packages/authz": "@originos/authz",
   "packages/db": "@originos/db",
   "packages/config": "@originos/config",
   "packages/service-kit": "@originos/service-kit",
@@ -43,6 +44,7 @@ export const DATABASE_SPECIFIERS = ["@originos/db", "pg", "postgres", "drizzle-o
 /** Leaf packages and the only bare imports their src/ may use. */
 export const LEAF_PACKAGES = {
   "packages/contracts": ["zod"],
+  "packages/authz": [],
 };
 
 const API_MODULES_DIR = "apps/api/src/modules";

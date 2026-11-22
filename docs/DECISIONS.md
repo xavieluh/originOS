@@ -1,6 +1,6 @@
 # Architecture decision log
 
-**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. ADR-024 (Phase 05) was accepted by the owner on 2026-11-22, before merge. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
@@ -28,6 +28,7 @@
 | ADR-021 | Browser tests: Playwright, axe and visual baselines in a pinned container | Host-rendered baselines (see ADR text) | Accepted 2026-11-22 (Phase 03) | 03, updated 04 |
 | ADR-022 | Authentication: Better Auth 1.7.27 in the API (email+password, verification, reset, TOTP, passkeys) behind a same-origin proxy | Hosted IdP; Auth.js; hand-rolled | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05 and 42 |
 | ADR-023 | Tenancy: `core` schema, non-superuser app role, row-level security that requires membership | App-only checks; Better Auth organization plugin | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05, 06 and 42 |
+| ADR-024 | Authorization: one pure evaluator (`packages/authz`) for roles, resource-scoped grants and explicit deny; agents capped by their owner; consent records with history | Policy engine (OPA/Cedar/Casbin); permission checks per module; roles only | Accepted 2026-11-22 (Phase 05) | 05, revisit at 06, 16 and 42 |
 
 ---
 
@@ -268,6 +269,41 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 **Why.** CLAUDE.md requires tenant isolation in the backend and storage. Database-enforced policies mean an application bug that sets the wrong tenant still cannot read or write another organization (tested directly against Postgres). Separate tables (not Better Auth's organization plugin) keep tenancy under the same RLS and audit rules every later module will use.
 
 **Verification (2026-11-22).** `packages/db` RLS integration tests 15/15 (role is not superuser, fails closed, forged tenant id reveals nothing, non-members cannot join or invite, invitation token, email, role and expiry are enforced by the database, single owner, audit log append-only); `apps/api` integration tests 16/16; Playwright journeys in ADR-021.
+
+## ADR-024 — Authorization: one evaluator, grants, explicit deny and consent (Phase 05)
+
+**Status.** Accepted 2026-11-22 (proposed in Phase 05; accepted by the owner before merge). Implements ADR-010's authorization half on top of ADR-023.
+
+**Decision.** `packages/authz` (new, no runtime dependencies) is the only place permission rules live. `evaluate(actor, action, resource)` is pure and deterministic. Callers load the actor's role and live grants for one organization and pass them in.
+- **Vocabulary.** Actor types are human, service and agent. Actions are read, write, publish, export and admin. Resource types so far are organization, members, invitations, audit_log, grants, agents and consents; later phases append to this list rather than inventing their own checks.
+- **Roles.** Owner has every action. Admin manages members, invitations, grants and agents, sets consent policies, reads and exports the audit log, and can change the organization but never own it (no organization admin). Member reads the organization, the roster, agents and consent policies. Anything not listed is denied.
+- **Evaluation order.** Explicit deny, then membership, then role, then allow grant, then resource ownership (people may read and change agents they own). Deny by default.
+- **Grants** (`core.permission_grants`). Each grant names a subject (user or agent; service is reserved for API credentials), an effect, one resource type or `*`, an optional resource id, actions, a reason and an expiry. Grants are revoked, never edited or deleted. The application role has column-level UPDATE on `revoked_at`/`revoked_by` only.
+- **Escalation rules** (`checkGrant`, plus database policy where it can be expressed):
+  - only holders of grants admin may grant;
+  - an allow grant may hand on only actions the grantor holds;
+  - organization admin is never grantable (also a database CHECK in the insert policy);
+  - nobody can deny the owner;
+  - nobody grants to, or revokes a grant on, themselves;
+  - subjects must belong to the organization (database function).
+- **Allow grants to people cover the audit log only** for now. Row-level security still keeps member, invitation, grant and settings management to owners and admins, so an allow grant there would pass the API and then fail in Postgres. Denies and agent grants have no such limit. Revisit when Phase 06 adds domain resources.
+- **Agents** (`core.agents`). Each agent has an accountable owner and is disabled, never deleted. Its permissions are the intersection of its own (default: read the organization; plus grants) with its owner's current permissions. It can never take admin actions and stops when disabled or when the owner leaves.
+- **Agents cannot authenticate yet.** Phase 05 registers them and computes their permissions for display and for later callers. Agent credentials and enforcement on agent traffic arrive with AgentTrust and the MCP server (Phases 16–18). Enforcement only covers actions routed through those controls (CLAUDE.md rule 7).
+- **API.** A `@RequirePermission(action, resourceType)` decorator replaces role lists in the global guard. The guard re-reads the membership and live grants on every request. Refusals are 403 with `{ error: "forbidden", reason }` (for example `explicit_deny` or `no_permission`). Grant and consent changes write `grant.*`, `agent.*` and `consent.*` audit events.
+- **Consent** (`core.consents`).
+  - Personal records are visible only to the person; organization policies are visible to members and set by owners and admins.
+  - Purposes: identity_directory, telemetry_collection, data_sharing, provider_scopes and cross_org_policy, each with a scope key where needed (provider, partner organization) and the wording version agreed to.
+  - Revoking keeps the row; giving consent again adds a new one. A partial unique index allows one active record per subject, purpose and scope.
+  - Recording consent turns nothing on by itself: the modules that need it check for an active record before acting.
+  - Personal consent changes appear in the organization audit log (purpose only, no other details), so administrators can show that telemetry or sharing was consented to.
+
+**Why not the alternatives.** A policy engine (OPA, Cedar, Casbin) adds a language and a runtime for rules that fit in about 150 lines of tested TypeScript today. The evaluator's interface (actor, action, resource → decision with reason) maps onto one if the rules outgrow it. Checks per module would drift; roles alone cannot express agent caps or explicit deny.
+
+**Verification (2026-11-22).**
+- `packages/authz` unit tests: 16/16 (deny by default, explicit deny beats role and wildcard, resource-scoped grants, expiry and revocation, services grant-only, agent defaults strictly narrower than the owner for every role, agent capped and never admin, `checkGrant` refusals).
+- `packages/db` RLS integration tests: 23/23, including 8 new ones for agents, grants and consents.
+- `apps/api` integration tests: 29/29, including 13 new ones (role-change audit, members bypassing the UI get 403 on 9 management calls, explicit deny and self-lift refusal, escalation refusals, agent cap, consent give/inspect/revoke/history).
+- Playwright: 128/128, including 3 new journeys.
 
 ---
 

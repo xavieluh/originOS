@@ -1,3 +1,4 @@
+import type { HumanActor } from "@originos/authz";
 import type { Role } from "@originos/db";
 
 /** The signed-in person behind a request, from a valid session cookie. */
@@ -21,5 +22,6 @@ declare module "fastify" {
   interface FastifyRequest {
     principal?: Principal;
     tenant?: TenantContext;
+    actor?: HumanActor;
   }
 }
