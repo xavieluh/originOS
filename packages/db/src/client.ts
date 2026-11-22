@@ -1,30 +1,47 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
+import * as schema from "./schema.js";
+
+/** Non-superuser role created by migration 0001; row-level security applies to it. */
+export const APPLICATION_ROLE = "originos_app";
 
 export interface DatabaseOptions {
   /** postgres:// connection string. Treated as a secret: never logged. */
   readonly url: string;
   readonly maxConnections?: number;
   readonly connectTimeoutMs?: number;
+  /**
+   * Run every pooled connection as this role, so row-level security is
+   * enforced. Services pass APPLICATION_ROLE; migrations and test fixtures
+   * connect without it. Set as a startup parameter: if the role cannot be
+   * assumed the connection fails, so queries never silently run as the owner.
+   */
+  readonly role?: string;
 }
 
+export type Db = NodePgDatabase<typeof schema>;
+
 export interface Database {
-  readonly db: NodePgDatabase;
+  readonly db: Db;
   readonly pool: pg.Pool;
   close(): Promise<void>;
 }
 
 export function createDatabase(options: DatabaseOptions): Database {
+  if (options.role !== undefined && !/^[a-z_][a-z0-9_]{0,62}$/.test(options.role)) {
+    throw new Error("Database role must be a plain lowercase identifier.");
+  }
   const pool = new pg.Pool({
     connectionString: options.url,
     max: options.maxConnections ?? 10,
     connectionTimeoutMillis: options.connectTimeoutMs ?? 2_000,
+    ...(options.role ? { options: `-c role=${options.role}` } : {}),
   });
   // Without a listener, an idle-client error would crash the process.
   // The error object from pg does not include the password.
   pool.on("error", () => undefined);
   return {
-    db: drizzle({ client: pool }),
+    db: drizzle({ client: pool, schema }),
     pool,
     close: () => pool.end(),
   };

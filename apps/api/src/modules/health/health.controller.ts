@@ -1,8 +1,10 @@
 import { Controller, Get, Inject, Res } from "@nestjs/common";
 import type { HealthResponse } from "@originos/contracts";
 import type { FastifyReply } from "fastify";
+import { Public } from "../core/index.js";
 import { HealthService } from "./health.service.js";
 
+@Public()
 @Controller("health")
 export class HealthController {
   constructor(@Inject(HealthService) private readonly health: HealthService) {}

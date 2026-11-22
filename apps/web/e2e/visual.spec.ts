@@ -58,3 +58,15 @@ test("command bar open", async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("command-bar-desktop.png");
 });
+
+test.describe("signed out", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+  for (const vpName of ["mobile", "desktop"] as const) {
+    test(`sign-in ${vpName}`, async ({ page }) => {
+      await page.setViewportSize(VIEWPORTS[vpName]);
+      await page.goto("/sign-in");
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page).toHaveScreenshot(`sign-in-${vpName}.png`, { fullPage: true });
+    });
+  }
+});

@@ -20,4 +20,21 @@ describe("loadApiEnv", () => {
       expect.objectContaining({ message: expect.not.stringContaining("hunter2") }),
     );
   });
+
+  it("requires an auth secret, https public URL and rate limits in production", () => {
+    const base = {
+      NODE_ENV: "production",
+      DATABASE_URL: "postgres://u:p@db.internal:5432/originos",
+      BETTER_AUTH_SECRET: "x".repeat(32),
+      ORIGINOS_PUBLIC_URL: "https://app.example.com",
+    };
+    expect(loadApiEnv(base).AUTH_RATE_LIMIT).toBe("on");
+    expect(() => loadApiEnv({ ...base, BETTER_AUTH_SECRET: undefined })).toThrow(
+      /BETTER_AUTH_SECRET/,
+    );
+    expect(() => loadApiEnv({ ...base, ORIGINOS_PUBLIC_URL: "http://app.example.com" })).toThrow(
+      /ORIGINOS_PUBLIC_URL/,
+    );
+    expect(() => loadApiEnv({ ...base, AUTH_RATE_LIMIT: "off" })).toThrow(/AUTH_RATE_LIMIT/);
+  });
 });

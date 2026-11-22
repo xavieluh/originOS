@@ -2,7 +2,7 @@
   "name": "@originos/db",
   "version": "0.0.0",
   "private": true,
-  "description": "PostgreSQL access (Drizzle). Importable only by apps/api and apps/worker.",
+  "description": "PostgreSQL access (Drizzle), schema and migrations. Importable only by apps/api and apps/worker.",
   "type": "module",
   "exports": {
     ".": {
@@ -16,7 +16,9 @@
     "lint": "eslint .",
     "test": "vitest run --exclude 'test/integration/**'",
     "test:integration": "vitest run test/integration",
-    "seed": "node dist/seed-cli.js"
+    "seed": "node dist/seed-cli.js",
+    "migrate": "node dist/migrate-cli.js",
+    "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
     "@originos/config": "workspace:*",
@@ -28,6 +30,7 @@
   "devDependencies": {
     "@types/node": "22.20.5",
     "@types/pg": "8.23.1",
+    "drizzle-kit": "0.31.11",
     "eslint": "9.39.5",
     "typescript": "6.0.3",
     "vite": "8.3.8",

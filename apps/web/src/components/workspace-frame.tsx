@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { UserMenu, WorkspaceSwitcher } from "./account-menus";
 import { NextLink } from "./next-link";
+import type { WorkspaceSession } from "../lib/session-types";
 import {
   commandItems,
   developerSection,
@@ -52,9 +54,11 @@ const commands = commandItems();
 
 export function WorkspaceFrame({
   surface,
+  session,
   children,
 }: {
   readonly surface: "workspace" | "developers";
+  readonly session: WorkspaceSession;
   readonly children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -73,13 +77,19 @@ export function WorkspaceFrame({
           <div className="flex-1 sm:flex-none">
             <CommandBar items={commands} onNavigate={(href) => router.push(href)} />
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <WorkspaceSwitcher session={session} />
+            <UserMenu session={session} />
+          </div>
+          {/* On phones the theme control moves into the account menu to keep the bar on one line. */}
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
         </>
       }
       sidebarFooter={
         <p className="text-xs text-fg-muted">
-          Development build. Sign-in arrives in Phase 04, so no account or workspace data exists
-          yet.
+          Development build. Signed in to {session.active.name} as {session.active.role}.
         </p>
       }
     >

@@ -1,9 +1,9 @@
 # OriginOS build state
 
-**Current phase:** 03 — passed locally and in CI, in review (PR #4)
-**Last fully completed phase:** 02 (local development and CI; PR #3 merged by owner 2026-11-22)
+**Current phase:** 04 — in progress
+**Last fully completed phase:** 03 (design system and app shell; PR #4 merged by owner 2026-11-22). Phase 04 acceptance checks pass locally; its PR is in review.
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
-**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Health endpoints only on the backend: no product module, no database tables, no sign-in and no external integration exists.
+**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. No product module and no external integration exists yet; production email delivery is not configured.
 
 ## Phase progress
 
@@ -12,8 +12,8 @@
 | 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
 | 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
-| 03 Distinctive UX system and app shell | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. | Becomes COMPLETE when PR #4 is merged |
-| 04 Authentication, teams and organizations | NOT STARTED | — | — |
+| 03 Distinctive UX system and app shell | COMPLETE | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. PR #4 merged 2026-11-22. | — |
+| 04 Authentication, teams and organizations | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: DB RLS integration 15/15, API integration 16/16, Playwright 119/119 in the pinned container against the real API, Postgres and Mailpit (auth journeys, routes, axe, keyboard, 24 visual baselines), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 04 handoff. | Production SMTP provider not chosen (BLOCKED, see handoff); CI result pending on the PR |
 | 05 Authorization, policy baseline and consent | NOT STARTED | — | — |
 | 06 Core domain schema, ledger and outbox | NOT STARTED | — | — |
 | 07 Object storage, ingestion queues and workflow core | NOT STARTED | — | — |
@@ -71,6 +71,27 @@
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
 2. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+
+## Phase 04 handoff (2026-11-22)
+
+- **Phase:** 04 Authentication, teams and organizations. Procedure: origin-build, followed by hand.
+- **Files added/changed:**
+  - `packages/db`: `src/schema.ts` (`core` schema: users, sessions, accounts, verifications, two_factors, passkeys, organizations, memberships, invitations, audit_events), `src/client.ts` (connections run as `originos_app` via the `role` startup parameter; fails closed), `src/scope.ts` (`withScope`, `setTenant`), `src/migrate.ts` + `migrate-cli.ts`, `drizzle.config.ts`, `migrations/0000_core_auth_tenancy.sql` (generated) and `0001_core_rls.sql` (role, grants, SECURITY DEFINER helpers, policies), `test/integration/rls.test.ts`.
+  - `apps/api`: `src/modules/core/` (Better Auth config and Fastify mount, global auth guard with origin/JSON CSRF checks, `@Public`/`@RequireTenant`, tenancy service and controllers, mailer + templates), env (`ORIGINOS_PUBLIC_URL`, `BETTER_AUTH_SECRET`, `SMTP_URL`, `MAIL_FROM`, `AUTH_RATE_LIMIT`), `test/integration/`.
+  - `apps/web`: `/api/auth/*` same-origin proxy; `src/proxy.ts` (signed-out redirect fast path); `src/lib/{api,session,session-cookie,auth-client,auth-config,navigate}.ts`; server actions `src/app/actions/{tenancy,account}.ts`; pages `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`, `/two-factor`, `/onboarding`, `/invitations/accept`, `/settings` (organization, members, invitations, activity), `/settings/account` (profile, password, two-step, passkeys, sessions); workspace switcher and account menu; `ClientForm`; E2E `auth.setup.ts`, `auth.spec.ts`, `support/`, updated suites and baselines.
+  - `compose.yaml` (Mailpit 1.34.0), `.env.example`, `turbo.json`, `scripts/smoke.sh`, `scripts/db-reset-local.sh`, `.github/workflows/ci.yml` (migrations + API integration in local-stack; Postgres and Mailpit services for `web-e2e`), `packages/service-kit` (`redactUrl` for request logs), DECISIONS (ADR-019–023 Accepted; ADR-010 and ADR-021 notes), SECRETS, DEVELOPMENT.
+- **Migrations:** `0000_core_auth_tenancy`, `0001_core_rls` (`pnpm db:migrate`).
+- **API changes:** `GET /v1/auth-config` (public); Better Auth endpoints under `/api/auth/*`; `GET /v1/me`, `PUT /v1/me/active-organization`, `POST /v1/organizations`, `GET|PATCH /v1/organization`, `GET|POST /v1/organization/invitations`, `POST /v1/organization/invitations/:id/revoke`, `PATCH|DELETE /v1/organization/members/:userId`, `POST /v1/organization/transfer-ownership`, `GET /v1/organization/audit-events`, `POST /v1/invitations/lookup`, `POST /v1/invitations/accept`. Everything else answers 401 without a session.
+- **Commands executed and results (2026-11-22, Node 22.23.5, pnpm 10.28.0, Docker, Postgres 18.7):**
+  - `scripts/check.sh --db` → "All checks passed" (format, lint, typecheck, unit tests incl. web 28, api 11, service-kit 7, ui 73; build; DB integration 15/15; API integration 16/16).
+  - `pnpm db:migrate && scripts/smoke.sh` → passed (signed-out `/v1/me` 401, `/home` redirects to sign-in, sign-in page sees a working account service).
+  - `CI=1 scripts/e2e-docker.sh` → 118/119 first run; the failure was a test race (typing into the sign-in page while navigating to "forgot password"), fixed by waiting for the heading; `auth.spec` re-run twice each → 25/25; final full run after the last change → 119/119. Visual suite re-run against fresh baselines → stable.
+- **Acceptance checks:** cross-org access impossible ✓; invitation expiry and revocation ✓; create org and switch workspaces ✓; logged-out requests refused ✓ (evidence in ACCEPTANCE_MATRIX row 04).
+- **Bugs found and fixed while testing:** forms could fall back to a native GET before hydration and put passwords in the URL (now hydration-gated POST forms); new sessions didn't reopen the last workspace; a second invitation link opened in the same tab was ignored; a failed `SET ROLE` would have left a connection running as the schema owner (now a startup parameter that fails closed); Better Auth disables its CSRF checks under test runners (pinned on).
+- **Security and privacy:** deny by default on every API route; CSRF by Origin + JSON content type plus Better Auth's checks; httpOnly session cookies, tokens never sent to browser JavaScript; invitation tokens hashed at rest, carried in URL fragments and POST bodies, query strings redacted from logs; RLS requires membership; audit log append-only; email bodies and links never logged; `AUTH_RATE_LIMIT=off` refused in production; production requires `BETTER_AUTH_SECRET` and an https public URL.
+- **External setup required (BLOCKED until the owner decides):** a production email provider and its `SMTP_URL` secret (sign-up, reset and invitations show "email delivery is not set up" without it); a production `BETTER_AUTH_SECRET`; a reverse proxy that overwrites `X-Forwarded-For` (Phase 44). None is needed locally.
+- **Known gaps:** no OIDC/social or enterprise SSO yet; no account deletion (Phase 05/41); TOTP setup shows the key and an `otpauth://` link but no QR code; the session cookie is renewed by one browser-side session read per workspace page load (server-rendered pages cannot set cookies); the 1-day renewal itself is Better Auth behaviour and has no automated test here; the members list has no pagination (fine at current sizes); `pnpm audit` shows one moderate dev-server advisory in esbuild via better-auth's optional drizzle-kit dependency.
+- **Next phase:** 05 Authorization, policy baseline and consent.
 
 ## Phase 03 handoff (2026-11-22)
 

@@ -279,7 +279,6 @@ export const workspaceSections = [
     summary: "Members, consent, retention and billing for this workspace.",
     keywords: ["members", "roles", "consent", "retention", "billing", "usage", "status"],
     planned: [
-      { feature: "Members and roles", phase: 4, description: "Sign-in, teams and organizations." },
       {
         feature: "Consent and retention",
         phase: 5,
