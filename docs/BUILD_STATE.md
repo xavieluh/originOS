@@ -1,15 +1,15 @@
 # OriginOS build state
 
-**Current phase:** 00 — not started
-**Last fully completed phase:** None
-**Environment:** Not created
-**Implementation status:** This archive provides prompts/instructions only. No application code has been built.
+**Current phase:** 01 — not started
+**Last fully completed phase:** 00 (architecture docs, accepted by owner 2026-11-22)
+**Environment:** Not created (no repository, no code)
+**Implementation status:** Phase 00 produced architecture documents only. No application code has been built. No acceptance check has been executed against code.
 
 ## Phase progress
 
 | Phase | Status | Evidence / tests | Blockers |
 |---|---|---|---|
-| 00 Product contract and architecture | NOT STARTED | — | — |
+| 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
 | 01 Production-shaped monorepo | NOT STARTED | — | — |
 | 02 Local development, CI and conventions | NOT STARTED | — | — |
 | 03 Distinctive UX system and app shell | NOT STARTED | — | — |
@@ -58,9 +58,20 @@
 | 46 Open-source governance, developer community and docs | NOT STARTED | — | — |
 | 47 Release audit and first real customer pilot | NOT STARTED | — | — |
 
+## Phase 00 check status (manual document review, 2026-11-22)
+
+| Check | Status | Note |
+|---|---|---|
+| ARCHITECTURE.md and DECISIONS.md describe concrete service boundaries | Done | ARCHITECTURE §4–5, ADR-001 |
+| PRODUCT_MAP.md accounts for all 15 modules | Done | 15 rows + notes |
+| ACCEPTANCE_MATRIX.md maps each capability to verification | Done | Part A: 73 capabilities with verification type and evidence |
+| No implementation claims without implementation | Holds | Every module NOT BUILT; every result NOT RUN |
+
 ## Current blockers
 
-None identified; application has not been started.
+1. `.claude/skills/origin-build`, `.claude/skills/origin-audit` and `.claude/agents/` were added to the kit on 2026-11-22 but have not been tested in Claude Code yet.
+2. No git repository yet; Phase 01 needs one.
+3. Phase 01 should add `apps/worker` and `services/media-validator` to its scaffold (accepted ADR-001).
 
 ## Session handoff template
 
