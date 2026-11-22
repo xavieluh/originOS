@@ -9,3 +9,16 @@
 .DS_Store
 .idea/
 .vscode/
+# Dependencies and build output
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/

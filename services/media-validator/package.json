@@ -1,0 +1,30 @@
+{
+  "name": "@originos/media-validator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Sandboxed C2PA media validation. Scaffold only: validation arrives in Phase 12.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@originos/config": "workspace:*",
+    "@originos/contracts": "workspace:*",
+    "@originos/service-kit": "workspace:*",
+    "fastify": "5.12.8",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "eslint": "9.39.5",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@originos/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "OriginOS web app: public network, private workspace and developer console (Next.js).",
+  "type": "module",
+  "scripts": {
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
+    "dev": "NEXT_TELEMETRY_DISABLED=1 next dev --hostname 127.0.0.1 --port 3000",
+    "start": "NEXT_TELEMETRY_DISABLED=1 next start --hostname 127.0.0.1 --port 3000",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@originos/config": "workspace:*",
+    "@originos/contracts": "workspace:*",
+    "@originos/ui": "workspace:*",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  }
+}

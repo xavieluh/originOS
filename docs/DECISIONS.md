@@ -17,6 +17,10 @@
 | ADR-010 | Tenancy and authorization: `tenant_id` everywhere, single authz evaluator, RLS as defense in depth | App-only checks; database-per-tenant | Accepted 2026-11-22 | 04, 05, 06 |
 | ADR-011 | Seven personas (split org admin into team admin and enterprise admin) | Spec's six | Accepted 2026-11-22 | 00 |
 | ADR-012 | Explicit non-goals | — | Accepted 2026-11-22 | 00, revisit at 47 |
+| ADR-013 | Import boundaries enforced by a local ESLint rule with a declarative policy table | eslint-plugin-boundaries; dependency-cruiser; overlapping `no-restricted-imports` blocks | Proposed 2026-11-22 (Phase 01) | 01, revisit at 06 |
+| ADR-014 | NestJS DI uses explicit `@Inject(Token)` on every constructor parameter | Rely on `emitDecoratorMetadata` (needs SWC/tsc in tests and dev) | Proposed 2026-11-22 (Phase 01) | 01 |
+| ADR-015 | Phase 01 toolchain and pinned versions (TypeScript 6.0, ESLint 9, ESM, compiled workspace packages) | TypeScript 7.0; ESLint 10; CommonJS; source-only internal packages | Proposed 2026-11-22 (Phase 01) | 01, revisit at 02 |
+| ADR-016 | Add `packages/service-kit` for the shared Fastify bootstrap | Copy the bootstrap into each service | Proposed 2026-11-22 (Phase 01) | 01 |
 
 ---
 
@@ -138,6 +142,55 @@ OriginOS never claims access to private Claude conversation history or to agent 
 ## ADR-012 — Non-goals
 
 Not in scope: blockchain/tokens; AI-text detection; any aggregate trust score or "100% human" seal; reading private Claude history or uninstrumented agent activity; enforcement over agents that do not route through OriginOS; legal ownership determinations (rights are claims with evidence); paywall bypass or unconsented scraping; per-module microservices; real-time co-editing unless Phase 28 proves need; self-hosted inference at launch; running untrusted marketplace code in the main process; purchasable verification outcomes (MASTER_SPEC §10).
+
+## ADR-013 — Import boundary enforcement
+
+**Context.** ADR-001 requires lint-enforced boundaries (ARCHITECTURE §4 rules 1–2), verified by a deliberate violation fixture.
+
+**Decision.** One local rule, `originos/boundaries` in `packages/config/eslint/boundaries.mjs`, enabled in the shared flat config. It does path arithmetic on import specifiers against a policy table: database packages only in `apps/api`, `apps/worker`, `packages/db`; no imports of deployables by name; relative imports may not leave their workspace package; another API module only through its `index.ts`; `packages/contracts/src` imports only `zod`.
+
+**Why not the alternatives.** `eslint-plugin-boundaries` 7.4.4 needs an import resolver to classify workspace imports; with NodeNext `.js` specifiers and pnpm symlinks that adds `eslint-import-resolver-typescript` setup for little gain at this size. Several `no-restricted-imports` blocks would silently override each other where globs overlap (flat config replaces rule options). Revisit at Phase 06, when module count grows, if the policy table becomes hard to read.
+
+**Verification.** `packages/config/test/boundaries.test.ts`: unit cases for every policy plus ESLint `lintText` fixtures that must fail (web → db, module → another module's internals) and one that must pass. Manually confirmed on 2026-11-22 that `eslint` in `apps/web` reports the violation alongside Next's own rules.
+
+## ADR-014 — Explicit injection tokens in NestJS
+
+**Context.** Nest's implicit constructor injection depends on `emitDecoratorMetadata`. `tsx` (dev) and Vitest (tests) transpile with esbuild/oxc, which do not emit that metadata, so implicit injection would work in `tsc` builds and fail in tests and dev, or the reverse.
+
+**Decision.** Every constructor parameter in `apps/api` uses `@Inject(Token)` (a class or a `Symbol`). `emitDecoratorMetadata` stays on for `tsc` builds but nothing relies on it. Tests boot the real Nest application (`createApi`) and would fail on a missing token.
+
+## ADR-015 — Toolchain and pinned versions (Phase 01)
+
+Checked 2026-11-22 against the npm registry (published versions, `engines` and `peerDependencies`). Official docs listed for reference; the compatibility decisions below rest on the package metadata.
+
+| Tool | Version | Why this version |
+|---|---|---|
+| Node.js | ≥ 22.13 (tested 22.23.5) | Vitest 5 needs `^22.12`; ESLint 9 needs `^22.13` |
+| pnpm | 10.28.0 | Installed toolchain; pinned via `packageManager` |
+| Turborepo | 2.11.13 | Latest 2.x (turborepo.com/docs) |
+| TypeScript | 6.0.3 | typescript-eslint 8.73.0 supports `>=4.8.4 <6.1.0`; TypeScript 7.0.2 is not yet supported by it |
+| ESLint | 9.39.5 | `eslint-config-next` 16.4.6 pulls `eslint-plugin-react` 7.37.5, whose peer range stops at ESLint 9; ESLint 10 is outside that declared range |
+| typescript-eslint | 8.73.0 | Latest |
+| Prettier | 3.10.1 | Latest |
+| Next.js / eslint-config-next | 16.4.6 | Latest; App Router; Turbopack build |
+| React / React DOM | 19.3.1 | Within Next 16 peer range `^19` |
+| NestJS (`core`, `common`, `platform-fastify`, `testing`) | 12.6.0 | Latest; `platform-fastify` 12.6.0 depends on Fastify 5.12.8 |
+| Fastify | 5.12.8 | Same version Nest's adapter uses, so one Fastify in the tree. Uses `LogController` (top-level `requestIdLogLabel` is deprecated in 5.12) |
+| Zod | 4.6.7 | Latest; v4 API (`z.url()`, `z.iso.datetime()`) |
+| Drizzle ORM | 0.45.4 (stable) | 1.0 is still RC. `drizzle-kit` is deferred to Phase 06 with the first schema |
+| pg / @types/pg | 8.23.1 | node-postgres driver for Drizzle |
+| Vitest / Vite | 5.1.1 / 8.3.8 | Vitest 5 declares Vite as a peer |
+| tsx | 4.23.15 | Dev watch for Node services |
+| @types/node | 22.20.5 | Matches the Node 22 runtime |
+| uv / Python | uv 0.11, Python ≥ 3.12 (tested 3.13.18) | `services/ai-worker`; pytest 9.2.0, ruff 0.17.6, hatchling 1.33.0 pinned in `pyproject.toml` and `uv.lock` |
+
+Module system: ESM (`"type": "module"`, `module: NodeNext`) in every TypeScript package. Shared packages compile to `dist/` with declarations; Turborepo builds dependencies first (`dependsOn: ["^build"]`). The web app uses `moduleResolution: Bundler` as Next requires.
+
+Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify adapter), fastify.dev/docs, orm.drizzle.team/docs, typescript-eslint.io, eslint.org/docs, vitest.dev, turborepo.com/docs, docs.astral.sh/uv.
+
+## ADR-016 — `packages/service-kit`
+
+**Decision.** The Fastify bootstrap shared by the worker's health server, MCP server, telemetry ingest and media validator (redacted logger, correlation IDs as request IDs, `GET /health/live` and `GET /health/ready`, JSON 404) lives in `packages/service-kit`. The API's `FastifyAdapter` uses the same `fastifyBaseOptions`, so logging and correlation behave identically in all processes. It holds no business logic and may not import `@originos/db`.
 
 ---
 
