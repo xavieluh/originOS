@@ -2,6 +2,12 @@
 
 This package is a **build specification, 48 execution prompts, project skills and continuity files**. It is not a completed OriginOS app. The goal is to help Claude Code develop the entire ambitious product incrementally with reviewable, testable stages.
 
+## Developing the code
+
+Phase 01 added the monorepo scaffold. Install, run and check it with the commands in
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Build progress is tracked in
+[`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
+
 ## Quick start (recommended)
 
 1. Create a new empty folder/repository named `originos` and extract **the contents** of this kit into its root. Make sure `CLAUDE.md`, `.claude/skills/origin-build/SKILL.md`, `docs/`, and `prompts/` are directly inside the repository root.

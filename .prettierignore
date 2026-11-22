@@ -1,0 +1,16 @@
+pnpm-lock.yaml
+**/dist/
+**/.next/
+**/.turbo/
+**/.venv/
+**/uv.lock
+coverage/
+# Build-kit source documents are kept as authored.
+docs/
+prompts/
+PHASES.json
+PROMPT_INDEX.md
+README.md
+TRIGGERS.md
+CLAUDE.md
+.claude/

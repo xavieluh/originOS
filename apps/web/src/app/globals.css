@@ -1,0 +1,132 @@
+/* Minimal base styles. The design system and Tailwind arrive in Phase 03. */
+:root {
+  color-scheme: light dark;
+  --bg: #fbfaf7;
+  --fg: #1c1b19;
+  --muted: #5c5a55;
+  --border: #d9d6cf;
+  --positive: #1f6f43;
+  --negative: #a3262a;
+  --neutral: #5c5a55;
+  --focus: #1d4ed8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161513;
+    --fg: #ecebe7;
+    --muted: #b3b0a8;
+    --border: #3a3833;
+    --positive: #6fcf97;
+    --negative: #f08a8d;
+    --neutral: #b3b0a8;
+    --focus: #93b4ff;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    16px/1.55 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.oo-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 8px 12px;
+  background: var(--fg);
+  color: var(--bg);
+}
+.oo-skip-link:focus {
+  left: 16px;
+  top: 16px;
+}
+.oo-header,
+.oo-main,
+.oo-footer {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.oo-header {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--border);
+}
+.oo-product {
+  margin: 0;
+  font-weight: 700;
+}
+.oo-tagline {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.oo-footer {
+  color: var(--muted);
+  font-size: 14px;
+  border-top: 1px solid var(--border);
+}
+.lede {
+  color: var(--muted);
+}
+.status-list > div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.status-list dt {
+  font-weight: 600;
+}
+.status-list dd {
+  margin: 0;
+}
+.module-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.module-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.oo-badge {
+  display: inline-block;
+  flex: none;
+  line-height: 1.6;
+  padding: 0 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.oo-badge--positive {
+  color: var(--positive);
+}
+.oo-badge--negative {
+  color: var(--negative);
+}
+.oo-badge--neutral {
+  color: var(--neutral);
+}
