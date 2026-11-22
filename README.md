@@ -12,6 +12,16 @@ scripts/dev.sh         # web :3000, api :4000, worker, mcp-server, telemetry, me
 scripts/check.sh       # the same checks CI runs (add --db for database integration tests)
 ```
 
+### On Windows
+
+The scripts are Bash, and the package scripts run on Windows too (environment variables are set through `cross-env`). What you need:
+
+- **Git Bash** (comes with [Git for Windows](https://git-scm.com/download/win)): run `bash scripts/bootstrap.sh` and `bash scripts/dev.sh` from it. PowerShell and cmd work for `pnpm` commands but not for `scripts/*.sh`.
+- **Docker Desktop**, installed and *running* before you run the scripts (they stop with "Docker is installed but not running" otherwise). Use the WSL 2 backend.
+- **pnpm through corepack:** `corepack enable` writes into the Node.js install folder, so run it once from a terminal opened with "Run as administrator", or install pnpm with `npm install -g pnpm@10.28.0` instead.
+- **uv** is optional: without it the Python ai-worker is skipped.
+- `pnpm` may print "Ignored build scripts: esbuild…". That is expected: esbuild ships its binaries as optional packages, so the skipped install script is not needed.
+
 Details, ports and conventions: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Secrets policy:
 [`docs/SECRETS.md`](docs/SECRETS.md). Build progress: [`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
 
