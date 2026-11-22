@@ -1,7 +1,7 @@
 # OriginOS build state
 
-**Current phase:** 03 — passed locally and in CI, in review (PR #4)
-**Last fully completed phase:** 02 (local development and CI; PR #3 merged by owner 2026-11-22)
+**Current phase:** 04 — in progress
+**Last fully completed phase:** 03 (design system and app shell; PR #4 merged by owner 2026-11-22)
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
 **Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Health endpoints only on the backend: no product module, no database tables, no sign-in and no external integration exists.
 
@@ -12,7 +12,7 @@
 | 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
 | 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
-| 03 Distinctive UX system and app shell | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. | Becomes COMPLETE when PR #4 is merged |
+| 03 Distinctive UX system and app shell | COMPLETE | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. PR #4 merged 2026-11-22. | — |
 | 04 Authentication, teams and organizations | NOT STARTED | — | — |
 | 05 Authorization, policy baseline and consent | NOT STARTED | — | — |
 | 06 Core domain schema, ledger and outbox | NOT STARTED | — | — |
