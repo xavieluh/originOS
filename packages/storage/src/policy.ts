@@ -36,16 +36,19 @@ export function maxUploadBytes(configured?: number): number {
   return Math.min(configured ?? MAX_UPLOAD_BYTES, MAX_UPLOAD_BYTES);
 }
 
+/** Control characters and bidirectional overrides, which can disguise a name (e.g. "txt.exe" shown as "exe.txt"). */
+// eslint-disable-next-line no-control-regex
+const UNSAFE_NAME_CHARS = /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g;
+
 /**
  * A display name safe to store and show: no path, no control or bidi
  * characters, at most 200 characters. Never used as a storage key.
  */
 export function sanitizeFilename(raw: string): string {
   const base = raw.split(/[\\/]/).pop() ?? "";
-  // eslint-disable-next-line no-control-regex
   const cleaned = base
     .normalize("NFC")
-    .replace(/[\u0000-\u001f\u007f‪-‮⁦-⁩]/g, "")
+    .replace(UNSAFE_NAME_CHARS, "")
     .trim();
   if (!cleaned || cleaned === "." || cleaned === "..") {
     throw new UploadRefused("invalid_filename", "The file needs a name.");

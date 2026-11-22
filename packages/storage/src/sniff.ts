@@ -43,7 +43,7 @@ function looksLikeSafeText(head: Uint8Array, truncated: boolean): boolean {
   }
   // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f]/.test(text)) return false;
-  const start = text.replace(/^﻿/, "").trimStart().slice(0, 256).toLowerCase();
+  const start = text.replace(/^\uFEFF/, "").trimStart().slice(0, 256).toLowerCase();
   return !/^<(!doctype|html|svg|\?xml|script|head|body)/.test(start);
 }
 
