@@ -5,6 +5,7 @@ import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fa
 import { CORRELATION_ID_HEADER } from "@originos/contracts";
 import type { Database } from "@originos/db";
 import { type LogDestination, type LogLevel, fastifyBaseOptions } from "@originos/service-kit";
+import type { Storage } from "@originos/storage";
 import { AppModule } from "./app.module.js";
 import {
   type Auth,
@@ -24,6 +25,8 @@ export interface CreateApiOptions {
   /** Auth signing secret. Without one (development only), a random per-process secret is used. */
   readonly authSecret?: string;
   readonly authRateLimit?: boolean;
+  /** Object storage and scanner settings. Without it, uploads answer "not set up". */
+  readonly storage?: Storage;
 }
 
 export interface RouteInfo {
@@ -66,7 +69,13 @@ export async function createApi(options: CreateApiOptions): Promise<NestFastifyA
   }
 
   const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule.register({ database: options.database, auth, mailer, publicOrigin }),
+    AppModule.register({
+      database: options.database,
+      auth,
+      mailer,
+      publicOrigin,
+      storage: options.storage ?? { store: null, scanner: null, maxUploadBytes: 0 },
+    }),
     adapter,
     // Fastify's logger (redacted) is the structured log; Nest's own logger only reports boot errors.
     { logger: options.logLevel === "silent" ? false : ["error", "warn"], bufferLogs: false },
@@ -75,6 +84,10 @@ export async function createApi(options: CreateApiOptions): Promise<NestFastifyA
     reply.header(CORRELATION_ID_HEADER, request.id);
   });
   mountAuthHandler(fastify, auth);
+  // File uploads arrive as raw bytes; the handler reads the stream with its own size limit.
+  fastify.addContentTypeParser("application/octet-stream", (_request, payload, done) =>
+    done(null, payload),
+  );
   // No CORS: browsers reach the API only through the web app's server (same origin).
   app.enableShutdownHooks();
   await app.init();

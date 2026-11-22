@@ -24,6 +24,7 @@
     "@originos/contracts": "workspace:*",
     "@originos/db": "workspace:*",
     "@originos/service-kit": "workspace:*",
+    "@originos/storage": "workspace:*",
     "better-auth": "1.7.27",
     "drizzle-orm": "0.45.4",
     "fastify": "5.12.8",
