@@ -57,9 +57,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
+      # The Python package runs in the "python" job, which has uv installed.
+      - run: pnpm turbo run lint --filter='!@originos/ai-worker'
+      - run: pnpm turbo run typecheck --filter='!@originos/ai-worker'
+      - run: pnpm turbo run test --filter='!@originos/ai-worker'
       - run: pnpm build
 
   python:
