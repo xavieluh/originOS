@@ -1,6 +1,6 @@
 # Architecture decision log
 
-**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. ADR-024 (Phase 05) was accepted by the owner on 2026-11-22, before merge. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. ADR-024 (Phase 05) was accepted by the owner on 2026-11-22, before merge. ADR-025 (Phase 06) and ADR-026 (Phase 07) were accepted by the owner on 2026-11-22. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
@@ -30,7 +30,7 @@
 | ADR-023 | Tenancy: `core` schema, non-superuser app role, row-level security that requires membership | App-only checks; Better Auth organization plugin | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05, 06 and 42 |
 | ADR-024 | Authorization: one pure evaluator (`packages/authz`) for roles, resource-scoped grants and explicit deny; agents capped by their owner; consent records with history | Policy engine (OPA/Cedar/Casbin); permission checks per module; roles only | Accepted 2026-11-22 (Phase 05) | 05, revisit at 06, 16 and 42 |
 | ADR-025 | Canonical domain schema: opaque prefixed ids, one Postgres schema per context, object registry with typed relation whitelist, append-oriented writes, hash-chained audit log, transactional outbox with a separate worker role, down migrations | Graph DB; generic JSON objects; polymorphic edges without FKs; message broker | Accepted 2026-11-22 (Phase 06) | 06, revisit at 13, 20, 41 and 44 |
-| ADR-026 | Ingestion and jobs: S3-compatible storage with quarantine and files buckets, content sniffing, ClamAV scanning in the worker, one-minute signed URLs; a Postgres job runner under row-level security with steps, retries, dead-letter, cancel and human waits, mapped onto Temporal | pg-boss; graphile-worker; Temporal now; scanning in the API; serving files through the API | Proposed 2026-11-22 (Phase 07) | 07, revisit at 08, 21 and 44 |
+| ADR-026 | Ingestion and jobs: S3-compatible storage with quarantine and files buckets, content sniffing, ClamAV scanning in the worker, one-minute signed URLs; a Postgres job runner under row-level security with steps, retries, dead-letter, cancel and human waits, mapped onto Temporal | pg-boss; graphile-worker; Temporal now; scanning in the API; serving files through the API | Accepted 2026-11-22 (Phase 07) | 07, revisit at 08, 21 and 44 |
 
 ---
 
@@ -338,7 +338,7 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-026 — Object storage, upload ingestion and the durable job runner (Phase 07)
 
-**Status.** Proposed 2026-11-22 (Phase 07), awaiting the owner's OK. Implements the storage half of ARCHITECTURE §4 and ADR-003's "start pragmatically" workflow engine.
+**Status.** Accepted 2026-11-22 (proposed in Phase 07; accepted by the owner before merge). Implements the storage half of ARCHITECTURE §4 and ADR-003's "start pragmatically" workflow engine.
 
 **Versions (checked 2026-11-22 against npm and Docker Hub).** `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` 3.1164.0 (latest; path-style addressing, checksums only when required, so SeaweedFS and other S3-compatible stores work). `clamav/clamav:1.4` (the official image; the non-`_base` tags ship signature databases, and freshclam updates them on start). SeaweedFS stays at `chrislusf/seaweedfs:4.54` (Phase 01); in CI it takes local-only credentials from `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` because services cannot mount the repository. No queue library was added.
 
