@@ -3,17 +3,18 @@ import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
 import { CORRELATION_ID_HEADER } from "@originos/contracts";
 import type { Database } from "@originos/db";
-import { type LogLevel, fastifyBaseOptions } from "@originos/service-kit";
+import { type LogDestination, type LogLevel, fastifyBaseOptions } from "@originos/service-kit";
 import { AppModule } from "./app.module.js";
 
 export interface CreateApiOptions {
   readonly database: Database | null;
   readonly logLevel: LogLevel;
+  readonly logDestination?: LogDestination;
 }
 
 /** Build the API application without listening, so tests can use `inject`. */
 export async function createApi(options: CreateApiOptions): Promise<NestFastifyApplication> {
-  const adapter = new FastifyAdapter(fastifyBaseOptions(options.logLevel));
+  const adapter = new FastifyAdapter(fastifyBaseOptions(options.logLevel, options.logDestination));
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.register({ database: options.database }),
     adapter,

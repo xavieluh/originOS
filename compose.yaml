@@ -1,0 +1,46 @@
+# Local development infrastructure for OriginOS (Phase 02).
+# Application processes (web, api, worker, ...) run on the host with `pnpm dev`;
+# this file provides only their dependencies. Not for production use.
+#
+# Credentials below are fixed local-only values, published in the repository on
+# purpose. Ports bind to 127.0.0.1 so nothing is reachable from other machines.
+# Redis is intentionally absent: nothing uses it yet (ADR-003).
+
+name: originos
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    environment:
+      POSTGRES_USER: originos
+      POSTGRES_PASSWORD: originos-local-only
+      POSTGRES_DB: originos
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./infra/local/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U originos -d originos"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # S3-compatible object storage emulator, used from Phase 07 (ingestion).
+  object-storage:
+    image: chrislusf/seaweedfs:4.54
+    command: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-s3.config=/etc/seaweedfs/s3.json"]
+    ports:
+      - "127.0.0.1:8333:8333"
+    volumes:
+      - object-storage-data:/data
+      - ./infra/local/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/healthz || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres-data:
+  object-storage-data:

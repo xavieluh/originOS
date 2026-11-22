@@ -1,7 +1,7 @@
 # OriginOS build state
 
-**Current phase:** 01 — acceptance checks passed locally; PR awaiting owner review
-**Last fully completed phase:** 00 (architecture docs, accepted by owner 2026-11-22). Phase 01 becomes complete when its PR is reviewed and merged.
+**Current phase:** 02 — in progress
+**Last fully completed phase:** 01 (monorepo scaffold; PR #2 merged by owner 2026-11-22)
 **Environment:** Repository xavieluh/originOS. Local only: no CI (Phase 02), no Docker Compose (Phase 02), nothing deployed.
 **Implementation status:** Monorepo scaffold with health endpoints only. No product module, no database tables, no external integration exists.
 
@@ -10,7 +10,7 @@
 | Phase | Status | Evidence / tests | Blockers |
 |---|---|---|---|
 | 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
-| 01 Production-shaped monorepo | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22 (see handoff below and ACCEPTANCE_MATRIX row 01). ADR-013–016 Proposed. | Owner review of the PR; ADR-013–016 acceptance |
+| 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
 | 02 Local development, CI and conventions | NOT STARTED | — | — |
 | 03 Distinctive UX system and app shell | NOT STARTED | — | — |
 | 04 Authentication, teams and organizations | NOT STARTED | — | — |

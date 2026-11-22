@@ -1,6 +1,9 @@
+import { CORRELATION_ID_HEADER } from "@originos/contracts";
 import { AppShell, StatusBadge, type StatusTone } from "@originos/ui";
+import { headers } from "next/headers";
 import { type ApiStatus, fetchApiStatus } from "../lib/api-status";
 import { loadWebServerEnv } from "../lib/env";
+import { logEvent } from "../lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +63,11 @@ const DEPENDENCY_LABELS = {
 
 export default async function HomePage() {
   const env = loadWebServerEnv();
-  const status = await fetchApiStatus(env.ORIGINOS_API_URL);
+  const correlationId = (await headers()).get(CORRELATION_ID_HEADER) ?? undefined;
+  const status = await fetchApiStatus(env.ORIGINOS_API_URL, { correlationId });
+  if (status.kind !== "ready") {
+    logEvent("warn", "API readiness check did not pass", { correlationId, apiStatus: status.kind });
+  }
   const api = describeApi(status);
   const checks = "health" in status ? Object.entries(status.health.checks) : [];
 

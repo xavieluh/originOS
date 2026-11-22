@@ -14,31 +14,41 @@ const respond = (status: number, body: unknown): typeof fetch =>
 
 describe("fetchApiStatus", () => {
   it("is ready when the API returns 200 with a valid ok body", async () => {
-    const status = await fetchApiStatus("http://api.test", respond(200, ok));
+    const status = await fetchApiStatus("http://api.test", { fetchImpl: respond(200, ok) });
     expect(status.kind).toBe("ready");
   });
 
   it("is not ready on 503 with a valid body", async () => {
     const body = { ...ok, status: "down", checks: { database: { status: "unreachable" } } };
-    expect((await fetchApiStatus("http://api.test", respond(503, body))).kind).toBe("not_ready");
+    expect((await fetchApiStatus("http://api.test", { fetchImpl: respond(503, body) })).kind).toBe(
+      "not_ready",
+    );
   });
 
   it("is unreachable when the request fails", async () => {
     const failing = (async () => {
       throw new TypeError("fetch failed");
     }) as typeof fetch;
-    expect((await fetchApiStatus("http://api.test", failing)).kind).toBe("unreachable");
+    expect((await fetchApiStatus("http://api.test", { fetchImpl: failing })).kind).toBe(
+      "unreachable",
+    );
   });
 
   it("rejects bodies that do not match the health contract or name another service", async () => {
-    expect((await fetchApiStatus("http://api.test", respond(200, { ok: true }))).kind).toBe(
-      "invalid_response",
-    );
     expect(
-      (await fetchApiStatus("http://api.test", respond(200, { ...ok, service: "web" }))).kind,
+      (await fetchApiStatus("http://api.test", { fetchImpl: respond(200, { ok: true }) })).kind,
+    ).toBe("invalid_response");
+    expect(
+      (
+        await fetchApiStatus("http://api.test", {
+          fetchImpl: respond(200, { ...ok, service: "web" }),
+        })
+      ).kind,
     ).toBe("invalid_response");
     const notJson = (async () => new Response("<html>", { status: 200 })) as typeof fetch;
-    expect((await fetchApiStatus("http://api.test", notJson)).kind).toBe("invalid_response");
+    expect((await fetchApiStatus("http://api.test", { fetchImpl: notJson })).kind).toBe(
+      "invalid_response",
+    );
   });
 
   it("calls /health/ready on the configured base URL", async () => {
@@ -47,7 +57,17 @@ describe("fetchApiStatus", () => {
       calledWith = String(input);
       return new Response(JSON.stringify(ok), { status: 200 });
     }) as typeof fetch;
-    await fetchApiStatus("http://127.0.0.1:4000", spy);
+    await fetchApiStatus("http://127.0.0.1:4000", { fetchImpl: spy });
     expect(calledWith).toBe("http://127.0.0.1:4000/health/ready");
+  });
+
+  it("forwards the correlation ID when given one", async () => {
+    let sent: string | null = null;
+    const spy = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      sent = new Headers(init?.headers).get("x-correlation-id");
+      return new Response(JSON.stringify(ok), { status: 200 });
+    }) as typeof fetch;
+    await fetchApiStatus("http://api.test", { fetchImpl: spy, correlationId: "web-corr-1234" });
+    expect(sent).toBe("web-corr-1234");
   });
 });

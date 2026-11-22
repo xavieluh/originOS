@@ -1,0 +1,11 @@
+{
+  "identities": [
+    {
+      "name": "originos-local",
+      "credentials": [
+        { "accessKey": "originos-local-access-key", "secretKey": "originos-local-only-secret" }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

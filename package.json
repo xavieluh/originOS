@@ -15,7 +15,9 @@
     "test": "turbo run test",
     "check": "turbo run lint typecheck test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:seed": "pnpm --filter @originos/db seed",
+    "test:integration": "pnpm --filter @originos/db test:integration"
   },
   "devDependencies": {
     "@originos/config": "workspace:*",

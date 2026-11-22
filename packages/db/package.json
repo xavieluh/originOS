@@ -14,12 +14,16 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run --exclude 'test/integration/**'",
+    "test:integration": "vitest run test/integration",
+    "seed": "node dist/seed-cli.js"
   },
   "dependencies": {
+    "@originos/config": "workspace:*",
     "@originos/contracts": "workspace:*",
     "drizzle-orm": "0.45.4",
-    "pg": "8.23.1"
+    "pg": "8.23.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

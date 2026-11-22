@@ -1,35 +1,27 @@
 # Developing OriginOS
 
-Phase 01 scaffold. Local tooling, Docker Compose, CI and conventions are extended in Phase 02.
-
 ## Prerequisites
 
 | Tool | Version | Notes |
 |---|---|---|
 | Node.js | 22.13 or newer (`.nvmrc` says 22) | Tested on 22.23.5 |
-| pnpm | 10.28.0 (pinned in `package.json` `packageManager`) | `corepack enable` picks it up |
-| uv | 0.11 or newer | Only for `services/ai-worker` (Python 3.12+) |
-| PostgreSQL | 16 | Optional in Phase 01. Without it, readiness reports the database as *not configured* |
+| pnpm | 10.28.0 (pinned in `package.json` `packageManager`) | `scripts/bootstrap.sh` enables it through corepack if missing |
+| Docker with Compose v2 | any current | Runs Postgres and the object-storage emulator. `--no-docker` skips it |
+| uv | 0.11 or newer | Only for `services/ai-worker` (Python 3.12+); skipped with a warning if absent |
+| gitleaks | 8.30.1 | Optional locally; CI always runs it |
 
-## Clean install and checks
+Scripts are bash (macOS, Linux, WSL).
 
-```bash
-pnpm install --frozen-lockfile
-pnpm build          # compiles shared packages, apps and services (turbo)
-pnpm check          # lint + typecheck + unit tests in every package
-pnpm format:check   # prettier
-```
-
-`pnpm lint` also enforces the architectural import boundaries (see "Boundaries" below).
-
-## Running locally
+## Fresh checkout
 
 ```bash
-cp .env.example .env   # optional; every variable has a safe default
-pnpm dev               # all TypeScript processes in watch mode
+scripts/bootstrap.sh     # once: .env from .env.example, pnpm install, uv sync, build, docker compose up
+scripts/dev.sh           # every day: containers + all TypeScript processes in watch mode, .env exported
 ```
 
-| Process | Package | Default address | Health |
+Then open http://127.0.0.1:3000. The home page shows the API and database status read live.
+
+| Process | Package | Address | Health |
 |---|---|---|---|
 | Web | `apps/web` | http://127.0.0.1:3000 | `GET /api/health` |
 | API | `apps/api` | http://127.0.0.1:4000 | `GET /health/live`, `GET /health/ready` |
@@ -37,36 +29,54 @@ pnpm dev               # all TypeScript processes in watch mode
 | MCP server | `apps/mcp-server` | http://127.0.0.1:4100 | `GET /health/live`, `GET /health/ready` |
 | Telemetry ingest | `services/telemetry` | http://127.0.0.1:4200 | `GET /health/live`, `GET /health/ready` |
 | Media validator | `services/media-validator` | http://127.0.0.1:4300 | `GET /health/live`, `GET /health/ready` |
-| AI worker (Python) | `services/ai-worker` | no server | `uv run --project services/ai-worker python -m originos_ai_worker` prints a health report |
+| AI worker (Python) | `services/ai-worker` | no server | `uv run --project services/ai-worker python -m originos_ai_worker` |
+| Postgres 18 + pgvector 0.8.7 | compose `postgres` | 127.0.0.1:5432 (`originos`, `originos_test`) | `pg_isready` |
+| S3-compatible storage (SeaweedFS 4.54) | compose `object-storage` | http://127.0.0.1:8333 | `/healthz`; used from Phase 07 |
 
-All services bind to loopback by default. The environment is loaded from the process environment;
-`pnpm dev` does not read `.env` by itself, so export variables or use a tool such as `direnv`.
-Phase 02 adds Docker Compose for Postgres.
+Everything binds to loopback. Redis is not part of the stack because nothing uses it (ADR-003).
 
-Production-style run: `pnpm build`, then `pnpm --filter @originos/api start` (and likewise for the
-other packages).
+Useful compose commands: `docker compose ps`, `docker compose logs -f postgres`, `docker compose down` (keeps data), `docker compose down -v` (deletes local data).
 
-To see the API's database check go green, point it at any Postgres 16:
+## Checks
 
 ```bash
-DATABASE_URL=postgres://user@127.0.0.1:5432/originos pnpm --filter @originos/api start
-curl -s http://127.0.0.1:4000/health/ready
+scripts/check.sh         # .env ignored, gitleaks (if installed), prettier, lint, typecheck, unit tests, build
+scripts/check.sh --db    # plus database integration tests against TEST_DATABASE_URL
+scripts/smoke.sh         # after a build: start web, api, worker against the DB and verify them end to end
 ```
 
-Readiness semantics (shared contract `HealthResponse` in `packages/contracts`):
+Individual commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check`, `pnpm test:integration`.
+
+CI (`.github/workflows/ci.yml`) runs on every push to `main` and every pull request:
+
+| Job | What it proves |
+|---|---|
+| Secret scan | gitleaks over the full history; no tracked `.env` |
+| Lint, typecheck, test, build | the whole TypeScript workspace from a clean install |
+| ai-worker (Python) | ruff and pytest |
+| Local stack | `compose.yaml` starts; DB integration tests (pgvector); seed guard; `scripts/smoke.sh` |
+| Dependency audit and SBOM | `pnpm audit --prod --audit-level high`; CycloneDX SBOM uploaded as an artifact |
+
+Migration checks start in Phase 06, when the first migration exists.
+
+## Readiness semantics
+
+Shared contract `HealthResponse` (`packages/contracts`):
 
 - `/health/live` never checks dependencies.
-- `/health/ready` returns 200 when every configured dependency answers, 503 when one is `unreachable` or `error`.
-- A dependency that is optional and not configured is reported as `not_configured` and does not fail readiness.
-- `DATABASE_URL` is required when `NODE_ENV=production`; startup fails otherwise.
+- `/health/ready` returns 200 when every configured dependency answers and 503 when one is `unreachable` or `error`.
+- An optional dependency without configuration is `not_configured` and does not fail readiness.
+- `DATABASE_URL` is required when `NODE_ENV=production`.
 
-## Real-database test
+## Logging and correlation IDs
 
-`packages/db` has tests that run only when `TEST_DATABASE_URL` is set:
+- Every process writes JSON lines with `level`, `time`, `msg` and, for requests, `correlationId`.
+- The `x-correlation-id` header is accepted when it is 8 to 128 characters of `[A-Za-z0-9_-]`, otherwise replaced with a UUID, and echoed on every response. The web app's `src/proxy.ts` assigns one to each page request and forwards it to the API, so one ID follows a request across web and API logs.
+- Credential headers and credential-named fields are redacted (`packages/service-kit/src/logging.ts`, `services/ai-worker/src/originos_ai_worker/logging_setup.py`). See [SECRETS.md](SECRETS.md).
 
-```bash
-TEST_DATABASE_URL=postgres://user@127.0.0.1:5432/originos pnpm --filter @originos/db test
-```
+## Sample data
+
+`pnpm db:seed` runs registered seed sets (`packages/db/src/seed.ts`). It refuses when `NODE_ENV=production`, and refuses a non-loopback database unless `SEED_ALLOW_NON_LOCAL=true`. Seeded text must carry the `[SAMPLE]` label. No seed sets exist until Phase 06 adds tables.
 
 ## Layout
 
@@ -76,19 +86,20 @@ apps/api               NestJS + Fastify modular monolith; bounded contexts in sr
 apps/worker            outbox dispatch and durable jobs (queue arrives in Phase 07)
 apps/mcp-server        remote MCP server (tools arrive in Phase 23)
 packages/contracts     Zod contracts shared by every surface (leaf package)
-packages/db            Drizzle + node-postgres; only api and worker may import it
+packages/db            Drizzle + node-postgres, seed guard; only api and worker may import it
 packages/config        env validation, shared ESLint config and boundary rule
 packages/service-kit   shared Fastify bootstrap: redacted logs, correlation IDs, health routes
 packages/ui            shared React primitives (design system grows in Phase 03)
 services/telemetry     agent telemetry ingest (Phase 16)
 services/media-validator  sandboxed C2PA validation (Phase 12)
 services/ai-worker     Python research worker (Phases 24-25); calls models only via the API gateway
+infra/local            compose init files (Postgres extensions, S3 emulator credentials)
+scripts                bootstrap, dev, check, smoke
 ```
 
 ## Boundaries
 
-Enforced by the `originos/boundaries` ESLint rule (`packages/config/eslint/boundaries.mjs`,
-ARCHITECTURE §4, ADR-013):
+Enforced by the `originos/boundaries` ESLint rule (`packages/config/eslint/boundaries.mjs`, ADR-013):
 
 1. Only `apps/api`, `apps/worker` and `packages/db` may import `@originos/db`, `pg`, `postgres` or `drizzle-*`.
 2. Code in one API module may import another module only through `src/modules/<name>/index.ts`.
@@ -96,12 +107,11 @@ ARCHITECTURE §4, ADR-013):
 4. Relative imports may not leave their own workspace package.
 5. `packages/contracts/src` may import only `zod`.
 
-Violation fixtures live in `packages/config/test/boundaries.test.ts`.
+## Conventions
 
-## Conventions in force
-
-- TypeScript strict (plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), ESM everywhere.
-- Exact dependency versions (`.npmrc` `save-exact=true`); `engine-strict=true`.
+- TypeScript strict (plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), ESM everywhere, Prettier formatting.
+- Exact dependency versions (`.npmrc` `save-exact=true`); `engine-strict=true`; GitHub Actions pinned to commit SHAs.
 - NestJS constructor parameters use explicit `@Inject(Token)` (ADR-014).
-- Env validation errors name variables, never values. Logs redact credential headers and fields.
-- Next.js telemetry is disabled in the web scripts.
+- Env validation errors name variables, never values.
+- Branches: work on a feature branch and open a pull request; `main` changes only through reviewed PRs with green CI.
+- Next.js and Turborepo telemetry are disabled in scripts and CI.

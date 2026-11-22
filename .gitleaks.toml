@@ -1,0 +1,11 @@
+# gitleaks configuration (docs/SECRETS.md). Uses the default rule set and
+# allows only the documented local-only development credentials, which are
+# committed on purpose in compose.yaml, infra/local/ and .env.example.
+title = "OriginOS gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Local-only development credentials for the compose stack"
+regexes = ['''originos-local-only(-secret)?''', '''originos-local-access-key''']
