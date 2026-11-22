@@ -1,7 +1,7 @@
 # OriginOS build state
 
-**Current phase:** 02 — all acceptance checks passed (local and CI); PR #3 awaiting owner review
-**Last fully completed phase:** 01 (monorepo scaffold; PR #2 merged by owner 2026-11-22)
+**Current phase:** 03 — in progress
+**Last fully completed phase:** 02 (local development and CI; PR #3 merged by owner 2026-11-22)
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
 **Implementation status:** Monorepo scaffold, local dev tooling and CI. Health endpoints only: no product module, no database tables, no external integration exists.
 
@@ -11,7 +11,7 @@
 |---|---|---|---|
 | 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
-| 02 Local development, CI and conventions | PASSED, IN REVIEW | All 4 checks passed 2026-11-22: locally and in GitHub Actions run 45063816462 (5/5 jobs green). See Phase 02 handoff. | Owner review of PR #3; ADR-017/018 acceptance |
+| 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
 | 03 Distinctive UX system and app shell | NOT STARTED | — | — |
 | 04 Authentication, teams and organizations | NOT STARTED | — | — |
 | 05 Authorization, policy baseline and consent | NOT STARTED | — | — |
@@ -70,8 +70,7 @@
 ## Current blockers
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
-2. ADR-013 to ADR-018 are Proposed and need the owner's acceptance.
-3. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+2. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
 
 ## Phase 02 handoff (2026-11-22)
 

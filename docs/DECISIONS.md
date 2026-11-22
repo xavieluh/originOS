@@ -1,6 +1,6 @@
 # Architecture decision log
 
-**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
@@ -17,12 +17,12 @@
 | ADR-010 | Tenancy and authorization: `tenant_id` everywhere, single authz evaluator, RLS as defense in depth | App-only checks; database-per-tenant | Accepted 2026-11-22 | 04, 05, 06 |
 | ADR-011 | Seven personas (split org admin into team admin and enterprise admin) | Spec's six | Accepted 2026-11-22 | 00 |
 | ADR-012 | Explicit non-goals | — | Accepted 2026-11-22 | 00, revisit at 47 |
-| ADR-013 | Import boundaries enforced by a local ESLint rule with a declarative policy table | eslint-plugin-boundaries; dependency-cruiser; overlapping `no-restricted-imports` blocks | Proposed 2026-11-22 (Phase 01) | 01, revisit at 06 |
-| ADR-014 | NestJS DI uses explicit `@Inject(Token)` on every constructor parameter | Rely on `emitDecoratorMetadata` (needs SWC/tsc in tests and dev) | Proposed 2026-11-22 (Phase 01) | 01 |
-| ADR-015 | Phase 01 toolchain and pinned versions (TypeScript 6.0, ESLint 9, ESM, compiled workspace packages) | TypeScript 7.0; ESLint 10; CommonJS; source-only internal packages | Proposed 2026-11-22 (Phase 01) | 01, revisit at 02 |
-| ADR-016 | Add `packages/service-kit` for the shared Fastify bootstrap | Copy the bootstrap into each service | Proposed 2026-11-22 (Phase 01) | 01 |
-| ADR-017 | Local stack: Docker Compose with Postgres 18 + pgvector 0.8.7 and SeaweedFS 4.54 as the S3 emulator; apps run on the host | Postgres 16/17; MinIO, RustFS or S3Mock; apps in containers | Proposed 2026-11-22 (Phase 02) | 02, revisit at 07 and 44 |
-| ADR-018 | CI on GitHub Actions: SHA-pinned actions, gitleaks binary with checksum, compose-based smoke job, `pnpm audit` + Syft CycloneDX SBOM | gitleaks-action; dependency-review-action; separate Postgres service container | Proposed 2026-11-22 (Phase 02) | 02, revisit at 42 |
+| ADR-013 | Import boundaries enforced by a local ESLint rule with a declarative policy table | eslint-plugin-boundaries; dependency-cruiser; overlapping `no-restricted-imports` blocks | Accepted 2026-11-22 (Phase 01) | 01, revisit at 06 |
+| ADR-014 | NestJS DI uses explicit `@Inject(Token)` on every constructor parameter | Rely on `emitDecoratorMetadata` (needs SWC/tsc in tests and dev) | Accepted 2026-11-22 (Phase 01) | 01 |
+| ADR-015 | Phase 01 toolchain and pinned versions (TypeScript 6.0, ESLint 9, ESM, compiled workspace packages) | TypeScript 7.0; ESLint 10; CommonJS; source-only internal packages | Accepted 2026-11-22 (Phase 01) | 01, revisit at 02 |
+| ADR-016 | Add `packages/service-kit` for the shared Fastify bootstrap | Copy the bootstrap into each service | Accepted 2026-11-22 (Phase 01) | 01 |
+| ADR-017 | Local stack: Docker Compose with Postgres 18 + pgvector 0.8.7 and SeaweedFS 4.54 as the S3 emulator; apps run on the host | Postgres 16/17; MinIO, RustFS or S3Mock; apps in containers | Accepted 2026-11-22 (Phase 02) | 02, revisit at 07 and 44 |
+| ADR-018 | CI on GitHub Actions: SHA-pinned actions, gitleaks binary with checksum, compose-based smoke job, `pnpm audit` + Syft CycloneDX SBOM | gitleaks-action; dependency-review-action; separate Postgres service container | Accepted 2026-11-22 (Phase 02) | 02, revisit at 42 |
 
 ---
 
