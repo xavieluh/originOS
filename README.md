@@ -25,7 +25,7 @@ The scripts are Bash, and the package scripts run on Windows too (environment va
 
 ### Troubleshooting the local database
 
-`pnpm db:status` says whether the database in `DATABASE_URL` is reachable and migrated, and prints the fix. `scripts/dev.sh` runs it before starting anything.
+`pnpm db:status` says whether the database in `DATABASE_URL` is reachable and migrated, and prints the fix. `scripts/dev.sh` runs it before starting anything. `pnpm db:migrate`, `pnpm db:status` and `pnpm db:seed` read the repository's `.env` themselves, so they work from any terminal; a variable already set in your shell wins over `.env`.
 
 - **Sign-up fails with "something went wrong", and the API log shows `role "originos_app" does not exist`.** The database has not been migrated: migrations create that role, the tables and the row-level security policies. Run `pnpm db:migrate` from the repository root, then `scripts/dev.sh` again. `scripts/bootstrap.sh` now does this for you; checkouts set up before that change need it once.
 - **`Cannot reach the database`, or `password authentication failed`.** The services are not reaching the compose Postgres. Check that the port in `DATABASE_URL` (and `TEST_DATABASE_URL`) matches `POSTGRES_HOST_PORT` in `.env`; if another Postgres is installed on your machine, it may be the one answering on 5432.

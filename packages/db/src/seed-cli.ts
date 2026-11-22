@@ -1,5 +1,5 @@
 // `pnpm db:seed` from the repository root. Loads env, checks the guard, runs seed sets.
-import { envFields, parseEnv } from "@originos/config";
+import { envFields, loadLocalEnv, parseEnv } from "@originos/config";
 import { z } from "zod";
 import { createDatabase } from "./client.js";
 import { assertSeedAllowed, seedSets } from "./seed.js";
@@ -11,6 +11,7 @@ const SeedEnv = z.object({
 });
 
 async function main(): Promise<void> {
+  loadLocalEnv();
   const env = parseEnv("db:seed", SeedEnv);
   assertSeedAllowed({
     nodeEnv: env.NODE_ENV,

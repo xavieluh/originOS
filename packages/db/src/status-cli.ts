@@ -2,7 +2,7 @@
 // Connects as DATABASE_URL's user and says whether the services can start.
 // Exit codes: 0 ready, 1 cannot connect, 2 needs `pnpm db:migrate`, 3 the
 // database is newer than this checkout. Never prints the connection string.
-import { envFields, parseEnv } from "@originos/config";
+import { envFields, loadLocalEnv, parseEnv } from "@originos/config";
 import { z } from "zod";
 import { createDatabase } from "./client.js";
 import { databaseStatus, isReady } from "./status.js";
@@ -15,6 +15,7 @@ function target(url: string): string {
 }
 
 async function main(): Promise<number> {
+  loadLocalEnv();
   const env = parseEnv("db:status", StatusEnv);
   const where = target(env.DATABASE_URL);
   const database = createDatabase({ url: env.DATABASE_URL });

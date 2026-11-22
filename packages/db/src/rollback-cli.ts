@@ -1,6 +1,6 @@
 // `pnpm --filter @originos/db rollback -- <steps> --destroy-data`: undo the
 // newest applied migrations. Development and test only.
-import { envFields, parseEnv } from "@originos/config";
+import { envFields, loadLocalEnv, parseEnv } from "@originos/config";
 import { z } from "zod";
 import { createDatabase } from "./client.js";
 import { rollbackMigrations } from "./rollback.js";
@@ -11,6 +11,7 @@ const RollbackEnv = z.object({
 });
 
 async function main(): Promise<void> {
+  loadLocalEnv();
   const env = parseEnv("db:rollback", RollbackEnv);
   const args = process.argv.slice(2);
   if (env.NODE_ENV === "production")
