@@ -19,7 +19,7 @@ GRANT SELECT, UPDATE (status, error_code, error_message, detected_type, sha256, 
 GRANT SELECT, UPDATE (status, attempts, available_at, locked_by, locked_until, progress, progress_message,
   last_error, wait_reason, result, finished_at, updated_at) ON core.jobs TO originos_worker;
 --> statement-breakpoint
-GRANT SELECT, INSERT ON core.job_steps TO originos_worker;
+GRANT SELECT, INSERT, UPDATE (output) ON core.job_steps TO originos_worker;
 --> statement-breakpoint
 GRANT INSERT ON core.outbox_events TO originos_worker;
 --> statement-breakpoint
