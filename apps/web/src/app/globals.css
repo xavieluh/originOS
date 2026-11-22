@@ -1,132 +1,61 @@
-/* Minimal base styles. The design system and Tailwind arrive in Phase 03. */
-:root {
-  color-scheme: light dark;
-  --bg: #fbfaf7;
-  --fg: #1c1b19;
-  --muted: #5c5a55;
-  --border: #d9d6cf;
-  --positive: #1f6f43;
-  --negative: #a3262a;
-  --neutral: #5c5a55;
-  --focus: #1d4ed8;
+@import "tailwindcss";
+@import "@originos/ui/tokens.css";
+
+/* Scan the shared components' sources for class names. */
+@source "../../../../packages/ui/src";
+
+/* Map design tokens (packages/ui/src/tokens.ts) to Tailwind utilities. */
+@theme inline {
+  --color-bg: var(--oo-bg);
+  --color-surface: var(--oo-surface);
+  --color-surface-alt: var(--oo-surface-alt);
+  --color-border: var(--oo-border);
+  --color-border-strong: var(--oo-border-strong);
+  --color-fg: var(--oo-fg);
+  --color-fg-muted: var(--oo-fg-muted);
+  --color-accent: var(--oo-accent);
+  --color-accent-fg: var(--oo-accent-fg);
+  --color-accent-subtle: var(--oo-accent-subtle);
+  --color-accent-text: var(--oo-accent-text);
+  --color-focus: var(--oo-focus);
+  --color-positive: var(--oo-positive);
+  --color-positive-subtle: var(--oo-positive-subtle);
+  --color-warning: var(--oo-warning);
+  --color-warning-subtle: var(--oo-warning-subtle);
+  --color-negative: var(--oo-negative);
+  --color-negative-subtle: var(--oo-negative-subtle);
+  --color-info: var(--oo-info);
+  --color-info-subtle: var(--oo-info-subtle);
+  --color-overlay: var(--oo-overlay);
+  --font-display: var(--oo-font-display);
+  --font-sans: var(--oo-font-body);
+  --font-mono: var(--oo-font-mono);
+  --radius-sm: var(--oo-radius-sm);
+  --radius-md: var(--oo-radius-md);
+  --radius-lg: var(--oo-radius-lg);
+  --radius-pill: var(--oo-radius-pill);
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #161513;
-    --fg: #ecebe7;
-    --muted: #b3b0a8;
-    --border: #3a3833;
-    --positive: #6fcf97;
-    --negative: #f08a8d;
-    --neutral: #b3b0a8;
-    --focus: #93b4ff;
+
+@layer base {
+  html {
+    background: var(--oo-bg);
+    color: var(--oo-fg);
+    font-family: var(--oo-font-body);
+    -webkit-font-smoothing: antialiased;
   }
-}
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font:
-    16px/1.55 system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
-}
-:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-}
-.oo-skip-link {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  padding: 8px 12px;
-  background: var(--fg);
-  color: var(--bg);
-}
-.oo-skip-link:focus {
-  left: 16px;
-  top: 16px;
-}
-.oo-header,
-.oo-main,
-.oo-footer {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 16px;
-}
-.oo-header {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  border-bottom: 1px solid var(--border);
-}
-.oo-product {
-  margin: 0;
-  font-weight: 700;
-}
-.oo-tagline {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-.oo-footer {
-  color: var(--muted);
-  font-size: 14px;
-  border-top: 1px solid var(--border);
-}
-.lede {
-  color: var(--muted);
-}
-.status-list > div {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-.status-list dt {
-  font-weight: 600;
-}
-.status-list dd {
-  margin: 0;
-}
-.module-list {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 8px;
-}
-.module-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-.oo-badge {
-  display: inline-block;
-  flex: none;
-  line-height: 1.6;
-  padding: 0 8px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.oo-badge--positive {
-  color: var(--positive);
-}
-.oo-badge--negative {
-  color: var(--negative);
-}
-.oo-badge--neutral {
-  color: var(--neutral);
+  body {
+    min-height: 100dvh;
+    line-height: 1.55;
+  }
+  :focus-visible {
+    outline-color: var(--oo-focus);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0s !important;
+      animation-duration: 0s !important;
+    }
+  }
 }

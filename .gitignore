@@ -22,3 +22,6 @@ next-env.d.ts
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+# Playwright output (baselines in e2e/*-snapshots are committed)
+test-results/
+playwright-report/

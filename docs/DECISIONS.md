@@ -1,6 +1,6 @@
 # Architecture decision log
 
-**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
@@ -17,12 +17,12 @@
 | ADR-010 | Tenancy and authorization: `tenant_id` everywhere, single authz evaluator, RLS as defense in depth | App-only checks; database-per-tenant | Accepted 2026-11-22 | 04, 05, 06 |
 | ADR-011 | Seven personas (split org admin into team admin and enterprise admin) | Spec's six | Accepted 2026-11-22 | 00 |
 | ADR-012 | Explicit non-goals | — | Accepted 2026-11-22 | 00, revisit at 47 |
-| ADR-013 | Import boundaries enforced by a local ESLint rule with a declarative policy table | eslint-plugin-boundaries; dependency-cruiser; overlapping `no-restricted-imports` blocks | Proposed 2026-11-22 (Phase 01) | 01, revisit at 06 |
-| ADR-014 | NestJS DI uses explicit `@Inject(Token)` on every constructor parameter | Rely on `emitDecoratorMetadata` (needs SWC/tsc in tests and dev) | Proposed 2026-11-22 (Phase 01) | 01 |
-| ADR-015 | Phase 01 toolchain and pinned versions (TypeScript 6.0, ESLint 9, ESM, compiled workspace packages) | TypeScript 7.0; ESLint 10; CommonJS; source-only internal packages | Proposed 2026-11-22 (Phase 01) | 01, revisit at 02 |
-| ADR-016 | Add `packages/service-kit` for the shared Fastify bootstrap | Copy the bootstrap into each service | Proposed 2026-11-22 (Phase 01) | 01 |
-| ADR-017 | Local stack: Docker Compose with Postgres 18 + pgvector 0.8.7 and SeaweedFS 4.54 as the S3 emulator; apps run on the host | Postgres 16/17; MinIO, RustFS or S3Mock; apps in containers | Proposed 2026-11-22 (Phase 02) | 02, revisit at 07 and 44 |
-| ADR-018 | CI on GitHub Actions: SHA-pinned actions, gitleaks binary with checksum, compose-based smoke job, `pnpm audit` + Syft CycloneDX SBOM | gitleaks-action; dependency-review-action; separate Postgres service container | Proposed 2026-11-22 (Phase 02) | 02, revisit at 42 |
+| ADR-013 | Import boundaries enforced by a local ESLint rule with a declarative policy table | eslint-plugin-boundaries; dependency-cruiser; overlapping `no-restricted-imports` blocks | Accepted 2026-11-22 (Phase 01) | 01, revisit at 06 |
+| ADR-014 | NestJS DI uses explicit `@Inject(Token)` on every constructor parameter | Rely on `emitDecoratorMetadata` (needs SWC/tsc in tests and dev) | Accepted 2026-11-22 (Phase 01) | 01 |
+| ADR-015 | Phase 01 toolchain and pinned versions (TypeScript 6.0, ESLint 9, ESM, compiled workspace packages) | TypeScript 7.0; ESLint 10; CommonJS; source-only internal packages | Accepted 2026-11-22 (Phase 01) | 01, revisit at 02 |
+| ADR-016 | Add `packages/service-kit` for the shared Fastify bootstrap | Copy the bootstrap into each service | Accepted 2026-11-22 (Phase 01) | 01 |
+| ADR-017 | Local stack: Docker Compose with Postgres 18 + pgvector 0.8.7 and SeaweedFS 4.54 as the S3 emulator; apps run on the host | Postgres 16/17; MinIO, RustFS or S3Mock; apps in containers | Accepted 2026-11-22 (Phase 02) | 02, revisit at 07 and 44 |
+| ADR-018 | CI on GitHub Actions: SHA-pinned actions, gitleaks binary with checksum, compose-based smoke job, `pnpm audit` + Syft CycloneDX SBOM | gitleaks-action; dependency-review-action; separate Postgres service container | Accepted 2026-11-22 (Phase 02) | 02, revisit at 42 |
 
 ---
 
@@ -211,6 +211,34 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 **Not yet covered.** Migration checks (no migrations until Phase 06), Python dependency audit (the ai-worker has no runtime dependencies), container image scanning (no images until Phase 44), and turbo remote caching.
 
 **Turborepo env.** Turbo 2 runs tasks in strict env mode, so `turbo.json` lists the runtime variables in `dev.passThroughEnv`; without it `scripts/dev.sh` started the API with no `DATABASE_URL` (found and fixed 2026-11-22).
+
+---
+
+## ADR-019 — Design system: Tailwind CSS 4 over TypeScript tokens (Phase 03)
+
+**Status.** Proposed 2026-11-22 (Phase 03).
+
+**Decision.** Design tokens live in `packages/ui/src/tokens.ts` (colours for light and dark, fonts, radii, motion). `packages/ui` builds them into `dist/tokens.css` as `--oo-*` custom properties (`:root`, `[data-theme="dark"]`, and `prefers-color-scheme: dark` unless `data-theme="light"`). The web app uses Tailwind CSS 4.3.5 via `@tailwindcss/postcss` 4.3.5, mapping the variables in an `@theme inline` block, and scans `packages/ui/src` with `@source`. Components in `packages/ui` are plain React with Tailwind classes; they take a `linkComponent` instead of importing Next. Pure helpers (`theme.ts`, `commands.ts`, `nav.ts`) sit outside `"use client"` modules so server code can import them. Versions were the latest on npm on 2026-11-22.
+
+**Why.** CLAUDE.md names Tailwind and a shared accessible design system. Keeping tokens in TypeScript lets a unit test check WCAG contrast for every text pair (4.5:1) and UI pair (3:1) in both themes (`packages/ui/test/contrast.test.ts`), so a colour change that breaks contrast fails CI.
+
+**Guardrails built in.** `Button` needs an `action` name and a behaviour (click handler, submit or link); a disabled button must carry a visible reason. `NotYetAvailable` renders no controls. Dark mode follows the system unless the person picks Light or Dark (stored in `localStorage` under `originos-theme`, applied before paint by a fixed inline script).
+
+## ADR-020 — Typography and icons (Phase 03)
+
+**Status.** Proposed 2026-11-22 (Phase 03).
+
+**Decision.** Fraunces (display), Inter (body) and JetBrains Mono (IDs, hashes, timestamps), self-hosted through `@fontsource-variable/*` 5.3.0; icons from `lucide-react` 1.77.0. Icons are decorative (`aria-hidden`) and always sit next to text.
+
+**Why.** Self-hosting avoids a runtime request to a font CDN (privacy, no third-party dependency, deterministic screenshots). All three fonts are under the SIL Open Font License; lucide is ISC.
+
+## ADR-021 — Browser tests: Playwright, axe and visual baselines in a pinned container (Phase 03)
+
+**Status.** Proposed 2026-11-22 (Phase 03).
+
+**Decision.** `apps/web/e2e` runs with `@playwright/test` 1.65.1 and `@axe-core/playwright` 4.14.0 against a production build (`next start` on port 3100, API pointed at a closed port so status must read "Unreachable"). Suites: every nav route resolves and shows its "not yet available" cards; every `<button>` has a `data-action` from an allowlist and every link resolves; axe (WCAG 2.0/2.1/2.2 A and AA plus best practice) on every route in light and dark; keyboard (skip link, focus outline, ⌘K/Ctrl+K command bar, theme radios, drawer, mobile nav); and visual screenshots at 390, 820 and 1440 px plus dark. Visual baselines are generated and checked in `mcr.microsoft.com/playwright:v1.65.1-noble` (`scripts/e2e-docker.sh`), and the CI job `web-e2e` runs in the same image, so font rendering matches.
+
+**Why.** Screenshots differ across operating systems and browser builds; one pinned image for both makes the baselines meaningful. Unit tests can't see layout, focus or computed contrast, so the acceptance checks need a real browser.
 
 ---
 

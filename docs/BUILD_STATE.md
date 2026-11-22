@@ -1,9 +1,9 @@
 # OriginOS build state
 
-**Current phase:** 02 — all acceptance checks passed (local and CI); PR #3 awaiting owner review
-**Last fully completed phase:** 01 (monorepo scaffold; PR #2 merged by owner 2026-11-22)
+**Current phase:** 03 — passed locally and in CI, in review (PR #4)
+**Last fully completed phase:** 02 (local development and CI; PR #3 merged by owner 2026-11-22)
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
-**Implementation status:** Monorepo scaffold, local dev tooling and CI. Health endpoints only: no product module, no database tables, no external integration exists.
+**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Health endpoints only on the backend: no product module, no database tables, no sign-in and no external integration exists.
 
 ## Phase progress
 
@@ -11,8 +11,8 @@
 |---|---|---|---|
 | 00 Product contract and architecture | COMPLETE (docs only) | ARCHITECTURE.md, DECISIONS.md (ADR-001–012, all Accepted), PRODUCT_MAP.md, ACCEPTANCE_MATRIX.md (Part A traceability), THREAT_MODEL.md baseline. Checks reviewed manually; see "Phase 00 check status" below. | — |
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
-| 02 Local development, CI and conventions | PASSED, IN REVIEW | All 4 checks passed 2026-11-22: locally and in GitHub Actions run 45063816462 (5/5 jobs green). See Phase 02 handoff. | Owner review of PR #3; ADR-017/018 acceptance |
-| 03 Distinctive UX system and app shell | NOT STARTED | — | — |
+| 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
+| 03 Distinctive UX system and app shell | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. | Becomes COMPLETE when PR #4 is merged |
 | 04 Authentication, teams and organizations | NOT STARTED | — | — |
 | 05 Authorization, policy baseline and consent | NOT STARTED | — | — |
 | 06 Core domain schema, ledger and outbox | NOT STARTED | — | — |
@@ -70,8 +70,28 @@
 ## Current blockers
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
-2. ADR-013 to ADR-018 are Proposed and need the owner's acceptance.
-3. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+2. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+
+## Phase 03 handoff (2026-11-22)
+
+- **Phase:** 03 Distinctive UX system and app shell. Procedure: origin-build, followed by hand.
+- **Files added/changed:**
+  - `packages/ui`: tokens (`src/tokens.ts`, built to `dist/tokens.css`), `Button`, `Badge`/`StatusBadge`/`EventBadge`, `Card`, `DataTable`, `Drawer`, form fields (`TextField`, `TextArea`, `SelectField`, `Checkbox`), `Timeline`, `PageHeader`, `EmptyState`/`LoadingState`/`ErrorState`/`NotYetAvailable`, `SkipLink`, `ThemeToggle`, `CommandBar`, `WorkspaceShell`, `PublicShell`; pure helpers `theme.ts`, `commands.ts`, `nav.ts`. Removed Phase 01 `AppShell`.
+  - `apps/web`: Tailwind 4 + fonts (`globals.css`, `postcss.config.mjs`, root layout with pre-paint theme script); route groups `(public)` at `/`, `(workspace)` with `/home`, `/agents`, `/research`, `/publish`, `/trust`, `/discover`, `/integrations`, `/settings`, `/developers` console, gated `/design-system` gallery, `not-found.tsx`; `src/lib/navigation.ts` (single nav config with the phase for each planned feature, following ARCHITECTURE §7); live `SystemStatus` card on Home and Settings; `ORIGINOS_ENABLE_GALLERY` env flag; Playwright config and `e2e/` suites with visual baselines.
+  - `scripts/e2e-docker.sh`, `scripts/smoke.sh` (checks `/home` now that `/` is the public page), `.github/workflows/ci.yml` (`web-e2e` job in the Playwright image), `turbo.json`, `.env.example`, `.gitignore`, DECISIONS (ADR-019–021, Proposed; ADR-013–018 Accepted).
+- **Migrations and APIs:** none.
+- **Commands executed and results (2026-11-22, Node 22.23.5, pnpm 10.28.0, Docker 29.10.0):**
+  - `scripts/check.sh` → "All checks passed" (format, lint, typecheck, unit tests, build; gitleaks skipped locally as before).
+  - `pnpm --filter @originos/ui test` → 73 passed (54 WCAG contrast checks across both themes, 19 component and helper tests).
+  - `pnpm --filter @originos/web test` → 15 passed (incl. gallery gating).
+  - `scripts/e2e-docker.sh` (mcr.microsoft.com/playwright:v1.65.1-noble) → 78 passed: 20 route and dead-control tests, 23 axe tests (10 nav routes and the gallery, each in light and dark, plus open dialogs) with zero violations, 9 keyboard tests, 22 visual screenshots, plus gallery behaviour, 404 and status tests. Visual suite re-run against fresh baselines: 22/22 stable.
+  - `docker compose up -d --wait && scripts/smoke.sh` → passed (Home shows the API as ready against the real database).
+- **CI:** GitHub Actions run 45069044008 on 543dff5: all 6 jobs green (gitleaks, lint/typecheck/test/build, Python, local stack + smoke, audit + SBOM, and the new `web-e2e` job in the Playwright image, so the visual baselines match CI).
+- **Acceptance checks:** responsive shell at 390/820/1440 px (visual baselines, no horizontal scroll test) ✓; all nav routes resolve and unbuilt features say "Not yet available · Phase NN" ✓; keyboard focus and contrast (axe in both themes, contrast unit tests, keyboard E2E) ✓; no dead buttons (allowlist test on every route, `Button` type requires behaviour) ✓.
+- **Security and privacy:** no new data, endpoints or secrets. The gallery is off in production unless `ORIGINOS_ENABLE_GALLERY=true`. The theme script is a fixed string with no user input. Fonts are self-hosted, so no third-party requests. Workspace pages are public until sign-in exists (Phase 04) and say so; they hold no data.
+- **External setup:** none.
+- **Known gaps:** the command bar only navigates (search is Phase 34); its shortcut hint shows ⌘K on all platforms (Ctrl+K also works); the mobile nav panel has no backdrop; workspace routes have no auth guard until Phase 04.
+- **Next phase:** 04 Authentication, teams and organizations.
 
 ## Phase 02 handoff (2026-11-22)
 
