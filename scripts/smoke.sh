@@ -51,8 +51,8 @@ check_ready() { # url
 check_ready http://127.0.0.1:4000/health/ready
 check_ready http://127.0.0.1:4050/health/ready
 
-info "Checking the web page reports the API as ready"
-page="$(curl -s http://127.0.0.1:3000/)"
+info "Checking the workspace home page reports the API as ready"
+page="$(curl -s http://127.0.0.1:3000/home)"
 [[ "$page" == *"answered its readiness check"* ]] || die "web page does not show the API as ready"
 
 info "Checking the correlation ID reached the API log"

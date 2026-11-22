@@ -59,6 +59,17 @@ CI (`.github/workflows/ci.yml`) runs on every push to `main` and every pull requ
 
 Migration checks start in Phase 06, when the first migration exists.
 
+## Browser tests (Phase 03)
+
+`apps/web/e2e` holds Playwright suites for routes and dead controls, axe accessibility (light and dark), keyboard use and visual regression. Run them after `pnpm build`:
+
+```bash
+scripts/e2e-docker.sh                       # everything, in the pinned Playwright image (needs Docker)
+scripts/e2e-docker.sh --update-snapshots    # regenerate visual baselines after an intended UI change
+```
+
+Always regenerate baselines with the script, not on your host: CI compares against the same image (`mcr.microsoft.com/playwright:v1.65.1-noble`), and host fonts render differently. The design system gallery is at `/design-system` in development (production needs `ORIGINOS_ENABLE_GALLERY=true`). Any new `<button>` needs a `data-action` listed in `apps/web/e2e/routes.ts`, or the suite fails.
+
 ## Readiness semantics
 
 Shared contract `HealthResponse` (`packages/contracts`):

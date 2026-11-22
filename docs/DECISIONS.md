@@ -214,6 +214,34 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ---
 
+## ADR-019 — Design system: Tailwind CSS 4 over TypeScript tokens (Phase 03)
+
+**Status.** Proposed 2026-11-22 (Phase 03).
+
+**Decision.** Design tokens live in `packages/ui/src/tokens.ts` (colours for light and dark, fonts, radii, motion). `packages/ui` builds them into `dist/tokens.css` as `--oo-*` custom properties (`:root`, `[data-theme="dark"]`, and `prefers-color-scheme: dark` unless `data-theme="light"`). The web app uses Tailwind CSS 4.3.5 via `@tailwindcss/postcss` 4.3.5, mapping the variables in an `@theme inline` block, and scans `packages/ui/src` with `@source`. Components in `packages/ui` are plain React with Tailwind classes; they take a `linkComponent` instead of importing Next. Pure helpers (`theme.ts`, `commands.ts`, `nav.ts`) sit outside `"use client"` modules so server code can import them. Versions were the latest on npm on 2026-11-22.
+
+**Why.** CLAUDE.md names Tailwind and a shared accessible design system. Keeping tokens in TypeScript lets a unit test check WCAG contrast for every text pair (4.5:1) and UI pair (3:1) in both themes (`packages/ui/test/contrast.test.ts`), so a colour change that breaks contrast fails CI.
+
+**Guardrails built in.** `Button` needs an `action` name and a behaviour (click handler, submit or link); a disabled button must carry a visible reason. `NotYetAvailable` renders no controls. Dark mode follows the system unless the person picks Light or Dark (stored in `localStorage` under `originos-theme`, applied before paint by a fixed inline script).
+
+## ADR-020 — Typography and icons (Phase 03)
+
+**Status.** Proposed 2026-11-22 (Phase 03).
+
+**Decision.** Fraunces (display), Inter (body) and JetBrains Mono (IDs, hashes, timestamps), self-hosted through `@fontsource-variable/*` 5.3.0; icons from `lucide-react` 1.77.0. Icons are decorative (`aria-hidden`) and always sit next to text.
+
+**Why.** Self-hosting avoids a runtime request to a font CDN (privacy, no third-party dependency, deterministic screenshots). All three fonts are under the SIL Open Font License; lucide is ISC.
+
+## ADR-021 — Browser tests: Playwright, axe and visual baselines in a pinned container (Phase 03)
+
+**Status.** Proposed 2026-11-22 (Phase 03).
+
+**Decision.** `apps/web/e2e` runs with `@playwright/test` 1.65.1 and `@axe-core/playwright` 4.14.0 against a production build (`next start` on port 3100, API pointed at a closed port so status must read "Unreachable"). Suites: every nav route resolves and shows its "not yet available" cards; every `<button>` has a `data-action` from an allowlist and every link resolves; axe (WCAG 2.0/2.1/2.2 A and AA plus best practice) on every route in light and dark; keyboard (skip link, focus outline, ⌘K/Ctrl+K command bar, theme radios, drawer, mobile nav); and visual screenshots at 390, 820 and 1440 px plus dark. Visual baselines are generated and checked in `mcr.microsoft.com/playwright:v1.65.1-noble` (`scripts/e2e-docker.sh`), and the CI job `web-e2e` runs in the same image, so font rendering matches.
+
+**Why.** Screenshots differ across operating systems and browser builds; one pinned image for both makes the baselines meaningful. Unit tests can't see layout, focus or computed contrast, so the acceptance checks need a real browser.
+
+---
+
 ## Official sources to verify when each ADR is settled
 
 Claude Code hooks/memory/skills (code.claude.com/docs), MCP spec and SDKs (modelcontextprotocol.io), CAI SDK (opensource.contentauthenticity.org/docs), Slack Bolt JS (docs.slack.dev/tools/bolt-js), GitHub Apps docs, OpenTelemetry spec, W3C VC Data Model and OID4VC, Stripe test mode, chosen queue library docs. Links are recorded with the date checked; none were checked in Phase 00.
