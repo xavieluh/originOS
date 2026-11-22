@@ -29,7 +29,7 @@
 | ADR-022 | Authentication: Better Auth 1.7.27 in the API (email+password, verification, reset, TOTP, passkeys) behind a same-origin proxy | Hosted IdP; Auth.js; hand-rolled | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05 and 42 |
 | ADR-023 | Tenancy: `core` schema, non-superuser app role, row-level security that requires membership | App-only checks; Better Auth organization plugin | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05, 06 and 42 |
 | ADR-024 | Authorization: one pure evaluator (`packages/authz`) for roles, resource-scoped grants and explicit deny; agents capped by their owner; consent records with history | Policy engine (OPA/Cedar/Casbin); permission checks per module; roles only | Accepted 2026-11-22 (Phase 05) | 05, revisit at 06, 16 and 42 |
-| ADR-025 | Canonical domain schema: opaque prefixed ids, one Postgres schema per context, object registry with typed relation whitelist, append-oriented writes, hash-chained audit log, transactional outbox with a separate worker role, down migrations | Graph DB; generic JSON objects; polymorphic edges without FKs; message broker | Proposed 2026-11-22 (Phase 06) | 06, revisit at 13, 20, 41 and 44 |
+| ADR-025 | Canonical domain schema: opaque prefixed ids, one Postgres schema per context, object registry with typed relation whitelist, append-oriented writes, hash-chained audit log, transactional outbox with a separate worker role, down migrations | Graph DB; generic JSON objects; polymorphic edges without FKs; message broker | Accepted 2026-11-22 (Phase 06) | 06, revisit at 13, 20, 41 and 44 |
 
 ---
 
@@ -310,7 +310,7 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-025 — Canonical domain schema, object registry, ledger and outbox (Phase 06)
 
-**Status.** Proposed 2026-11-22 (Phase 06). Implements ADR-002 and the outbox half of ADR-003 on top of ADR-023/024. No new dependencies: the worker adds `drizzle-orm` 0.45.4, the version already pinned in `packages/db`.
+**Status.** Accepted 2026-11-22 (proposed in Phase 06; accepted by the owner after merge). Implements ADR-002 and the outbox half of ADR-003 on top of ADR-023/024. No new dependencies: the worker adds `drizzle-orm` 0.45.4, the version already pinned in `packages/db`.
 
 **Decision.**
 - **Contracts first.** `packages/contracts/src/domain/` is the documented schema: id formats (`ids.ts`), closed vocabularies including the seven assurance labels and the relation whitelist (`vocabulary.ts`), one zod schema per entity (`entities.ts`) and the event envelope (`events.ts`). A unit test in `packages/db` fails if a table and its contract drift apart.
