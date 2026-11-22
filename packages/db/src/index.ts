@@ -5,7 +5,19 @@ export { MIGRATIONS_FOLDER, runMigrations } from "./migrate.js";
 export { setTenant, withScope } from "./scope.js";
 export type { Scope, Tx } from "./scope.js";
 export * as schema from "./schema.js";
-export { INVITABLE_ROLES, ROLES } from "./schema.js";
-export type { InvitableRole, Role } from "./schema.js";
+export {
+  AGENT_STATUSES,
+  CONSENT_PURPOSES,
+  GRANT_SUBJECT_TYPES,
+  INVITABLE_ROLES,
+  ROLES,
+} from "./schema.js";
+export type {
+  AgentStatus,
+  ConsentPurpose,
+  GrantSubjectType,
+  InvitableRole,
+  Role,
+} from "./schema.js";
 export { SAMPLE_DATA_LABEL, SeedRefusedError, assertSeedAllowed, seedSets } from "./seed.js";
 export type { SeedSet } from "./seed.js";

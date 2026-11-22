@@ -280,9 +280,9 @@ export const workspaceSections = [
     keywords: ["members", "roles", "consent", "retention", "billing", "usage", "status"],
     planned: [
       {
-        feature: "Consent and retention",
-        phase: 5,
-        description: "Authorization policy baseline and consent records.",
+        feature: "Data retention and deletion",
+        phase: 41,
+        description: "Retention schedules, deletion requests and privacy operations.",
       },
       { feature: "Billing and usage", phase: 39, description: "Metering and commercial accounts." },
     ],

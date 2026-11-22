@@ -45,6 +45,12 @@ export function describeAuditAction(action: string): string {
       "member.removed": "Removed a member",
       "member.left": "Left the organization",
       "ownership.transferred": "Transferred ownership",
+      "agent.created": "Registered an agent",
+      "agent.disabled": "Disabled an agent",
+      "grant.created": "Changed permissions (added a grant or deny)",
+      "grant.revoked": "Changed permissions (revoked a grant or deny)",
+      "consent.granted": "Gave consent",
+      "consent.revoked": "Revoked consent",
     }[action] ?? action
   );
 }

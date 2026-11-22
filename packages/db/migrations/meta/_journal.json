@@ -15,6 +15,20 @@
       "when": 1795382735711,
       "tag": "0001_core_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795385486470,
+      "tag": "0002_core_authz_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795385511965,
+      "tag": "0003_core_authz_rls",
+      "breakpoints": true
     }
   ]
 }

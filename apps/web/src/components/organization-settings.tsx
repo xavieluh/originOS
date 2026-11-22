@@ -3,7 +3,7 @@
 import { Badge, Button, Card, DataTable, EmptyState, SelectField, TextField } from "@originos/ui";
 import { ClientForm } from "./client-form";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { type FormEvent } from "react";
 import {
   changeRoleAction,
   inviteMemberAction,
@@ -11,89 +11,21 @@ import {
   renameOrganizationAction,
   revokeInvitationAction,
   transferOwnershipAction,
-  type ActionResult,
 } from "../app/actions/tenancy";
+import { ConfirmButton, useAction } from "./action-helpers";
+import { FormMessage } from "./auth/auth-panel";
 import {
   describeAuditAction,
   type AuditEventRow,
   type InvitationRow,
   type OrganizationDetail,
 } from "../lib/organization-types";
-import { FormMessage } from "./auth/auth-panel";
+import { can, type PermissionMatrix } from "../lib/access-types";
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-
-/** Runs a server action, shows its error, and refreshes server data on success. */
-function useAction() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const run = async (fn: () => Promise<ActionResult<unknown>>, success?: string) => {
-    setBusy(true);
-    setError(null);
-    setNotice(null);
-    const result = await fn();
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return false;
-    }
-    if (success) setNotice(success);
-    router.refresh();
-    return true;
-  };
-  const messages: ReactNode = (
-    <>
-      {error ? <FormMessage tone="error">{error}</FormMessage> : null}
-      {notice ? <FormMessage tone="info">{notice}</FormMessage> : null}
-    </>
-  );
-  return { run, busy, messages };
-}
-
-/** Two-step confirmation for consequential actions; no browser dialogs. */
-function ConfirmButton({
-  action,
-  label,
-  confirmLabel,
-  onConfirm,
-}: {
-  readonly action: string;
-  readonly label: string;
-  readonly confirmLabel: string;
-  readonly onConfirm: () => void;
-}) {
-  const [armed, setArmed] = useState(false);
-  if (!armed) {
-    return (
-      <Button action={action} size="sm" variant="ghost" onClick={() => setArmed(true)}>
-        {label}
-      </Button>
-    );
-  }
-  return (
-    <span className="inline-flex gap-2">
-      <Button
-        action={`${action}.confirm`}
-        size="sm"
-        variant="danger"
-        onClick={() => {
-          setArmed(false);
-          onConfirm();
-        }}
-      >
-        {confirmLabel}
-      </Button>
-      <Button action={`${action}.cancel`} size="sm" variant="ghost" onClick={() => setArmed(false)}>
-        Cancel
-      </Button>
-    </span>
-  );
-}
 
 export function OrganizationSettings({
   detail,
@@ -101,22 +33,33 @@ export function OrganizationSettings({
   invitations,
   auditEvents,
   emailConfigured,
+  permissions,
 }: {
   readonly detail: OrganizationDetail;
   readonly myUserId: string;
   readonly invitations: readonly InvitationRow[] | null;
   readonly auditEvents: readonly AuditEventRow[] | null;
   readonly emailConfigured: boolean;
+  /** From GET /v1/me/permissions. Controls follow it; the API enforces it regardless. */
+  readonly permissions: PermissionMatrix | null;
 }) {
-  const manage = detail.myRole === "owner" || detail.myRole === "admin";
   return (
     <div className="flex flex-col gap-6">
-      <OrganizationProfile detail={detail} canEdit={manage} />
-      <Members detail={detail} myUserId={myUserId} />
-      {manage && invitations ? (
-        <Invitations rows={invitations} emailConfigured={emailConfigured} />
+      <OrganizationProfile detail={detail} canEdit={can(permissions, "write", "organization")} />
+      <Members
+        detail={detail}
+        myUserId={myUserId}
+        canManage={can(permissions, "admin", "members")}
+        canTransfer={can(permissions, "admin", "organization")}
+      />
+      {invitations ? (
+        <Invitations
+          rows={invitations}
+          emailConfigured={emailConfigured}
+          canInvite={can(permissions, "write", "invitations")}
+        />
       ) : null}
-      {manage && auditEvents ? <AuditLog rows={auditEvents} /> : null}
+      {auditEvents ? <AuditLog rows={auditEvents} /> : null}
     </div>
   );
 }
@@ -167,14 +110,16 @@ function OrganizationProfile({
 function Members({
   detail,
   myUserId,
+  canManage: manage,
+  canTransfer: isOwner,
 }: {
   readonly detail: OrganizationDetail;
   readonly myUserId: string;
+  readonly canManage: boolean;
+  readonly canTransfer: boolean;
 }) {
   const { run, messages } = useAction();
   const router = useRouter();
-  const isOwner = detail.myRole === "owner";
-  const manage = isOwner || detail.myRole === "admin";
   const leave = async () => {
     if (await run(() => removeMemberAction(myUserId))) router.push("/onboarding");
   };
@@ -290,9 +235,11 @@ const statusTone = {
 function Invitations({
   rows,
   emailConfigured,
+  canInvite,
 }: {
   readonly rows: readonly InvitationRow[];
   readonly emailConfigured: boolean;
+  readonly canInvite: boolean;
 }) {
   const { run, messages } = useAction();
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -314,7 +261,7 @@ function Invitations({
       title="Invitations"
       description="Invitations are single-use, expire after 7 days, and only work for the invited email address once verified."
     >
-      {emailConfigured ? (
+      {!canInvite ? null : emailConfigured ? (
         <ClientForm
           className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end"
           onSubmit={(e) => void onSubmit(e)}
@@ -371,7 +318,7 @@ function Invitations({
             header: "Actions",
             align: "end",
             cell: (i) =>
-              i.status === "pending" ? (
+              canInvite && i.status === "pending" ? (
                 <ConfirmButton
                   action="invitation.revoke"
                   label="Revoke"
@@ -395,7 +342,7 @@ function AuditLog({ rows }: { readonly rows: readonly AuditEventRow[] }) {
   return (
     <Card
       title="Activity"
-      description="The 50 most recent account and membership events. This log is append-only."
+      description="The 50 most recent account, membership, permission and consent events. This log is append-only."
     >
       <DataTable
         caption="Organization activity"

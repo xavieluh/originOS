@@ -56,6 +56,10 @@ code="$(curl -s -o /dev/null -w '%{http_code}' -H 'x-correlation-id: smoke-test-
 [[ "$code" == "401" ]] || die "GET /v1/me without a session returned $code, expected 401"
 location="$(curl -s -o /dev/null -w '%{redirect_url}' http://127.0.0.1:3000/home)"
 [[ "$location" == *"/sign-in?next=%2Fhome" ]] || die "signed-out /home did not redirect to sign-in ($location)"
+for path in /v1/me/permissions /v1/me/consents /v1/organization/grants /v1/organization/agents; do
+  code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:4000$path")"
+  [[ "$code" == "401" ]] || die "GET $path without a session returned $code, expected 401 (Phase 05)"
+done
 
 info "Checking the sign-in page sees a working account service"
 config="$(curl -s http://127.0.0.1:4000/v1/auth-config)"
