@@ -1,7 +1,7 @@
 # OriginOS build state
 
-**Current phase:** 05 — acceptance checks pass locally; built on top of the unmerged Phase 04 branch
-**Last fully completed phase:** 03 (design system and app shell; PR #4 merged by owner 2026-11-22). Phase 04 acceptance checks pass locally; its PR (#5) is in review. Phase 05 is committed on top of it and gets its own PR once #5 merges.
+**Current phase:** 05 — acceptance checks pass locally; PR in review
+**Last fully completed phase:** 04 (authentication, teams and organizations; PR #5 merged by owner 2026-11-22).
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
 **Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. Phase 05 adds the single permission evaluator (`packages/authz`: roles, resource-scoped grants, explicit deny, agent and service actors), agents capped by their owner, and consent records with history, with API guards, settings pages and audit events. No product module and no external integration exists yet; production email delivery is not configured.
 
@@ -13,8 +13,8 @@
 | 01 Production-shaped monorepo | COMPLETE | All 4 checks passed locally 2026-11-22 (see Phase 01 handoff and ACCEPTANCE_MATRIX row 01). PR #2 merged 2026-11-22. | — |
 | 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
 | 03 Distinctive UX system and app shell | COMPLETE | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. PR #4 merged 2026-11-22. | — |
-| 04 Authentication, teams and organizations | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: DB RLS integration 15/15, API integration 16/16, Playwright 119/119 in the pinned container against the real API, Postgres and Mailpit (auth journeys, routes, axe, keyboard, 24 visual baselines), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 04 handoff. | Production SMTP provider not chosen (BLOCKED, see handoff); CI result pending on the PR |
-| 05 Authorization, policy baseline and consent | PASSED, NOT YET IN A PR | All 4 checks passed locally 2026-11-22: authz unit 16/16, DB RLS integration 23/23, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 05 handoff. | Waits for PR #5 (Phase 04) to merge; then opened as its own PR. ADR-024 Proposed |
+| 04 Authentication, teams and organizations | COMPLETE | All 4 checks passed locally 2026-11-22: DB RLS integration 15/15, API integration 16/16, Playwright 119/119 in the pinned container against the real API, Postgres and Mailpit (auth journeys, routes, axe, keyboard, 24 visual baselines), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 04 handoff. PR #5 merged 2026-11-22. | Production SMTP provider not chosen (BLOCKED, see handoff) |
+| 05 Authorization, policy baseline and consent | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: authz unit 16/16, DB RLS integration 23/23, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 05 handoff. | ADR-024 Proposed; CI result pending on the PR |
 | 06 Core domain schema, ledger and outbox | NOT STARTED | — | — |
 | 07 Object storage, ingestion queues and workflow core | NOT STARTED | — | — |
 | 08 Origin Connect OAuth and integration broker | NOT STARTED | — | — |
@@ -74,7 +74,7 @@
 
 ## Phase 05 handoff (2026-11-22)
 
-- **Phase:** 05 Authorization, policy baseline and consent. Procedure: origin-build, followed by hand. Built on the Phase 04 branch, because PR #5 is not merged yet.
+- **Phase:** 05 Authorization, policy baseline and consent. Procedure: origin-build, followed by hand. Started on the Phase 04 branch while PR #5 was open; moved onto main after it merged.
 - **Files added/changed:**
   - `packages/authz` (new): `src/model.ts` (actor types, actions, roles, resource types, grant and decision types), `src/evaluate.ts` (`evaluate`, `effectivePermissions`, `rolePermits`), `src/grants.ts` (`checkGrant`), `test/evaluate.test.ts`. Added to the import boundary table as a leaf package.
   - `packages/db`: `src/schema.ts` (`agents`, `permission_grants`, `consents`), `migrations/0002_core_authz_consent.sql` (generated), `0003_core_authz_rls.sql` (grants, column-level UPDATE for revocation only, `core.grant_subject_in_tenant`, `core.owns_agent`, policies), `test/integration/rls-authz.test.ts`.
@@ -97,7 +97,7 @@
   - Consent records are not yet checked by any feature, because the directory, telemetry and connectors don't exist yet; each of those phases must check for an active record.
   - Service actors exist in the evaluator only (API credentials are a later phase).
   - Retention and account deletion are Phase 41.
-- **Next phase:** 06 Core domain schema, ledger and outbox, after PR #5 merges and the Phase 05 PR is reviewed.
+- **Next phase:** 06 Core domain schema, ledger and outbox, after the Phase 05 PR is reviewed.
 
 ## Phase 04 handoff (2026-11-22)
 
