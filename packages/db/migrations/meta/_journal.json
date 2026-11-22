@@ -43,6 +43,20 @@
       "when": 1795387523143,
       "tag": "0005_domain_rls_outbox_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795389164521,
+      "tag": "0006_ingest_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795389219561,
+      "tag": "0007_ingest_jobs_rls",
+      "breakpoints": true
     }
   ]
 }

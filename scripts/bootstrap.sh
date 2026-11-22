@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 # One-time setup of a fresh checkout. Safe to re-run.
-#   scripts/bootstrap.sh            install deps, create .env, start Postgres + object storage
+#   scripts/bootstrap.sh            install deps, create .env, start Postgres + object storage, migrate
 #   scripts/bootstrap.sh --no-docker   skip containers (readiness then reports the DB as not configured)
+#   scripts/bootstrap.sh --no-scanner  start the containers without the malware scanner (saves ~1.5 GB of memory)
 source "$(dirname "$0")/lib.sh"
 
 with_docker=1
-[[ "${1:-}" == "--no-docker" ]] && with_docker=0
+with_scanner=1
+for arg in "$@"; do
+  case "$arg" in
+    --no-docker) with_docker=0 ;;
+    --no-scanner) with_scanner=0 ;;
+    *) die "Unknown option: $arg" ;;
+  esac
+done
 
 info "Checking prerequisites"
 have node || die "Node.js 22.13+ is required (see .nvmrc)."
@@ -40,8 +48,13 @@ info "Building workspace packages"
 pnpm build
 
 if [[ $with_docker == 1 ]]; then
-  info "Starting Postgres (pgvector) and object storage"
-  compose up -d --wait
+  start_containers "$with_scanner"
+  load_env
+  check_db_port
+  info "Applying database migrations (creates the service roles and tables)"
+  pnpm --silent db:migrate || die "Migrations failed (see above). Fix it, then run: pnpm db:migrate"
+  info "Creating the local storage buckets"
+  ensure_buckets
 fi
 
 info "Done. Start everything with: scripts/dev.sh"

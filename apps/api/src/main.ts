@@ -1,4 +1,5 @@
 import { APPLICATION_ROLE, createDatabase } from "@originos/db";
+import { storageFromEnv } from "@originos/storage";
 import { createApi } from "./app.js";
 import { loadApiEnv } from "./config/env.js";
 import { createMailer } from "./modules/core/index.js";
@@ -16,6 +17,7 @@ async function main(): Promise<void> {
     mailer: createMailer(env),
     publicUrl: env.ORIGINOS_PUBLIC_URL,
     authRateLimit: env.AUTH_RATE_LIMIT === "on",
+    storage: storageFromEnv(),
     ...(env.BETTER_AUTH_SECRET ? { authSecret: env.BETTER_AUTH_SECRET } : {}),
   });
   if (database) {

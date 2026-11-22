@@ -58,6 +58,23 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+  # Malware scanner (Phase 07): ClamAV's clamd. The image ships signature
+  # databases; freshclam inside the container updates them when it has network
+  # access. Takes about a minute and ~1.5 GB of memory to load, so it has its
+  # own profile: scripts/bootstrap.sh and scripts/dev.sh start it unless
+  # --no-scanner is passed. Without it, uploads stay in quarantine.
+  scanner:
+    image: clamav/clamav:1.4
+    profiles: ["scanner"]
+    ports:
+      - "127.0.0.1:${CLAMAV_HOST_PORT:-3310}:3310"
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      start_period: 180s
+      retries: 30
+
 volumes:
   postgres-data:
   object-storage-data:

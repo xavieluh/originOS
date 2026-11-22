@@ -7,11 +7,19 @@ import type { Principal, TenantContext } from "./principal.js";
 export const PUBLIC_KEY = "originos:public";
 export const TENANT_ROLES_KEY = "originos:tenant-roles";
 export const PERMISSION_KEY = "originos:permission";
+export const BINARY_BODY_KEY = "originos:binary-body";
 
 export interface RequiredPermission {
   readonly action: Action;
   readonly resourceType: ResourceType;
 }
+
+/**
+ * Let a state-changing route take an `application/octet-stream` body (file
+ * uploads) instead of JSON. The origin check still applies; browsers cannot
+ * send that type cross-site without a CORS preflight, which the API never grants.
+ */
+export const AcceptsBinaryBody = () => SetMetadata(BINARY_BODY_KEY, true);
 
 /** Opt a route out of authentication. Everything else requires a session (deny by default). */
 export const Public = () => SetMetadata(PUBLIC_KEY, true);

@@ -18,6 +18,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "seed": "node dist/seed-cli.js",
     "migrate": "node dist/migrate-cli.js",
+    "status": "node dist/status-cli.js",
     "db:generate": "drizzle-kit generate",
     "rollback": "node dist/rollback-cli.js"
   },

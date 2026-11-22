@@ -2,15 +2,27 @@ import { HealthResponse } from "@originos/contracts";
 import type { Database } from "@originos/db";
 import { describe, expect, it } from "vitest";
 import { loadWorkerEnv } from "../src/env.js";
+import { jobHandlers } from "../src/handlers.js";
+import { createJobRunner } from "../src/job-runner.js";
 import { createOutboxDispatcher } from "../src/outbox-dispatcher.js";
 import { createWorker } from "../src/worker.js";
 
 describe("worker", () => {
-  it("registers no job handlers or outbox consumers yet, and has no dispatcher without a database", () => {
+  it("registers the upload scan job, no outbox consumers yet, and has no runners without a database", () => {
+    expect(
+      jobHandlers({ store: null, scanner: null, maxUploadBytes: 1 }).map((h) => h.type),
+    ).toEqual(["ingest.scan_upload"]);
     const worker = createWorker({ LOG_LEVEL: "silent" }, null);
-    expect(worker.handlers).toHaveLength(0);
+    expect(worker.jobs).toBeNull();
     expect(worker.outbox).toBeNull();
     return worker.stop();
+  });
+
+  it("refuses two handlers for the same job type", () => {
+    const h = { type: "test.job", run: async () => undefined };
+    expect(() => createJobRunner({ db: {} as never, workerId: "w", handlers: [h, h] })).toThrow(
+      /Duplicate/,
+    );
   });
 
   it("refuses two outbox consumers with the same name (the name is the idempotency key)", () => {
@@ -38,7 +50,10 @@ describe("worker", () => {
     const worker = createWorker({ LOG_LEVEL: "silent" }, null);
     const res = await worker.health.inject({ method: "GET", url: "/health/ready" });
     expect(res.statusCode).toBe(200);
-    expect(HealthResponse.parse(res.json()).checks.database?.status).toBe("not_configured");
+    const checks = HealthResponse.parse(res.json()).checks;
+    expect(checks.database?.status).toBe("not_configured");
+    expect(checks.objectStorage?.status).toBe("not_configured");
+    expect(checks.malwareScanner?.status).toBe("not_configured");
     await worker.stop();
   });
 

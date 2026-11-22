@@ -25,7 +25,7 @@ Agent histories and traces; unpublished manuscripts; creator personal informatio
 |---|---|---|---|---|
 | Cross-tenant read/write | B1, B2, B8 | I, E | `tenant_id` + TenantContext, single authz evaluator, RLS defense in depth, tenant-prefixed S3 keys with signed URLs | 04–07, 42 |
 | Privilege escalation via UI bypass or API key | B1 | E | Backend-only checks; scoped keys; agent principals ⊂ user | 05, 38 |
-| Malicious upload (malware, zip bomb, parser exploit) | B5 | T, D, E | Quarantine bucket, scan, MIME sniff, size/time limits, sandboxed validator with no egress | 07, 12 |
+| Malicious upload (malware, zip bomb, parser exploit) | B5 | T, D, E | Quarantine bucket, scan, MIME sniff, size/time limits, sandboxed validator with no egress. **Built in 07 (ADR-026):** closed type list without SVG/HTML/archives/office files, magic-byte sniffing in the API and again in the worker, 25 MB limit checked before and while reading, quarantine bucket, ClamAV in the worker, downloads only after a clean scan as `attachment`, text previews rendered as text, no PDF rendering. Not yet: sandboxed parsers and validators with no egress (12), re-scanning with newer signatures | 07, 12 |
 | Prompt injection from retrieved sources | B6 | T, E | AI has no write tools by default; consequential actions need policy + human approval; injection fixtures in evals | 15, 34, 42 |
 | Model tool overreach | B2, B6 | E | Least-privilege tool scopes; approvals requestable but not grantable via MCP | 20, 23 |
 | OAuth confused deputy / token theft | B2, B7 | S, I | PKCE + state, audience-bound tokens, encrypted token vault, tokens never sent to client | 08, 23 |

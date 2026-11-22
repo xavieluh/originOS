@@ -45,6 +45,7 @@ So the rule is:
 
 - No export or erasure request flow, retention schedule, purge job or legal hold exists yet.
 - Deleting a user today sets `actor_user_id` to null and `subjects.user_id` to null, but does not yet replace the subject's display name; that pseudonymization step belongs to the erasure flow.
-- Object storage (Phase 07) needs its own purge and verification.
+- Object storage (Phase 07) needs its own purge and verification. Today: rejected files stay in the quarantine bucket indefinitely (kept so an admin can review them; nobody can download them), clean files have a copy in both buckets, and an object whose database row failed to commit is orphaned in quarantine. Deleting an organization cascades its upload rows but not its objects. Phase 41 adds a purge job keyed on the `tenants/<tenant>/` prefix; Phase 44 adds bucket lifecycle rules (for example, expire quarantine copies after the scan).
+- Upload rows keep the file name, size, SHA-256, uploader and scan result; the bytes are never written to logs, job payloads or events (those carry ids only).
 - Backups keep deleted data until they expire; the backup retention period is set in Phase 44 and must be stated to customers.
 - The audit chain is verified on demand only; scheduled verification and alerting arrive with operations (Phase 37/43).

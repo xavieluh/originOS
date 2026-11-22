@@ -31,3 +31,20 @@ export {
   markFailed,
 } from "./outbox.js";
 export type { ClaimOptions, NewEvent, OutboxEvent } from "./outbox.js";
+export {
+  cancelRunningJob,
+  claimJobs,
+  completedSteps,
+  enqueueJob,
+  failJob,
+  heartbeat,
+  requestCancel,
+  resumeWaitingJob,
+  retryDeadJob,
+  runStep,
+  succeedJob,
+  waitJob,
+} from "./jobs.js";
+export type { ClaimJobOptions, Job, JobTransitionError, NewJob } from "./jobs.js";
+export { databaseStatus, isReady } from "./status.js";
+export type { DatabaseStatus } from "./status.js";

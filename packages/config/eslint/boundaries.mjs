@@ -21,6 +21,7 @@ export const WORKSPACE_PACKAGES = {
   "packages/db": "@originos/db",
   "packages/config": "@originos/config",
   "packages/service-kit": "@originos/service-kit",
+  "packages/storage": "@originos/storage",
   "services/telemetry": "@originos/telemetry",
   "services/media-validator": "@originos/media-validator",
   "services/ai-worker": "@originos/ai-worker",

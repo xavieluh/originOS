@@ -1,6 +1,6 @@
 # Architecture decision log
 
-**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. ADR-024 (Phase 05) was accepted by the owner on 2026-11-22, before merge. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) and ADR-022 to ADR-023 (Phase 04) were accepted by the owner on 2026-11-22, during Phase 04. ADR-024 (Phase 05) was accepted by the owner on 2026-11-22, before merge. ADR-025 (Phase 06) and ADR-026 (Phase 07) were accepted by the owner on 2026-11-22. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
@@ -29,7 +29,8 @@
 | ADR-022 | Authentication: Better Auth 1.7.27 in the API (email+password, verification, reset, TOTP, passkeys) behind a same-origin proxy | Hosted IdP; Auth.js; hand-rolled | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05 and 42 |
 | ADR-023 | Tenancy: `core` schema, non-superuser app role, row-level security that requires membership | App-only checks; Better Auth organization plugin | Accepted 2026-11-22 (Phase 04) | 04, revisit at 05, 06 and 42 |
 | ADR-024 | Authorization: one pure evaluator (`packages/authz`) for roles, resource-scoped grants and explicit deny; agents capped by their owner; consent records with history | Policy engine (OPA/Cedar/Casbin); permission checks per module; roles only | Accepted 2026-11-22 (Phase 05) | 05, revisit at 06, 16 and 42 |
-| ADR-025 | Canonical domain schema: opaque prefixed ids, one Postgres schema per context, object registry with typed relation whitelist, append-oriented writes, hash-chained audit log, transactional outbox with a separate worker role, down migrations | Graph DB; generic JSON objects; polymorphic edges without FKs; message broker | Proposed 2026-11-22 (Phase 06) | 06, revisit at 13, 20, 41 and 44 |
+| ADR-025 | Canonical domain schema: opaque prefixed ids, one Postgres schema per context, object registry with typed relation whitelist, append-oriented writes, hash-chained audit log, transactional outbox with a separate worker role, down migrations | Graph DB; generic JSON objects; polymorphic edges without FKs; message broker | Accepted 2026-11-22 (Phase 06) | 06, revisit at 13, 20, 41 and 44 |
+| ADR-026 | Ingestion and jobs: S3-compatible storage with quarantine and files buckets, content sniffing, ClamAV scanning in the worker, one-minute signed URLs; a Postgres job runner under row-level security with steps, retries, dead-letter, cancel and human waits, mapped onto Temporal | pg-boss; graphile-worker; Temporal now; scanning in the API; serving files through the API | Accepted 2026-11-22 (Phase 07) | 07, revisit at 08, 21 and 44 |
 
 ---
 
@@ -310,7 +311,7 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-025 — Canonical domain schema, object registry, ledger and outbox (Phase 06)
 
-**Status.** Proposed 2026-11-22 (Phase 06). Implements ADR-002 and the outbox half of ADR-003 on top of ADR-023/024. No new dependencies: the worker adds `drizzle-orm` 0.45.4, the version already pinned in `packages/db`.
+**Status.** Accepted 2026-11-22 (proposed in Phase 06; accepted by the owner after merge). Implements ADR-002 and the outbox half of ADR-003 on top of ADR-023/024. No new dependencies: the worker adds `drizzle-orm` 0.45.4, the version already pinned in `packages/db`.
 
 **Decision.**
 - **Contracts first.** `packages/contracts/src/domain/` is the documented schema: id formats (`ids.ts`), closed vocabularies including the seven assurance labels and the relation whitelist (`vocabulary.ts`), one zod schema per entity (`entities.ts`) and the event envelope (`events.ts`). A unit test in `packages/db` fails if a table and its contract drift apart.
@@ -334,6 +335,36 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 - `packages/contracts` unit tests: 14/14; `packages/db` unit tests 21/21, including the contracts ↔ tables drift test.
 - `packages/db` integration: 39/39, including `domain.test.ts` (15: ids and registry, version and idempotency uniqueness, cross-tenant references refused even for the owner, agent runs need an agent subject, inferred rows unlabeled, relation whitelist equal to contracts, forbidden/wrong-kind/missing/self/duplicate edges refused, no orphan deletes, RLS for outsiders, attribution, private rows, immutability and no DELETE, audit chain tampering and erasure) and `rollback.test.ts` (every migration down and up, identical schema).
 - `apps/worker` integration: 8/8 (`outbox.test.ts`: delivery once per consumer, worker outage with lease expiry, crash after a consumer committed, retry with backoff and no partial effects, dead-letter, three concurrent workers never double-claim, worker role sees no tenant data, application role appends only for its own tenant).
+
+## ADR-026 — Object storage, upload ingestion and the durable job runner (Phase 07)
+
+**Status.** Accepted 2026-11-22 (proposed in Phase 07; accepted by the owner before merge). Implements the storage half of ARCHITECTURE §4 and ADR-003's "start pragmatically" workflow engine.
+
+**Versions (checked 2026-11-22 against npm and Docker Hub).** `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` 3.1164.0 (latest; path-style addressing, checksums only when required, so SeaweedFS and other S3-compatible stores work). `clamav/clamav:1.4` (the official image; the non-`_base` tags ship signature databases, and freshclam updates them on start). SeaweedFS stays at `chrislusf/seaweedfs:4.54` (Phase 01); in CI it takes local-only credentials from `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` because services cannot mount the repository. No queue library was added.
+
+**Decision: storage and uploads.**
+- `packages/storage` wraps one S3-compatible store with two buckets: **quarantine** (every upload lands here) and **files** (only scanned, type-confirmed copies). Keys are `tenants/<tenant>/uploads/<upload id>`, never derived from the file name.
+- **Accepted types** are a closed list in `packages/contracts/src/ingest.ts`: PDF, PNG, JPEG, GIF, WebP, plain text and Markdown, up to 25 MB (`UPLOAD_MAX_BYTES` may lower it). SVG, HTML, archives and office documents are refused: they execute or hide content in browsers and parsers.
+- **The API refuses before storing:** declared type and extension must agree, the size is checked from `Content-Length` and again while reading, the type is sniffed from magic bytes (text must be valid UTF-8 without control characters and must not start like HTML/SVG/XML), and names lose path segments, control and bidi-override characters. Each refusal has a stable code (`too_large` 413, `type_not_accepted`/`type_mismatch` 415, `empty`, `invalid_filename`) and a sentence the web app shows.
+- **One transaction** records the upload (status `quarantined`, SHA-256), enqueues `ingest.scan_upload` (idempotency key = upload id) and writes the `file.uploaded` audit event. The only route that accepts a non-JSON body is `POST /v1/files` (`@AcceptsBinaryBody`), and the origin check still applies.
+- **The worker scans:** it re-reads the quarantined bytes, re-checks the hash and the type, and streams them to clamd (`INSTREAM`). Clean → copy to the files bucket, then a `release` step sets `clean` and emits `upload.cleaned` on the outbox. Infected or mismatched → a `reject` step sets `rejected` with the signature and emits `upload.rejected`; the bytes stay in quarantine. No scanner configured → `scan_unavailable` and the job is dead-lettered (an admin retries once a scanner exists). Scanner or storage outage → retry with backoff.
+- **Downloads and previews** exist only for clean files: a signed URL valid for 60 s (`Content-Disposition: attachment`, the sniffed type), audited as `file.download_link_issued`. Previews return text as text (rendered escaped) and images as a 60 s inline URL; PDFs get no preview, because rendering untrusted PDFs needs a sandboxed renderer (revisit in Phase 21).
+- **Tenant isolation** is enforced three ways: row-level security on `core.uploads` (members of the tenant only), keys under the tenant prefix, and URLs signed per object. Another organization gets 404, and a signed URL cannot be altered to reach another key.
+
+**Decision: jobs.**
+- Our own runner on Postgres (`packages/db/src/jobs.ts`, `apps/worker/src/job-runner.ts`) instead of a queue library, so jobs are ordinary tenant rows under row-level security (members see the jobs they started; owners and admins see all and act on them; the worker role sees jobs and uploads only) and can carry progress, human waits and cancellation without a second store.
+- **Claiming:** `FOR UPDATE SKIP LOCKED` under a lease (`locked_until`), with a heartbeat while the handler runs; a crashed worker's job is reclaimed when its lease expires. Each claim counts an attempt.
+- **Steps:** `ctx.step(name, fn)` commits the step's database writes together with a `core.job_steps` row, so a retried job never repeats a finished step (this is how "retries without duplicate publishing" holds: outbox events are written inside steps). External side effects inside a step use `<job id>:<step>` as their idempotency key.
+- **Failure:** retry with capped exponential backoff; `PermanentJobError` or the last attempt dead-letters the job (`dead`) for review; owners and admins retry it with a fresh set of attempts.
+- **Cancel:** a pending or waiting job is cancelled at once; a running job is flagged and stops at its next progress report.
+- **Human waits:** `ctx.waitForPerson(reason)` parks the job as `waiting` (the attempt is not counted); an owner or admin approves or rejects it on the jobs page, and the job resumes with that decision in `ctx.resumeInput`.
+- **Temporal migration contract.** Handlers are sequences of named, idempotent steps with deterministic code between them, plus waits for people. Those map one to one onto Temporal activities and signals; nothing outside `jobs.ts` and `job-runner.ts` knows how jobs are stored. Move when a workflow needs timers longer than days, fan-out of hundreds of children, or cross-service sagas.
+
+**Why not the alternatives.** pg-boss (12.39.0) and graphile-worker (0.18.0) are good Postgres queues, but both keep jobs in their own schema, outside our row-level security, so tenant visibility, progress, human waits and dead-letter review would need a parallel table anyway. Temporal now would add a cluster before any workflow needs it (ADR-003). Scanning inside the API would hold requests for seconds and put clamd's attack surface in the request path. Serving files through the API would load it with large bodies; short-lived signed URLs keep the bytes on the store.
+
+**Known limits.** If the database insert fails after the object was stored, the quarantined object is orphaned (it is never served; a cleanup job is Phase 44's lifecycle rules). API readiness does not include storage (an outage makes uploads answer 503 `storage_unavailable`, not the whole API unready); the worker's readiness does include storage and the scanner. Scanning happens once, at upload: re-scanning with newer signatures is not implemented. Production buckets, lifecycle rules, encryption and access policies are infrastructure (Phase 44); `pnpm storage:setup` refuses `NODE_ENV=production`.
+
+**Verification (2026-11-22).** See BUILD_STATE "Phase 07 handoff" for the commands: storage unit 11/11 and integration 4/4 (real SeaweedFS and ClamAV: EICAR detected, signed URL bound to its key and expiring), worker integration 21/21 (jobs and scans), API integration 38/38 (files and jobs), Playwright 137/137 including `files.spec.ts` against the real API, worker, store and scanner.
 
 ---
 

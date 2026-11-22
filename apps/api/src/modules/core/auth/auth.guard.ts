@@ -13,6 +13,7 @@ import { AuthzService } from "../authz/authz.service.js";
 import { TenancyService } from "../tenancy/tenancy.service.js";
 import type { Auth } from "./auth.js";
 import {
+  BINARY_BODY_KEY,
   PERMISSION_KEY,
   PUBLIC_KEY,
   type RequiredPermission,
@@ -46,7 +47,12 @@ export class AuthGuard implements CanActivate {
     if (this.reflector.getAllAndOverride<boolean>(PUBLIC_KEY, targets)) return true;
 
     const request = context.switchToHttp().getRequest<FastifyRequest>();
-    if (!SAFE_METHODS.has(request.method)) this.checkCsrf(request);
+    if (!SAFE_METHODS.has(request.method)) {
+      this.checkCsrf(
+        request,
+        this.reflector.getAllAndOverride<boolean>(BINARY_BODY_KEY, targets) === true,
+      );
+    }
     if (!this.auth) throw authNotConfigured();
 
     const result = await this.auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
@@ -87,7 +93,7 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private checkCsrf(request: FastifyRequest): void {
+  private checkCsrf(request: FastifyRequest, binaryAllowed: boolean): void {
     if (request.headers.origin !== this.publicOrigin) {
       throw new ApiError(
         HttpStatus.FORBIDDEN,
@@ -95,8 +101,9 @@ export class AuthGuard implements CanActivate {
         "Request origin is not allowed.",
       );
     }
-    const type = request.headers["content-type"];
-    if (request.body !== undefined && !(type ?? "").toLowerCase().startsWith("application/json")) {
+    const type = (request.headers["content-type"] ?? "").toLowerCase();
+    if (binaryAllowed && type === "application/octet-stream") return;
+    if (request.body !== undefined && !type.startsWith("application/json")) {
       throw new ApiError(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "json_required", "Send a JSON body.");
     }
   }

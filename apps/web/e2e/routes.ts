@@ -79,6 +79,17 @@ export const BUTTON_ACTIONS = new Set([
   "consent.revoke",
   "consent.revoke.confirm",
   "consent.revoke.cancel",
+  // Phase 07: files and background jobs
+  "files.upload",
+  "files.preview",
+  "files.preview.close",
+  "files.download",
+  "jobs.retry",
+  "jobs.approve",
+  "jobs.reject",
+  "jobs.cancel",
+  "jobs.cancel.confirm",
+  "jobs.cancel.cancel",
 ]);
 
 /** Account screens. Signed-out ones are checked without a session. */
@@ -94,5 +105,7 @@ export const SIGNED_IN_ROUTES = [
   "/settings/account",
   "/settings/access",
   "/settings/consent",
+  "/settings/files",
+  "/settings/jobs",
   "/onboarding",
 ];

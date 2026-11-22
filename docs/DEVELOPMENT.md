@@ -15,11 +15,11 @@ Scripts are bash (macOS, Linux, WSL).
 ## Fresh checkout
 
 ```bash
-scripts/bootstrap.sh     # once: .env from .env.example, pnpm install, uv sync, build, docker compose up
-scripts/dev.sh           # every day: containers + all TypeScript processes in watch mode, .env exported
+scripts/bootstrap.sh     # once: .env from .env.example, pnpm install, uv sync, build, docker compose up, pnpm db:migrate
+scripts/dev.sh           # every day: containers, pnpm db:status, then all TypeScript processes in watch mode, .env exported
 ```
 
-Then run `pnpm db:migrate` once (and after pulling new migrations), open **http://localhost:3000** (use `localhost`, not `127.0.0.1`: cookies and passkeys are bound to `ORIGINOS_PUBLIC_URL`), and create an account. The verification email lands in Mailpit at http://127.0.0.1:8025; nothing is sent to real addresses. `scripts/db-reset-local.sh` drops and re-migrates the local databases (local compose only).
+Run `pnpm db:migrate` after pulling new migrations (`scripts/dev.sh` stops and says so when one is pending; `pnpm db:status` checks on its own). Then open **http://localhost:3000** (use `localhost`, not `127.0.0.1`: cookies and passkeys are bound to `ORIGINOS_PUBLIC_URL`), and create an account. The verification email lands in Mailpit at http://127.0.0.1:8025; nothing is sent to real addresses. `scripts/db-reset-local.sh` drops and re-migrates the local databases (local compose only).
 
 | Process | Package | Address | Health |
 |---|---|---|---|
@@ -31,7 +31,8 @@ Then run `pnpm db:migrate` once (and after pulling new migrations), open **http:
 | Media validator | `services/media-validator` | http://127.0.0.1:4300 | `GET /health/live`, `GET /health/ready` |
 | AI worker (Python) | `services/ai-worker` | no server | `uv run --project services/ai-worker python -m originos_ai_worker` |
 | Postgres 18 + pgvector 0.8.7 | compose `postgres` | 127.0.0.1:5432 (`originos`, `originos_test`) | `pg_isready` |
-| S3-compatible storage (SeaweedFS 4.54) | compose `object-storage` | http://127.0.0.1:8333 | `/healthz`; used from Phase 07 |
+| S3-compatible storage (SeaweedFS 4.54) | compose `object-storage` | http://127.0.0.1:8333 | `/healthz`; buckets `originos-quarantine` and `originos-files` (`pnpm storage:setup`, run by bootstrap and dev) |
+| Malware scanner (ClamAV 1.4) | compose `scanner` (profile `scanner`) | 127.0.0.1:3310 | `clamdcheck.sh`; needs ~1.5 GB of memory and a minute to start. `scripts/dev.sh --no-scanner` skips it, and uploads then stay "not scanned" |
 | Mail catcher (Mailpit 1.34.0) | compose `mail` | SMTP 127.0.0.1:1025, UI http://127.0.0.1:8025 | `/mailpit readyz` |
 
 Everything binds to loopback. Redis is not part of the stack because nothing uses it (ADR-003).
@@ -63,7 +64,7 @@ Migrations live in `packages/db/migrations` (drizzle-kit 0.31.11 generates them 
 
 ## Browser tests (Phase 03, real stack since Phase 04)
 
-`apps/web/e2e` holds Playwright suites for sign-up, verification, invitations, workspaces, password reset, two-step verification and passkeys (a virtual authenticator), routes and dead controls, axe accessibility (light and dark), keyboard use and visual regression. Playwright starts the built API (after migrating `originos_test`) on port 4990 and the built web app on http://localhost:3100. Start Postgres and Mailpit first (`docker compose up -d postgres mail`), then run after `pnpm build`:
+`apps/web/e2e` holds Playwright suites for sign-up, verification, invitations, workspaces, password reset, two-step verification and passkeys (a virtual authenticator), routes and dead controls, axe accessibility (light and dark), keyboard use and visual regression. Playwright starts the built API (after migrating `originos_test` and creating the `originos-e2e-*` buckets) on port 4990, the built worker (health on 4991) and the built web app on http://localhost:3100. The E2E stack lowers the upload limit to 1 MB. Start the containers first (`docker compose --profile scanner up -d --wait`), then run after `pnpm build`:
 
 ```bash
 scripts/e2e-docker.sh                       # everything, in the pinned Playwright image (needs Docker)
@@ -71,6 +72,14 @@ scripts/e2e-docker.sh --update-snapshots    # regenerate visual baselines after 
 ```
 
 Always regenerate baselines with the script, not on your host: CI compares against the same image (`mcr.microsoft.com/playwright:v1.65.1-noble`), and host fonts render differently. The design system gallery is at `/design-system` in development (production needs `ORIGINOS_ENABLE_GALLERY=true`). Any new `<button>` needs a `data-action` listed in `apps/web/e2e/routes.ts`, or the suite fails.
+
+## Files and background jobs (Phase 07)
+
+Uploads go browser → web `/api/files` (same origin) → API `POST /v1/files`, which checks the type, name and size, sniffs the bytes, stores them in the quarantine bucket and queues an `ingest.scan_upload` job. The worker scans with ClamAV and copies clean files to the files bucket. `/settings/files` lists uploads and their status; `/settings/jobs` (owners and admins) shows jobs and lets you retry failed ones, cancel, or answer jobs waiting for a person. Design: ADR-026.
+
+To try the malware path locally, upload a `.txt` file containing the standard EICAR test string; it is harmless, and ClamAV flags it.
+
+Job handlers live in `apps/worker/src/jobs/` and are registered in `src/handlers.ts`. Put each side effect in `ctx.step(name, fn)`, so a retry never repeats it; call `ctx.progress()` in long loops (it also notices cancellation).
 
 ## Readiness semantics
 

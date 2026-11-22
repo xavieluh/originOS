@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { APPLICATION_ROLE, createDatabase, runMigrations, type Database } from "@originos/db";
+import type { Storage } from "@originos/storage";
 import { createApi } from "../../src/app.js";
 import { MemoryMailer } from "../../src/modules/core/index.js";
 
@@ -18,7 +19,12 @@ export interface Harness {
   close(): Promise<void>;
 }
 
-export async function startHarness(): Promise<Harness> {
+export interface HarnessOptions {
+  /** Object storage and scanner; omitted means "not set up". */
+  readonly storage?: Storage;
+}
+
+export async function startHarness(options: HarnessOptions = {}): Promise<Harness> {
   const owner = createDatabase({ url: url! });
   await runMigrations(owner);
   const database = createDatabase({ url: url!, role: APPLICATION_ROLE });
@@ -30,6 +36,7 @@ export async function startHarness(): Promise<Harness> {
     publicUrl: ORIGIN,
     authSecret: "test-secret-test-secret-test-secret-0123456789",
     authRateLimit: false,
+    ...(options.storage ? { storage: options.storage } : {}),
   });
   return {
     app,
@@ -73,6 +80,25 @@ export class Client {
       else this.cookies.set(c.name, c.value);
     }
     return response;
+  }
+
+  /** Upload raw bytes the way the web app does: octet-stream body, name and type in headers. */
+  async upload(
+    filename: string,
+    type: string,
+    bytes: Uint8Array | string,
+    extraHeaders: Record<string, string> = {},
+  ) {
+    const payload = typeof bytes === "string" ? Buffer.from(bytes) : Buffer.from(bytes);
+    const headers: Record<string, string> = {
+      origin: ORIGIN,
+      "content-type": "application/octet-stream",
+      "x-upload-filename": encodeURIComponent(filename),
+      "x-upload-type": type,
+      ...extraHeaders,
+    };
+    if (this.cookies.size > 0) headers.cookie = this.cookieHeader;
+    return this.h.app.inject({ method: "POST", url: "/v1/files", headers, payload });
   }
 
   /** Sign up, follow the verification link from the captured email, and end signed in. */
