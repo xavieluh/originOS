@@ -1,0 +1,943 @@
+[
+  {
+    "n": 0,
+    "title": "Product contract and architecture",
+    "lane": "Foundation",
+    "goal": "Turn the complete OriginOS vision into implementable boundaries and living decisions.",
+    "tasks": [
+      "Audit repository and read master requirements",
+      "define personas: creator, reader, researcher, editor, developer, team admin, enterprise admin",
+      "produce architecture decision records for modular monolith, identity graph, event bus, AI gateway, C2PA, Claude/MCP, telemetries and non-goals",
+      "create target navigation, data-flow diagrams, threat-model baseline, release gates and product requirements traceability matrix",
+      "resolve conflicts in existing repo with documented trade-offs"
+    ],
+    "checks": [
+      "docs/ARCHITECTURE.md and docs/DECISIONS.md describe concrete service boundaries",
+      "docs/PRODUCT_MAP.md accounts for all 15 modules",
+      "docs/ACCEPTANCE_MATRIX.md maps each capability to verification",
+      "no implementation claims without implementation"
+    ],
+    "filename": "00-product-contract-and-architecture.md"
+  },
+  {
+    "n": 1,
+    "title": "Production-shaped monorepo",
+    "lane": "Foundation",
+    "goal": "Create the real development scaffold with clean domain boundaries.",
+    "tasks": [
+      "Initialize pnpm workspaces and Turborepo pinned to supported compatible versions",
+      "scaffold apps/web Next.js, apps/api NestJS with Fastify, apps/mcp-server, packages/ui, packages/contracts, packages/db, packages/config, services/ai-worker, services/telemetry",
+      "configure TypeScript strict, eslint/formatter, package scripts, env validation",
+      "implement health endpoints and root web shell",
+      "supply architectural import boundary rules"
+    ],
+    "checks": [
+      "clean install works with documented commands",
+      "typecheck lint unit tests run",
+      "web and api start locally and health endpoints respond",
+      "code compiles without fake integrations"
+    ],
+    "filename": "01-production-shaped-monorepo.md"
+  },
+  {
+    "n": 2,
+    "title": "Local development, CI and conventions",
+    "lane": "Foundation",
+    "goal": "Make every build stage reproducible for a solo founder and future contributors.",
+    "tasks": [
+      "Add Docker Compose for Postgres with pgvector, Redis only if used, object storage emulator, and worker dependencies",
+      "add .env.example with documentation and secret scanning policy",
+      "GitHub Actions build lint test migration checks and SBOM/dependency scan",
+      "seed only clearly labeled sample data in nonproduction",
+      "add scripts/check and scripts/dev bootstrap",
+      "configure structured logging and correlation ids"
+    ],
+    "checks": [
+      "fresh checkout bootstraps from README",
+      "CI validates a real build",
+      "secrets are excluded from git and logs",
+      "a developer can start web api database and worker locally"
+    ],
+    "filename": "02-local-development-ci-and-conventions.md"
+  },
+  {
+    "n": 3,
+    "title": "Distinctive UX system and app shell",
+    "lane": "Foundation",
+    "goal": "Make OriginOS look like a cohesive high-end research studio + agent command center.",
+    "tasks": [
+      "Create design tokens, typography, accessible light/dark themes, responsive sidebar and global command bar",
+      "build shared buttons, tables, cards, drawers, forms, timelines, event badges, loading/empty/error states",
+      "add layouts for public network, private workspace and developer console",
+      "scaffold functioning route navigation for Home, Agents, Research, Publish, Trust, Discover, Integrations, Settings without claiming features built",
+      "create visual regression fixtures and keyboard navigation"
+    ],
+    "checks": [
+      "responsive polished shell renders at mobile/tablet/desktop",
+      "all navigation routes resolve and unfinished modules clearly say not yet available",
+      "accessible keyboard focus and contrast checks pass",
+      "no dead buttons shown as working"
+    ],
+    "filename": "03-distinctive-ux-system-and-app-shell.md"
+  },
+  {
+    "n": 4,
+    "title": "Authentication, teams and organizations",
+    "lane": "Core",
+    "goal": "Build robust account and workspace lifecycle before any private records.",
+    "tasks": [
+      "Select and document supported OIDC/auth solution with passkeys/MFA where feasible, session lifecycle, email verification and secure recovery",
+      "add users, organizations, memberships, invitations and owner transfer",
+      "create sign-in/sign-up, workspace switcher, invitation acceptance, account settings",
+      "protect routes server-side, secure cookies, CSRF controls and sessions",
+      "add auth integration tests"
+    ],
+    "checks": [
+      "cross-org account access is impossible in tests",
+      "invitation expiry and revocation work",
+      "user can create an organization and switch authorized workspaces",
+      "logged-out requests cannot access private endpoints"
+    ],
+    "filename": "04-authentication-teams-and-organizations.md"
+  },
+  {
+    "n": 5,
+    "title": "Authorization, policy baseline and consent",
+    "lane": "Core",
+    "goal": "Make permission checks a single reusable service rather than scattered UI logic.",
+    "tasks": [
+      "Implement RBAC plus resource scoped grants and explicit deny",
+      "define actor types human/service/agent and actions read/write/publish/export/admin",
+      "record consent for identity/telemetry/data-sharing, provider scopes, and cross-org policies",
+      "add API guards and fine-grained permission checks",
+      "build workspace members/roles UI and permission audit events",
+      "build denial and privilege-escalation tests"
+    ],
+    "checks": [
+      "role change triggers audit record",
+      "backend rejects forbidden reads and writes even if UI bypassed",
+      "agent permissions are narrower than owning user by default",
+      "consent can be inspected and revoked"
+    ],
+    "filename": "05-authorization-policy-baseline-and-consent.md"
+  },
+  {
+    "n": 6,
+    "title": "Core domain schema, ledger and outbox",
+    "lane": "Core",
+    "goal": "Create canonical objects used by every module.",
+    "tasks": [
+      "Design migrations and ORM models for subjects, identities, works, versions, artifacts, sources, claims, agent runs, actions, attestations, approvals, relationships and organizations",
+      "use opaque IDs, schema versioning, timestamps, actor attribution and provenance confidence metadata",
+      "build append-oriented audit event table plus transactional outbox and idempotent consumer helpers",
+      "prevent forbidden edge types and orphaned records",
+      "document deletion vs signed receipt retention policy"
+    ],
+    "checks": [
+      "all migrations apply and rollback safely in test env",
+      "an outbox event survives simulated worker outage and is processed once logically under retries",
+      "foreign keys and uniqueness hold",
+      "schemas documented in contracts"
+    ],
+    "filename": "06-core-domain-schema-ledger-and-outbox.md"
+  },
+  {
+    "n": 7,
+    "title": "Object storage, ingestion queues and workflow core",
+    "lane": "Core",
+    "goal": "Provide the reliable plumbing behind large documents and long-running jobs.",
+    "tasks": [
+      "Integrate S3-compatible storage with scoped signed URLs and strict upload types/limits",
+      "implement antivirus/malware scanning adapter, hashing, MIME sniffing, safe document preview pipelines",
+      "add durable job runner using selected queue and clear future Temporal migration contract",
+      "implement retries/backoff, dead-letter review, cancellations, progress status and human waits",
+      "provide job admin UI and local worker tests"
+    ],
+    "checks": [
+      "unauthorized tenant cannot retrieve an object",
+      "failed job retries safely without duplicate publishing",
+      "upload errors are visible",
+      "malicious/oversize file is quarantined or rejected"
+    ],
+    "filename": "07-object-storage-ingestion-queues-and-workflow-core.md"
+  },
+  {
+    "n": 8,
+    "title": "Origin Connect OAuth and integration broker",
+    "lane": "Core",
+    "goal": "Build a reusable secure integration system instead of ad hoc tokens per product.",
+    "tasks": [
+      "Define provider adapters, OAuth authorization-code PKCE support where appropriate, token encryption, rotation and revocation",
+      "create connector registry with capabilities, granted scopes, data-residency and status",
+      "add inbound webhook verification, replay defense, idempotency and outbound delivery manager",
+      "ship connect/disconnect UI with permission disclosures",
+      "develop fake provider test server only for testing, not deceptively as production integration"
+    ],
+    "checks": [
+      "OAuth state/replay tests pass",
+      "provider token never reaches client or log",
+      "disconnected providers stop new API calls",
+      "webhook signatures and retries verified"
+    ],
+    "filename": "08-origin-connect-oauth-and-integration-broker.md"
+  },
+  {
+    "n": 9,
+    "title": "IdentityMesh creator and organization profiles",
+    "lane": "Trust",
+    "goal": "Introduce the public/private identity graph and account ownership proofs.",
+    "tasks": [
+      "Create creator/organization profile entity and public page",
+      "support website ownership via DNS or HTML challenge, claimed GitHub identity via supported OAuth proof, profile privacy controls, moderation state and badges with precise semantics",
+      "introduce claim review queue with human decision and evidence audit",
+      "implement account recovery, changed ownership and badge expiration"
+    ],
+    "checks": [
+      "verified domain requires successful challenge, not self-report",
+      "reviewer actions recorded",
+      "revoked or stale proofs are clearly labeled",
+      "pseudonymous profiles work without exposing legal identity"
+    ],
+    "filename": "09-identitymesh-creator-and-organization-profiles.md"
+  },
+  {
+    "n": 10,
+    "title": "IdentityMesh portable credentials",
+    "lane": "Trust",
+    "goal": "Define standards-aligned portable credentials with issuer provenance.",
+    "tasks": [
+      "Research current W3C VC/OID4VC specifications against official docs before choosing subset",
+      "implement issuer, subject, evidence reference, status and revocation model",
+      "create credential issuance/review and reader verification UI for supported credential profile",
+      "protect signing keys with secret/KMS interface",
+      "distinguish verifiable signature from true claim or government identity"
+    ],
+    "checks": [
+      "tampered credential fails validation",
+      "revoked credential is marked revoked",
+      "test verifier checks issuer and validity rules",
+      "unsupported credential formats show explicit unsupported state"
+    ],
+    "filename": "10-identitymesh-portable-credentials.md"
+  },
+  {
+    "n": 11,
+    "title": "Content, authorship and versions",
+    "lane": "Trust",
+    "goal": "Create the canonical content/artifact pipeline used by OriginGraph and PublisherOS.",
+    "tasks": [
+      "Implement works with versions, contributors, origin claims, canonical URLs, content types, import channel and rights notices",
+      "support upload, URL metadata, RSS import with rate limits and copyright-safe storage, and manual text entry",
+      "hash exact bytes and normalized text separately with clear meaning",
+      "add duplicate handling, permissioned previews and revision diff API/UI"
+    ],
+    "checks": [
+      "upload -> version -> contributor graph is persistent",
+      "hash changes when bytes change",
+      "duplicate canonical URL cannot silently overwrite another creator",
+      "unauthorized re-hosted text is not published"
+    ],
+    "filename": "11-content-authorship-and-versions.md"
+  },
+  {
+    "n": 12,
+    "title": "C2PA media validation service",
+    "lane": "Trust",
+    "goal": "Provide real cryptographic Content Credentials inspection for supported media.",
+    "tasks": [
+      "Implement adapter using current CAI C2PA SDK (Node/Rust) verified against official docs",
+      "parse supported manifests, validate content binding/trust chain/revocation where supported, report signature issues and metadata gaps",
+      "isolate untrusted media parsing and constrain resource usage",
+      "separate validated cryptographic properties from self-asserted AI-use and author identity",
+      "include known-good, tampered, unsigned and unsupported fixtures"
+    ],
+    "checks": [
+      "valid fixture passes and modified media fails or reports breakage per SDK",
+      "unsigned is unverified not fraudulent",
+      "validation returns machine readable diagnostics",
+      "never display \"human-authored guaranteed\""
+    ],
+    "filename": "12-c2pa-media-validation-service.md"
+  },
+  {
+    "n": 13,
+    "title": "OriginGraph provenance graph and explorer",
+    "lane": "Trust",
+    "goal": "Build typed relationships and interactive origin tracing for works and creators.",
+    "tasks": [
+      "Implement graph edges CREATED_BY, CITES, DERIVED_FROM, REVISION_OF, REVIEWED_BY, PUBLISHED_BY, LICENSED_UNDER and observed provenance event links",
+      "create query APIs for ancestors, descendants, contributors and changes over time with depth/size limits",
+      "build Cytoscape or React Flow visual explorer with evidence inspector and filters",
+      "version graph edges and keep assertion vs independently validated facts distinct"
+    ],
+    "checks": [
+      "graph roundtrip works on multiple interconnected works",
+      "cycle handling and tenant visibility boundaries tested",
+      "evidence panel explains each edge provenance",
+      "performance safe bounds in place"
+    ],
+    "filename": "13-origingraph-provenance-graph-and-explorer.md"
+  },
+  {
+    "n": 14,
+    "title": "Public verification pages and embeddable widgets",
+    "lane": "Trust",
+    "goal": "Ship defensible verification artifacts usable beyond OriginOS.",
+    "tasks": [
+      "Create public verification record page with source, issuer, signatory, claim type, integrity status, verification timestamp and caveats",
+      "build accessible embeddable widget and origin link with CSP/CORS protections",
+      "add public sharing/privacy selection and revocation/appeals notices",
+      "issue signed verification receipt where supported and verifiable",
+      "publish API schema and test embeds"
+    ],
+    "checks": [
+      "public anonymous users see only explicitly public data",
+      "changed content yields clear invalid/stale status",
+      "embed works in a separate-origin test page",
+      "claims never overstate human authorship"
+    ],
+    "filename": "14-public-verification-pages-and-embeddable-widgets.md"
+  },
+  {
+    "n": 15,
+    "title": "Provider-agnostic AI gateway and safety budgets",
+    "lane": "AI",
+    "goal": "Enable model-powered work without hard-coupling OriginOS to one vendor.",
+    "tasks": [
+      "Implement provider interface and adapters for configured cloud model provider and optional local compatible endpoint",
+      "route tasks by capability, latency, privacy and budget",
+      "store prompts/outputs according to per-workspace policy and redact secrets",
+      "include structured output schemas, retries, provider outage behavior, rate limits, metering and human-review flags",
+      "build evaluation fixture suite for hallucination-prone tasks"
+    ],
+    "checks": [
+      "model calls use shared gateway and can swap provider in tests",
+      "API unavailable yields recoverable queued state",
+      "cost and tokens logged where exposed",
+      "sources never invented by gateway"
+    ],
+    "filename": "15-provider-agnostic-ai-gateway-and-safety-budgets.md"
+  },
+  {
+    "n": 16,
+    "title": "AgentTrust telemetry collector",
+    "lane": "Agents",
+    "goal": "Build secure high-volume ingestion of observed agent runs and tool events.",
+    "tasks": [
+      "Define trace schema for span, run, model call, tool request/result, authorization, artifact and consequences",
+      "implement authenticated OTLP-compatible ingestion or adapter without claiming complete provider history",
+      "redact secrets/content based on policies and collect schema version/correlation IDs",
+      "support backpressure, sampling control, retention classes and deduplication",
+      "add ingestion dashboard"
+    ],
+    "checks": [
+      "replayed events do not duplicate logical actions",
+      "tenant isolation holds on ingestion",
+      "trace shows source and observability gaps",
+      "sensitive values redacted in logs and UI"
+    ],
+    "filename": "16-agenttrust-telemetry-collector.md"
+  },
+  {
+    "n": 17,
+    "title": "Claude Code hooks and CLI collector",
+    "lane": "Agents",
+    "goal": "Integrate supported Claude Code events while respecting actual hook capabilities.",
+    "tasks": [
+      "Read up-to-date Claude Code hook docs and design an installable opt-in collector",
+      "capture only documented event types, permitted prompts/tool metadata, local timing and project context",
+      "map to AgentTrust runs with correlation IDs and redact file contents or secrets by default",
+      "build onboarding, enable/disable, local buffering and offline retry",
+      "clearly label partial coverage and never claim full Claude chat history"
+    ],
+    "checks": [
+      "real hook smoke test produces at least one observed event",
+      "user can disable collection",
+      "collector cannot exfiltrate secrets by default",
+      "dashboard identifies the originating installation"
+    ],
+    "filename": "17-claude-code-hooks-and-cli-collector.md"
+  },
+  {
+    "n": 18,
+    "title": "Claude API and external agent SDK instrumentation",
+    "lane": "Agents",
+    "goal": "Make AgentTrust model-agnostic beyond local Claude Code.",
+    "tasks": [
+      "Create TypeScript instrumentation SDK and documented adapters for Claude API/Agent SDK and one generic OpenTelemetry agent runtime",
+      "distinguish model API requests from tool execution and downstream effects",
+      "support automatic span parenting, tenant auth, sampling, retries and sensitive-data filters",
+      "add minimal example instrumented research agent and contract tests"
+    ],
+    "checks": [
+      "instrumented sample run appears with linked tool events",
+      "absence of instrumentation is displayed as unknown",
+      "custom test agent emits valid events",
+      "model credentials remain server-side"
+    ],
+    "filename": "18-claude-api-and-external-agent-sdk-instrumentation.md"
+  },
+  {
+    "n": 19,
+    "title": "AgentTrust flight recorder and investigations",
+    "lane": "Agents",
+    "goal": "Create rich searchable agent timelines and action consequence analysis.",
+    "tasks": [
+      "Build run list/detail screens, timeline waterfall, source tool panels, status/cost/time breakdown and drill-down to artifacts",
+      "correlate downstream events when connectors provide identifiers and confirmations",
+      "add filters by agent/user/provider/repo/permissions",
+      "implement incident notes, exports, trace redaction controls and observability coverage indicator",
+      "use real telemetry fixtures for UX"
+    ],
+    "checks": [
+      "timeline displays real persistent events not hardcoded activity",
+      "denied or failed actions visibly differ from confirmed effects",
+      "authorized users can export scoped records",
+      "search and filtering tested"
+    ],
+    "filename": "19-agenttrust-flight-recorder-and-investigations.md"
+  },
+  {
+    "n": 20,
+    "title": "AgentTrust policy, approvals and signed receipts",
+    "lane": "Agents",
+    "goal": "Provide accountable controls instead of a passive telemetry dashboard.",
+    "tasks": [
+      "Implement policy engine for action type, external domain, sensitivity, budget and role",
+      "support pending approvals with expiry, double-confirmation and immutable decision events",
+      "enforce only for tool calls routed through our gateway or supported hooks",
+      "generate signed execution receipts linking inputs, observed events, policy decisions, approval and output hashes",
+      "include emergency stop on managed flows"
+    ],
+    "checks": [
+      "disallowed action held before execution in controlled path",
+      "approval expiration and replay attacks rejected",
+      "no claim of universal enforcement over disconnected agents",
+      "receipt signature and integrity validation tested"
+    ],
+    "filename": "20-agenttrust-policy-approvals-and-signed-receipts.md"
+  },
+  {
+    "n": 21,
+    "title": "GitHub App and outcome reconciliation",
+    "lane": "Integrations",
+    "goal": "Link agent runs to actual code changes and repository events.",
+    "tasks": [
+      "Build least-privilege GitHub App install flow, repository selection, webhook verification",
+      "ingest PRs, commits, checks, releases and compare event IDs to agent run claims",
+      "implement repository tab showing proposed vs merged vs deployed changes",
+      "permit read-only by default and ask approval for write actions",
+      "show scopes in Connect UI"
+    ],
+    "checks": [
+      "webhook signature tested and duplicates safe",
+      "PR merge state is sourced from GitHub not agent narration",
+      "revoked installation stops sync",
+      "audit events link to repo metadata without leaking private source"
+    ],
+    "filename": "21-github-app-and-outcome-reconciliation.md"
+  },
+  {
+    "n": 22,
+    "title": "OriginOS for Slack",
+    "lane": "Integrations",
+    "goal": "Build a polished first-party Slack app that is an interface, not the source of truth.",
+    "tasks": [
+      "Use Slack Bolt JS and official Slack docs to create installable app with OAuth and minimal scopes",
+      "add slash commands for /origin status, trace, approvals, evidence, verify",
+      "Block Kit alerts for review requests, agent incidents, publishing notifications and deep links",
+      "validate request signatures, user mapping, permission checks, action nonce/expiry and retries",
+      "render useful errors when not configured"
+    ],
+    "checks": [
+      "Slack command accesses only authorized workspace",
+      "approving from Slack revalidates server-side permission and state",
+      "retry does not cause double publish",
+      "integration can be disabled"
+    ],
+    "filename": "22-originos-for-slack.md"
+  },
+  {
+    "n": 23,
+    "title": "Claude MCP connector and developer agent tools",
+    "lane": "Integrations",
+    "goal": "Make OriginOS data and approved operations accessible from Claude and other MCP clients.",
+    "tasks": [
+      "Implement secure remote MCP server using current official SDK and supported authentication/authorization spec",
+      "expose scoped read tools search_agent_history/get_run/verify_work/search_evidence/get_creator and approval-request tools",
+      "use minimal tool descriptions, pagination, rate limits and tenant token audience checks",
+      "simulate Claude consumer with protocol tests",
+      "confirm unsupported private history access is never implied"
+    ],
+    "checks": [
+      "unauthenticated MCP requests rejected",
+      "cross-tenant tool call blocked",
+      "tools return source-linked structured results",
+      "human approvals cannot be bypassed via MCP"
+    ],
+    "filename": "23-claude-mcp-connector-and-developer-agent-tools.md"
+  },
+  {
+    "n": 24,
+    "title": "Research source connectors and ingestion",
+    "lane": "Research",
+    "goal": "Build EvidenceGraph source acquisition with licensing and provenance awareness.",
+    "tasks": [
+      "Implement adapters for OpenAlex, Crossref, PubMed, arXiv metadata and user-provided papers",
+      "use source identifiers DOI/PMID/arXiv with deduplication, rate limiting, license-aware full-text availability and stale-record warnings",
+      "parse PDFs in sandboxed worker and preserve page/source spans",
+      "show imported source management and errors"
+    ],
+    "checks": [
+      "same DOI imported twice resolves one canonical source",
+      "unavailable full text is not hallucinated",
+      "retrieved passages link to version and page where present",
+      "ingestion retry and metadata updates work"
+    ],
+    "filename": "24-research-source-connectors-and-ingestion.md"
+  },
+  {
+    "n": 25,
+    "title": "Claim extraction and citation assessments",
+    "lane": "Research",
+    "goal": "Create auditable AI-assisted evidence analysis, not automated truth certificates.",
+    "tasks": [
+      "Implement claim extraction with anchored spans, reference resolution, evidence retrieval and structured assessment supported/contradicted/insufficient/uncertain",
+      "store model version, prompts policy, cited passage hashes and reviewer overrides",
+      "add calibrated uncertainty language, source quality indicators, detection of citation mismatch and human review queue",
+      "build evaluation harness with adversarial and contradicted fixtures"
+    ],
+    "checks": [
+      "every assessment links inspectable evidence or explicitly insufficient data",
+      "no fabricated citations",
+      "conflicting source test produces a disagreement state",
+      "human correction does not erase original assessment"
+    ],
+    "filename": "25-claim-extraction-and-citation-assessments.md"
+  },
+  {
+    "n": 26,
+    "title": "EvidenceGraph explorer",
+    "lane": "Research",
+    "goal": "Let users visually investigate scientific claims, studies and contradictions.",
+    "tasks": [
+      "Build graph UI paper->claim->evidence_span->assessment with filters for year/topic/author/strength and source inspection",
+      "allow comparing competing claims, export bibliographies, save collections and attach claims to Origin Studio docs",
+      "enforce org ownership and licensed text visibility",
+      "add keyboard accessible non-graph alternative"
+    ],
+    "checks": [
+      "clicking a claim opens exact source span",
+      "graph filters and exports work on real DB data",
+      "source permission boundaries hold",
+      "exported citations include identifiers"
+    ],
+    "filename": "26-evidencegraph-explorer.md"
+  },
+  {
+    "n": 27,
+    "title": "Origin Library and knowledge workspaces",
+    "lane": "Creation",
+    "goal": "Provide the central personal and team knowledge repository.",
+    "tasks": [
+      "Build folders, collections, labels, saved works, notes, references and source import UI",
+      "create indexing, semantic and keyword search with deterministic filters, dedupe and access rules",
+      "implement sharing, version pinning and retention controls",
+      "show drag-and-drop upload and useful loading/progress/error states",
+      "connect library objects to OriginGraph and EvidenceGraph"
+    ],
+    "checks": [
+      "user can organize retrieve and share permitted source records",
+      "private source never appears via another tenant search",
+      "edits generate versioning/audit event",
+      "upload and indexing failures visible"
+    ],
+    "filename": "27-origin-library-and-knowledge-workspaces.md"
+  },
+  {
+    "n": 28,
+    "title": "Origin Studio editor and collaboration",
+    "lane": "Creation",
+    "goal": "Develop a fully functional provenance-aware editor and research workspace.",
+    "tasks": [
+      "Implement Tiptap/ProseMirror editor, source cards, citations, footnotes, comments, version history and autosave",
+      "provide team edit roles and optimistic concurrency, with real-time sync only if proven necessary",
+      "connect AI-assisted drafting via gateway with explicit user actions and AI-use events",
+      "add import/export to Markdown/HTML and citation references",
+      "maintain authorship attribution and snapshot integrity"
+    ],
+    "checks": [
+      "draft survives reload and concurrent update conflict",
+      "citations maintain stable source references",
+      "AI-assisted segments have clear disclosure state",
+      "editor exports valid content"
+    ],
+    "filename": "28-origin-studio-editor-and-collaboration.md"
+  },
+  {
+    "n": 29,
+    "title": "PublisherOS editorial workflow",
+    "lane": "Publishing",
+    "goal": "Make publication approval an actual durable process.",
+    "tasks": [
+      "Build submissions, assignments, editorial stages, comments, citation review checklist, revision requests, approve/reject and schedule",
+      "connect to EvidenceGraph and AgentTrust",
+      "implement role-aware editorial dashboard, approval wait/resume and publication audit trail",
+      "add embargo, rollback, legal hold and cancellation policies"
+    ],
+    "checks": [
+      "author cannot self-approve in policy-restricted organization",
+      "reviewer can request changes",
+      "scheduled item publishes only after required approvals",
+      "cancellations are recorded"
+    ],
+    "filename": "29-publisheros-editorial-workflow.md"
+  },
+  {
+    "n": 30,
+    "title": "PublisherOS external distribution connectors",
+    "lane": "Publishing",
+    "goal": "Publish approved content to external destinations with confirmed outcomes.",
+    "tasks": [
+      "Implement WordPress REST connector and a generic webhook publishing adapter with authenticated setup",
+      "map draft->publish with idempotency and confirmation receipts",
+      "record external publication URL/status and capture failures, revisions and retries",
+      "support RSS output and canonical links",
+      "protect publishing tokens, preview sanitized HTML, require explicit approval for external writes"
+    ],
+    "checks": [
+      "WordPress sandbox integration demonstrates actual post and verified ID",
+      "provider failures do not create duplicate posts",
+      "OriginGraph relates final external page to approved version",
+      "disconnected connector cannot publish"
+    ],
+    "filename": "30-publisheros-external-distribution-connectors.md"
+  },
+  {
+    "n": 31,
+    "title": "Verified Human public creator network",
+    "lane": "Community",
+    "goal": "Launch the public entry product without overclaiming verification.",
+    "tasks": [
+      "Build curated creator directory, profile pages, content cards, attribution widgets, editorial collections and transparent verification filters",
+      "define moderation policy and disclosure vocabulary: identity reviewed / domain controlled / signed media / self-declared AI use",
+      "allow opt-in participation, appeals and removal",
+      "include crawler-friendly metadata, RSS and safe canonical link handling"
+    ],
+    "checks": [
+      "public profile displays only consented fields",
+      "unsigned work cannot appear cryptographically verified",
+      "directory search and source links work",
+      "removal request and appeal flow recorded"
+    ],
+    "filename": "31-verified-human-public-creator-network.md"
+  },
+  {
+    "n": 32,
+    "title": "Community distribution, newsletters and discovery",
+    "lane": "Community",
+    "goal": "Solve the cold-start problem through creator utility and audience acquisition.",
+    "tasks": [
+      "Build founder-creator onboarding, invite/referral links, saved collections, followed topics, curated digest composition and email opt-in/unsubscribe",
+      "add personalized recommendations with explainable reasons and spam controls",
+      "build publisher analytics for legitimate referral traffic",
+      "integrate transactional email service through provider abstraction",
+      "track meaningful activation, repeat usage and retention"
+    ],
+    "checks": [
+      "double opt-in/unsubscribe enforced as applicable",
+      "digest sends only to opted-in subscribers and respects throttling",
+      "referral tracking avoids leaking private data",
+      "metrics distinguish content visits from active engagement"
+    ],
+    "filename": "32-community-distribution-newsletters-and-discovery.md"
+  },
+  {
+    "n": 33,
+    "title": "CreatorRights licensing and disputes",
+    "lane": "Rights",
+    "goal": "Create rights declarations and permission workflows without claiming legal ownership by default.",
+    "tasks": [
+      "Implement creator license declarations and authorized license metadata attachment to works",
+      "add permissions grants, requests for reuse, licensing record history, infringement report intake, evidence attachment, counterclaims and staff review",
+      "optionally connect suspected reuse monitor using permitted indexes/feeds",
+      "enforce rights/ownership are claims needing evidence"
+    ],
+    "checks": [
+      "licensed work displays correct user-declared terms and history",
+      "dispute state is visible and auditable",
+      "unverified ownership is not shown as proven",
+      "rights reviewers cannot silently rewrite existing receipts"
+    ],
+    "filename": "33-creatorrights-licensing-and-disputes.md"
+  },
+  {
+    "n": 34,
+    "title": "Origin Intelligence search and investigator",
+    "lane": "AI",
+    "goal": "Unify authorized search across the entire application with inspectable AI explanations.",
+    "tasks": [
+      "Build federated keyword and semantic search over permitted content, claims, runs, creators, documents and publications",
+      "add natural-language workspace investigator using tool retrieval and links to records, task plans, transparent tool traces and budget gates",
+      "provide question-answer explanations anchored to results, stale index indicators and refusal for unavailable evidence",
+      "include query access checks and anti-injection tests"
+    ],
+    "checks": [
+      "questions about agent history return evidence-linked runs",
+      "search excludes unauthorized items at retrieval time",
+      "unsupported claim results clearly indicate no evidence",
+      "tool prompt injection fixture does not trigger unauthorized action"
+    ],
+    "filename": "34-origin-intelligence-search-and-investigator.md"
+  },
+  {
+    "n": 35,
+    "title": "Origin Automations workflow builder",
+    "lane": "Automation",
+    "goal": "Add constrained event-driven automation without becoming an unsafe autonomous system.",
+    "tasks": [
+      "Create workflow definitions, triggers on trusted events, conditional branches, schedules, retries, approval nodes, execution logs and quotas",
+      "use durable workflow runtime selected in architecture",
+      "build visual builder using React Flow plus JSON representation and validation",
+      "add templates for new article review, agent incident and citation digest",
+      "external actions require scopes and human approval per risk"
+    ],
+    "checks": [
+      "workflow resumes after simulated worker crash",
+      "duplicate trigger cannot double-execute non-idempotent action",
+      "invalid graphs rejected",
+      "approval node actually pauses and resumes",
+      "disabled workflow stops firing"
+    ],
+    "filename": "35-origin-automations-workflow-builder.md"
+  },
+  {
+    "n": 36,
+    "title": "Origin Registry of actors and attestations",
+    "lane": "Registry",
+    "goal": "Make identities, verified organizations, issuer keys and agent registries discoverable according to policy.",
+    "tasks": [
+      "Create registry of agents, issuers, publishers, creator profiles, credential types and trust policies",
+      "distinguish human actors from service principals",
+      "provide key/status/revocation lookup, trust root management and privacy-filtered public search",
+      "link registry identities to signed receipts and OriginGraph",
+      "handle key rotation and issuer revocation"
+    ],
+    "checks": [
+      "revoked issuer clearly changes verification result",
+      "workspace-private agent not indexed publicly",
+      "rotation preserves historical receipt verifiability where possible",
+      "public API results enforce disclosure controls"
+    ],
+    "filename": "36-origin-registry-of-actors-and-attestations.md"
+  },
+  {
+    "n": 37,
+    "title": "Origin Analytics and operational dashboards",
+    "lane": "Operations",
+    "goal": "Make impact, cost and platform health measurable rather than cosmetic.",
+    "tasks": [
+      "Implement event metrics pipelines and real charts for agent usage, latency, policy blocks, AI spend, source quality, publishing conversion, referrals, provenance verification and retention",
+      "add tenant-scoped dashboards, reporting time windows, exports and alert thresholds",
+      "instrument core flows without placing user secrets in analytics",
+      "clearly mark estimated vs observed metrics"
+    ],
+    "checks": [
+      "dashboard totals reconcile with test events",
+      "time filters and export work",
+      "another workspace data is invisible",
+      "demo analytics use labeled fixture data"
+    ],
+    "filename": "37-origin-analytics-and-operational-dashboards.md"
+  },
+  {
+    "n": 38,
+    "title": "Developer REST API, SDKs and docs portal",
+    "lane": "Developer",
+    "goal": "Make OriginOS valuable as reusable infrastructure rather than a closed website.",
+    "tasks": [
+      "Design versioned OpenAPI contracts for works, verification, claims, runs, approvals and links",
+      "add API keys with scopes and rotation, quotas, pagination, idempotent writes, webhooks and sandbox/test environment",
+      "generate TypeScript SDK and minimal Python client example",
+      "build docs site with runnable authenticated examples and error catalog",
+      "include changelog and compatibility rules"
+    ],
+    "checks": [
+      "OpenAPI contract tests run against server",
+      "API key cannot escalate scopes",
+      "sample SDK can verify content and retrieve run in local stack",
+      "docs examples use actual endpoints"
+    ],
+    "filename": "38-developer-rest-api-sdks-and-docs-portal.md"
+  },
+  {
+    "n": 39,
+    "title": "Billing, metering and commercial accounts",
+    "lane": "Commercial",
+    "goal": "Turn managed infrastructure into an accountable SaaS product.",
+    "tasks": [
+      "Integrate Stripe hosted checkout/customer portal with webhook verification and billing event reconciliation",
+      "create free, team, publisher and enterprise plan limits configurable in DB",
+      "meter storage, telemetry events, API calls and AI tasks with tenant budget notifications",
+      "implement invoices/receipts statuses, trial policies and cancellation",
+      "build plan UI without charging users before explicit consent"
+    ],
+    "checks": [
+      "Stripe test-mode checkout and webhook work",
+      "retry cannot double-credit usage",
+      "plan limits enforced server-side",
+      "disabled billing displays setup requirement instead of fake working checkout"
+    ],
+    "filename": "39-billing-metering-and-commercial-accounts.md"
+  },
+  {
+    "n": 40,
+    "title": "Origin Marketplace and extension contracts",
+    "lane": "Developer",
+    "goal": "Enable future plugins without exposing arbitrary code execution.",
+    "tasks": [
+      "Define extension manifest schemas, permissions, categories, signing/review states and OAuth connection requirements",
+      "build registry search, install/uninstall, organization consent and developer listing submission",
+      "start with curated internal extensions only, documented third-party policy",
+      "avoid executing untrusted extensions in main process, require isolation design for future runtime"
+    ],
+    "checks": [
+      "extension install records scopes and admin consent",
+      "unapproved extension not installable",
+      "uninstall revokes configured access",
+      "initial listings are real internally implemented integrations"
+    ],
+    "filename": "40-origin-marketplace-and-extension-contracts.md"
+  },
+  {
+    "n": 41,
+    "title": "Administration, privacy and trust operations",
+    "lane": "Operations",
+    "goal": "Provide real-world control planes for support, identity review and user rights.",
+    "tasks": [
+      "Build separate admin with least-privilege roles, identity/rights/verification moderation queues, incident queue, support tooling, abuse reports, appeals and retention policies",
+      "implement account export, erasure requests and legal hold handling with explicit policy on retained signed public records",
+      "add accessible user-facing data/consent settings, tenant activity export and audit of support access"
+    ],
+    "checks": [
+      "support staff cannot view private data without scoped authorization",
+      "export and erasure request tracked",
+      "retention purge tested",
+      "moderation decisions require reason and produce audit event"
+    ],
+    "filename": "41-administration-privacy-and-trust-operations.md"
+  },
+  {
+    "n": 42,
+    "title": "Security hardening and independent verification preparation",
+    "lane": "Quality",
+    "goal": "Prove security boundaries and attack resistance before public release.",
+    "tasks": [
+      "Perform STRIDE threat-model review, OWASP checks, dependency/SBOM and container scans, secret scanning, SSRF and prompt-injection protection, XSS/CSRF defense, webhook and MCP OAuth security tests, multi-tenant red-team tests",
+      "secure signing key use/KMS, encryption, backups and incident playbooks",
+      "document unresolved vulnerabilities with severity and release gates"
+    ],
+    "checks": [
+      "all critical and high severity issues remediated or block release",
+      "no cross-tenant read in automated tests",
+      "signing keys never embedded in code",
+      "threat model updated with real mitigations"
+    ],
+    "filename": "42-security-hardening-and-independent-verification-preparation.md"
+  },
+  {
+    "n": 43,
+    "title": "Performance, reliability and failure recovery",
+    "lane": "Quality",
+    "goal": "Scale measured workloads without breaking the trust model.",
+    "tasks": [
+      "Load test agent telemetry ingestion, graph traversals, source import, public verification and workspace search",
+      "add database indexes, backpressure, caches, rate limits, archive/retention and query budgets",
+      "test worker restart, external provider outage, webhook redelivery, partial upload and delayed C2PA jobs",
+      "produce SLOs, observability dashboards and cost envelopes"
+    ],
+    "checks": [
+      "publish p50/p95 latency under documented test load not invented claims",
+      "duplicate/retry invariants hold",
+      "graceful degradation tested",
+      "measurable resource cost recorded"
+    ],
+    "filename": "43-performance-reliability-and-failure-recovery.md"
+  },
+  {
+    "n": 44,
+    "title": "Deployment, domains and disaster recovery",
+    "lane": "Infrastructure",
+    "goal": "Create a repeatable production deployment without hiding cloud costs or secrets.",
+    "tasks": [
+      "Add Terraform or documented IaC for chosen provider, staging and production environments, DNS/TLS, CDN/WAF, Postgres backups, object storage encryption, KMS secrets, container deploys, migrations and workflow workers",
+      "configure GitHub Actions deployment approvals, protected environments, rollback, monitoring, status page and disaster recovery runbook",
+      "keep local dev straightforward and cost caps visible"
+    ],
+    "checks": [
+      "staging deploy is demonstrated with output evidence if credentials exist, otherwise blocked accurately with manual steps",
+      "restore from backup tested locally/staging",
+      "no production destructive operations without explicit user approval",
+      "rollback documented"
+    ],
+    "filename": "44-deployment-domains-and-disaster-recovery.md"
+  },
+  {
+    "n": 45,
+    "title": "Integrated OriginOS flagship workflow",
+    "lane": "Integration",
+    "goal": "Demonstrate the complete joined-up product rather than 15 independent screens.",
+    "tasks": [
+      "Implement real end-to-end flow: identity-reviewed creator submits research article -> versions and provenance -> EvidenceGraph links claims to source spans -> instrumented Claude agent reviews -> AgentTrust records observed actions -> Slack approval -> PublisherOS publishes via configured test provider -> OriginGraph links resulting artifact -> MCP query retrieves evidence-backed history",
+      "build guided demo seeded with clearly labeled synthetic fixtures and real external provider smoke tests where configured",
+      "create usable walkthrough and failure scenarios"
+    ],
+    "checks": [
+      "automated integration suite passes locally with mock/sandbox provider only where clearly labeled",
+      "all artifacts linked by identifiers",
+      "failed approvals block publication",
+      "MCP reads same persisted trace, not invented output"
+    ],
+    "filename": "45-integrated-originos-flagship-workflow.md"
+  },
+  {
+    "n": 46,
+    "title": "Open-source governance, developer community and docs",
+    "lane": "Launch",
+    "goal": "Prepare a credible open-source launch and contribution path.",
+    "tasks": [
+      "Choose component licensing after reviewing dependency licenses and the open-core strategy",
+      "create CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, support policy, architecture docs, example apps and SDK usage guides",
+      "document trust assumptions, what is and is not verified, privacy and roadmap",
+      "provide onboarding for creator/publisher/developer and maintainers",
+      "prepare issue templates and changelog"
+    ],
+    "checks": [
+      "license scope is explicit per component",
+      "clean external contributor can run local dev from docs",
+      "no false endorsements or standards-compliance claims",
+      "vulnerability reporting path exists"
+    ],
+    "filename": "46-open-source-governance-developer-community-and-docs.md"
+  },
+  {
+    "n": 47,
+    "title": "Release audit and first real customer pilot",
+    "lane": "Launch",
+    "goal": "Deliver a verifiable launch candidate and record what remains unfinished.",
+    "tasks": [
+      "Conduct full traceability pass against docs/ACCEPTANCE_MATRIX.md, run comprehensive build/lint/unit/integration/e2e/security tests, cross-browser and a11y checks",
+      "run one creator/publisher pilot and one instrumented developer flow",
+      "collect telemetry, user feedback, costs and privacy concerns",
+      "fix critical blockers, write rollback/runbook and honest feature matrix",
+      "produce prioritized post-launch backlog without falsely marking unbuilt modules complete"
+    ],
+    "checks": [
+      "release checklist links test evidence",
+      "no critical/high blockers ignored",
+      "first deployment and pilot results clearly labeled actual vs proposed",
+      "docs/BUILD_STATE.md lists exact completed, partial, blocked and next tasks"
+    ],
+    "filename": "47-release-audit-and-first-real-customer-pilot.md"
+  }
+]
