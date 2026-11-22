@@ -201,8 +201,8 @@ describe("cross-organization isolation", () => {
         .returning(),
     );
     expect(renamed).toEqual([]);
-    const transferred = await attempt((tx) =>
-      tx.execute(sql`select core.transfer_ownership(${ids.alice}) as ok`),
+    const transferred = await withScope(app.db, { userId: ids.alice, tenantId: ids.orgB }, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select core.transfer_ownership(${ids.alice}) as ok`),
     );
     expect(transferred.rows[0]).toEqual({ ok: false });
   });

@@ -159,6 +159,11 @@ export function WorkspaceSwitcher({ session }: { readonly session: WorkspaceSess
 
 export function UserMenu({ session }: { readonly session: WorkspaceSession }) {
   const [error, setError] = useState<string | null>(null);
+  // Server-rendered pages verify the session but cannot pass a renewed cookie back to the
+  // browser. One session read per page load lets Better Auth extend the cookie while in use.
+  useEffect(() => {
+    void authClient.getSession();
+  }, []);
   const signOut = async () => {
     const { error: err } = await authClient.signOut();
     if (err) {

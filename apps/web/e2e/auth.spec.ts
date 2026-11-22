@@ -233,6 +233,7 @@ test.describe("account security", () => {
     await createOrganization(page, "Forget Co");
     await signOut(page);
     await page.getByRole("link", { name: "Forgot your password?" }).click();
+    await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
     await page.getByLabel("Email").fill(email);
     await page.getByRole("button", { name: "Email me a reset link" }).click();
     await expect(page.getByText(/If an account uses that address/)).toBeVisible();
