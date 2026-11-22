@@ -113,6 +113,15 @@ describe("application role", () => {
     });
   });
 
+  it("fails closed when the role cannot be assumed, instead of running as the owner", async () => {
+    const broken = createDatabase({ url: url!, role: "originos_missing_role" });
+    await expect(broken.pool.query("select 1")).rejects.toThrow();
+    await broken.close();
+    expect(() => createDatabase({ url: url!, role: "x; drop table core.users" })).toThrow(
+      /identifier/,
+    );
+  });
+
   it("sees no tenant rows without a scope", async () => {
     for (const table of ["organizations", "memberships", "invitations", "audit_events"]) {
       const r = await app.pool.query(`select count(*)::int as n from core.${table}`);

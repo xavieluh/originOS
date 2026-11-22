@@ -1,7 +1,8 @@
 import { passkey } from "@better-auth/passkey";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import type { Db } from "@originos/db";
-import { schema } from "@originos/db";
+import { schema, withScope } from "@originos/db";
+import { sql } from "drizzle-orm";
 import { betterAuth } from "better-auth";
 import { twoFactor } from "better-auth/plugins";
 import type { Mailer } from "../mail/mailer.js";
@@ -93,6 +94,18 @@ export function createAuth(config: AuthConfig) {
         activeOrganizationId: { type: "string", required: false, input: false },
       },
     },
+    databaseHooks: {
+      session: {
+        create: {
+          before: async (session) => ({
+            data: {
+              ...session,
+              activeOrganizationId: await defaultOrganizationFor(db, session.userId),
+            },
+          }),
+        },
+      },
+    },
     rateLimit: { enabled: config.rateLimit, window: 60, max: 30, storage: "memory" },
     plugins: [
       twoFactor({ issuer: "OriginOS" }),
@@ -102,3 +115,25 @@ export function createAuth(config: AuthConfig) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+
+/**
+ * The workspace a new session opens in: the organization the person used most
+ * recently in any session, else their oldest membership, else none (onboarding).
+ * Runs under row-level security as the person, so it can only see their own rows.
+ */
+export async function defaultOrganizationFor(db: Db, userId: string): Promise<string | null> {
+  const result = await withScope(db, { userId }, (tx) =>
+    tx.execute<{ tenant_id: string }>(sql`
+      select m.tenant_id
+      from core.memberships m
+      left join lateral (
+        select max(s.updated_at) as last_used
+        from core.sessions s
+        where s.user_id = m.user_id and s.active_organization_id = m.tenant_id
+      ) recent on true
+      where m.user_id = ${userId}
+      order by recent.last_used desc nulls last, m.created_at asc
+      limit 1`),
+  );
+  return result.rows[0]?.tenant_id ?? null;
+}

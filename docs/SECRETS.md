@@ -15,6 +15,16 @@ Provider API keys (model providers, Slack, GitHub App, Stripe, publishing platfo
 5. **Real secrets live in a secret manager**, injected as environment variables at runtime. The production store (cloud secret manager / KMS) is chosen in Phase 44; until then there are no production secrets.
 6. **CI uses GitHub Actions secrets only**, never echoes them, and grants workflows read-only `contents` permission by default.
 
+## Authentication secrets (Phase 04)
+
+| Variable | Used by | Production | Local value |
+| --- | --- | --- | --- |
+| `BETTER_AUTH_SECRET` | apps/api | **Required** (the API refuses to start without it). 32+ random characters, e.g. `openssl rand -base64 48`. Signs session cookies and encrypts TOTP secrets: rotating it signs everyone out and breaks enrolled two-step verification, so rotate deliberately. | `originos-local-only-…` in `.env.example`; the E2E suite uses its own `originos-local-only-e2e-…` value. Without it outside production the API generates a random secret per start and warns. |
+| `SMTP_URL` | apps/api | Required for sign-up, password reset and invitations. Contains the SMTP provider's credentials (`smtps://user:password@host:465`); treat the whole URL as a secret. **BLOCKED:** no production email provider is chosen yet. | `smtp://127.0.0.1:1025` (Mailpit; nothing leaves the machine). |
+| `DATABASE_URL` | apps/api, worker | Required. The connecting user must own the schema; the API switches every connection to the non-login `originos_app` role (ADR-023). | compose credentials (`originos-local-only`). |
+
+Session tokens live only in an httpOnly cookie. Server code that lists sessions strips the tokens before anything reaches the browser (`apps/web/src/app/actions/account.ts`). Invitation tokens are stored only as SHA-256 hashes, travel in the URL fragment (never sent to servers) and then in POST bodies, and the API log redacts query strings.
+
 ## Scanning
 
 - **CI:** every push and pull request runs gitleaks 8.30.1 over the full git history (`.github/workflows/ci.yml`, job `secret-scan`). A finding fails the build.

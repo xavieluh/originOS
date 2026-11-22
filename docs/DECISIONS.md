@@ -1,6 +1,6 @@
 # Architecture decision log
 
-**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
+**Status of this log:** ADR-001 to ADR-012 were **Accepted** by the owner on 2026-11-22 ("accept all"), including every [GUESS] item. ADR-013 to ADR-018 (Phases 01–02) were accepted on 2026-11-22 when the owner merged PRs #2 and #3 and asked for no changes before Phase 03. ADR-019 to ADR-021 (Phase 03) were accepted by the owner on 2026-11-22, during Phase 04. They are accepted as design direction only: none is validated by code or tests yet, and each will be revisited in the phase named in the table.
 **Version policy:** no library versions are pinned here. The phase that first installs a dependency records the exact version, the official doc URL it was checked against, and the date (CLAUDE.md rule 9).
 
 | ADR | Decision | Alternatives considered | Status | Settled / revisited in |
@@ -23,6 +23,11 @@
 | ADR-016 | Add `packages/service-kit` for the shared Fastify bootstrap | Copy the bootstrap into each service | Accepted 2026-11-22 (Phase 01) | 01 |
 | ADR-017 | Local stack: Docker Compose with Postgres 18 + pgvector 0.8.7 and SeaweedFS 4.54 as the S3 emulator; apps run on the host | Postgres 16/17; MinIO, RustFS or S3Mock; apps in containers | Accepted 2026-11-22 (Phase 02) | 02, revisit at 07 and 44 |
 | ADR-018 | CI on GitHub Actions: SHA-pinned actions, gitleaks binary with checksum, compose-based smoke job, `pnpm audit` + Syft CycloneDX SBOM | gitleaks-action; dependency-review-action; separate Postgres service container | Accepted 2026-11-22 (Phase 02) | 02, revisit at 42 |
+| ADR-019 | Design system: Tailwind CSS 4 over TypeScript tokens | see ADR text | Accepted 2026-11-22 (Phase 03) | 03 |
+| ADR-020 | Typography (Fraunces, Inter, JetBrains Mono, self-hosted) and lucide icons | Font CDN (see ADR text) | Accepted 2026-11-22 (Phase 03) | 03 |
+| ADR-021 | Browser tests: Playwright, axe and visual baselines in a pinned container | Host-rendered baselines (see ADR text) | Accepted 2026-11-22 (Phase 03) | 03, updated 04 |
+| ADR-022 | Authentication: Better Auth 1.7.27 in the API (email+password, verification, reset, TOTP, passkeys) behind a same-origin proxy | Hosted IdP; Auth.js; hand-rolled | Proposed 2026-11-22 (Phase 04) | 04, revisit at 05 and 42 |
+| ADR-023 | Tenancy: `core` schema, non-superuser app role, row-level security that requires membership | App-only checks; Better Auth organization plugin | Proposed 2026-11-22 (Phase 04) | 04, revisit at 05, 06 and 42 |
 
 ---
 
@@ -133,7 +138,7 @@ OriginOS never claims access to private Claude conversation history or to agent 
 
 ## ADR-010 — Tenancy and authorization
 
-**Decision.** Tenant = organization; workspaces within it **[GUESS: one workspace per org at first, model allows many]**. Every tenant-owned row has `tenant_id`; repositories require a `TenantContext`. One authorization evaluator: RBAC roles + resource-scoped grants + explicit deny, actor types human/service/agent, actions read/write/publish/export/admin. Agent principals default to a strict subset of the owning user's permissions. **[GUESS, recommended]** Postgres row-level security keyed on a per-transaction `app.tenant_id` setting as defense in depth. Auth provider (OIDC, passkeys/MFA) is chosen in Phase 04 against current docs and recorded here.
+**Decision.** Tenant = organization; workspaces within it **[GUESS: one workspace per org at first, model allows many]**. Every tenant-owned row has `tenant_id`; repositories require a `TenantContext`. One authorization evaluator: RBAC roles + resource-scoped grants + explicit deny, actor types human/service/agent, actions read/write/publish/export/admin. Agent principals default to a strict subset of the owning user's permissions. **[GUESS, recommended]** Postgres row-level security keyed on a per-transaction `app.tenant_id` setting as defense in depth. Auth provider (OIDC, passkeys/MFA) is chosen in Phase 04 against current docs and recorded here. **Phase 04:** authentication is ADR-022 (Better Auth); tenancy enforcement is ADR-023 (RLS that requires membership, not just a tenant setting).
 
 **Verification.** Phase 04/05: cross-org access impossible in tests even with UI bypassed; role change produces an audit event. Phase 42: automated cross-tenant red-team suite.
 
@@ -216,7 +221,7 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-019 — Design system: Tailwind CSS 4 over TypeScript tokens (Phase 03)
 
-**Status.** Proposed 2026-11-22 (Phase 03).
+**Status.** Accepted 2026-11-22 (proposed in Phase 03; accepted by the user during Phase 04).
 
 **Decision.** Design tokens live in `packages/ui/src/tokens.ts` (colours for light and dark, fonts, radii, motion). `packages/ui` builds them into `dist/tokens.css` as `--oo-*` custom properties (`:root`, `[data-theme="dark"]`, and `prefers-color-scheme: dark` unless `data-theme="light"`). The web app uses Tailwind CSS 4.3.5 via `@tailwindcss/postcss` 4.3.5, mapping the variables in an `@theme inline` block, and scans `packages/ui/src` with `@source`. Components in `packages/ui` are plain React with Tailwind classes; they take a `linkComponent` instead of importing Next. Pure helpers (`theme.ts`, `commands.ts`, `nav.ts`) sit outside `"use client"` modules so server code can import them. Versions were the latest on npm on 2026-11-22.
 
@@ -226,7 +231,7 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-020 — Typography and icons (Phase 03)
 
-**Status.** Proposed 2026-11-22 (Phase 03).
+**Status.** Accepted 2026-11-22 (proposed in Phase 03; accepted by the user during Phase 04).
 
 **Decision.** Fraunces (display), Inter (body) and JetBrains Mono (IDs, hashes, timestamps), self-hosted through `@fontsource-variable/*` 5.3.0; icons from `lucide-react` 1.77.0. Icons are decorative (`aria-hidden`) and always sit next to text.
 
@@ -234,11 +239,35 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-021 — Browser tests: Playwright, axe and visual baselines in a pinned container (Phase 03)
 
-**Status.** Proposed 2026-11-22 (Phase 03).
+**Status.** Accepted 2026-11-22 (proposed in Phase 03; accepted by the user during Phase 04).
 
 **Decision.** `apps/web/e2e` runs with `@playwright/test` 1.65.1 and `@axe-core/playwright` 4.14.0 against a production build (`next start` on port 3100, API pointed at a closed port so status must read "Unreachable"). Suites: every nav route resolves and shows its "not yet available" cards; every `<button>` has a `data-action` from an allowlist and every link resolves; axe (WCAG 2.0/2.1/2.2 A and AA plus best practice) on every route in light and dark; keyboard (skip link, focus outline, ⌘K/Ctrl+K command bar, theme radios, drawer, mobile nav); and visual screenshots at 390, 820 and 1440 px plus dark. Visual baselines are generated and checked in `mcr.microsoft.com/playwright:v1.65.1-noble` (`scripts/e2e-docker.sh`), and the CI job `web-e2e` runs in the same image, so font rendering matches.
 
 **Why.** Screenshots differ across operating systems and browser builds; one pinned image for both makes the baselines meaningful. Unit tests can't see layout, focus or computed contrast, so the acceptance checks need a real browser.
+
+**Phase 04 update.** Workspace pages now require a signed-in member, so the suite runs against the built API with a real Postgres (`originos_test`, migrated on start) and Mailpit, instead of a closed API port. A setup project signs a person up through the UI and the real verification email and saves the session; signed-out suites clear it. The browser uses `http://localhost:3100` because passkeys need a hostname. The "API unreachable" state stays covered by unit tests of `describeApi`.
+
+## ADR-022 — Authentication: Better Auth in the API (Phase 04)
+
+**Status.** Proposed 2026-11-22 (Phase 04).
+
+**Decision.** `better-auth` 1.7.27 with `@better-auth/drizzle-adapter` 1.7.27 and `@better-auth/passkey` 1.7.27 (newest releases on npm when checked on 2026-11-22), mounted in `apps/api` at `/api/auth/*`; the web app reaches it only through a same-origin proxy route (`apps/web/src/app/api/auth/[...all]/route.ts`), so the session cookie is first-party and httpOnly. Enabled: email + password (scrypt, 12–128 characters, email verification required before sign-in, reset by email with a 1-hour token that revokes all sessions), TOTP two-step verification with single-use backup codes, and passkeys (WebAuthn; relying-party ID = hostname of `ORIGINOS_PUBLIC_URL`). Sessions: 7 days, renewed daily while used, "fresh" for 15 minutes for sensitive changes; cookie prefix `originos`, `Secure` on https. Mail goes through nodemailer 10.6.1 over `SMTP_URL`; without it the mailer reports "not configured" and sign-up, reset and invitations show a setup-required state. Telemetry off.
+
+**Security notes.** Better Auth skips its origin/CSRF checks when it detects a test runner, so `disableOriginCheck: false` and `disableCSRFCheck: false` are pinned and tests exercise the production behaviour. It checks Origin when cookies are present and Fetch Metadata otherwise. Our own API routes add a global guard: unsafe methods need `Origin` equal to the public origin and a JSON body, then a valid session (deny by default; only health, `/v1/auth-config` and the auth endpoints are public). Session tokens never reach browser JavaScript: the session list is fetched server-side and stripped to ids. Forms are disabled until hydrated and use POST, so an early submit cannot put a password in a URL (found during Phase 04 testing). Per-IP rate limits are on (30 requests/minute window plus Better Auth's stricter sign-in rules); `AUTH_RATE_LIMIT=off` exists for browser test runs and is refused in production. The API trusts `x-forwarded-for` for client addresses: production must put it behind a proxy that overwrites that header (Phase 44). `pnpm audit` reports one moderate advisory in esbuild reached through better-auth's optional drizzle-kit dependency; it affects esbuild's dev server, which the API never runs. Better Auth has had security advisories before: pin exact versions, read the release notes on every upgrade and re-run the auth integration suite.
+
+**Why not the alternatives.** A hosted identity provider (Auth0, Clerk, WorkOS, Cognito) would add a paid external dependency and an account the owner hasn't approved; OIDC sign-in with external providers can be added later through Origin Connect (ADR-009) without changing sessions. Auth.js focuses on OAuth providers and leaves passwords, TOTP and passkeys to the app. Hand-rolling password and WebAuthn handling is the riskiest option. Better Auth's own organization plugin was not used: tenancy needs row-level security and our audit log (ADR-023).
+
+**Not done yet.** OIDC/social sign-in, enterprise SSO (SAML/OIDC per org), account deletion with retention rules (Phase 05 consent and retention), "breached password" checks, and a production email provider (**BLOCKED** on the owner choosing one and supplying `SMTP_URL`).
+
+## ADR-023 — Tenancy enforcement: core schema, application role and row-level security (Phase 04)
+
+**Status.** Proposed 2026-11-22 (Phase 04). Implements ADR-010's tenancy half; the authorization evaluator is Phase 05.
+
+**Decision.** A `core` Postgres schema holds accounts (Better Auth's tables), `organizations` (tenant id = organization id), `memberships` (owner/admin/member; exactly one owner per organization by partial unique index), `invitations` (lowercased email, invited role, SHA-256 token hash, 7-day expiry, accepted/revoked state) and an append-only `audit_events` table. Migrations are generated by drizzle-kit 0.31.11 from `packages/db/src/schema.ts`; row-level security is a hand-written migration (`0001_core_rls.sql`). Services connect as the schema owner but every pooled connection runs as `originos_app` (a NOLOGIN, non-superuser, NOBYPASSRLS role) via the `role` startup parameter, so if the role cannot be assumed the connection fails instead of running as the owner. Each request runs in a transaction that sets `app.user_id`, `app.tenant_id` and, for invitations, `app.invitation_token_hash`. Policies never trust `app.tenant_id` alone: rows are visible only when the user is a member (`core.member_role`, SECURITY DEFINER), management needs owner or admin, a new membership is possible only as the first owner of an organization you just created or by a valid, unexpired, unrevoked invitation addressed to your verified email with the invited role, and ownership moves only through `core.transfer_ownership()`. The application role cannot update or delete audit events. A new session opens in the organization the person used most recently.
+
+**Why.** CLAUDE.md requires tenant isolation in the backend and storage. Database-enforced policies mean an application bug that sets the wrong tenant still cannot read or write another organization (tested directly against Postgres). Separate tables (not Better Auth's organization plugin) keep tenancy under the same RLS and audit rules every later module will use.
+
+**Verification (2026-11-22).** `packages/db` RLS integration tests 15/15 (role is not superuser, fails closed, forged tenant id reveals nothing, non-members cannot join or invite, invitation token, email, role and expiry are enforced by the database, single owner, audit log append-only); `apps/api` integration tests 16/16; Playwright journeys in ADR-021.
 
 ---
 

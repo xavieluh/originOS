@@ -11,9 +11,10 @@ export interface DatabaseOptions {
   readonly maxConnections?: number;
   readonly connectTimeoutMs?: number;
   /**
-   * Switch every pooled connection to this role (`SET ROLE`) before use, so
-   * row-level security is enforced. Services pass APPLICATION_ROLE; migrations
-   * and test fixtures connect without it.
+   * Run every pooled connection as this role, so row-level security is
+   * enforced. Services pass APPLICATION_ROLE; migrations and test fixtures
+   * connect without it. Set as a startup parameter: if the role cannot be
+   * assumed the connection fails, so queries never silently run as the owner.
    */
   readonly role?: string;
 }
@@ -27,21 +28,18 @@ export interface Database {
 }
 
 export function createDatabase(options: DatabaseOptions): Database {
+  if (options.role !== undefined && !/^[a-z_][a-z0-9_]{0,62}$/.test(options.role)) {
+    throw new Error("Database role must be a plain lowercase identifier.");
+  }
   const pool = new pg.Pool({
     connectionString: options.url,
     max: options.maxConnections ?? 10,
     connectionTimeoutMillis: options.connectTimeoutMs ?? 2_000,
+    ...(options.role ? { options: `-c role=${options.role}` } : {}),
   });
   // Without a listener, an idle-client error would crash the process.
   // The error object from pg does not include the password.
   pool.on("error", () => undefined);
-  if (options.role) {
-    const statement = `SET ROLE ${pg.escapeIdentifier(options.role)}`;
-    // Queued on the new client before the pool hands it to any caller.
-    pool.on("connect", (client) => {
-      client.query(statement).catch(() => undefined);
-    });
-  }
   return {
     db: drizzle({ client: pool, schema }),
     pool,

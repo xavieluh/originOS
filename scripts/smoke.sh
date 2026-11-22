@@ -51,9 +51,19 @@ check_ready() { # url
 check_ready http://127.0.0.1:4000/health/ready
 check_ready http://127.0.0.1:4050/health/ready
 
-info "Checking the workspace home page reports the API as ready"
-page="$(curl -s http://127.0.0.1:3000/home)"
-[[ "$page" == *"answered its readiness check"* ]] || die "web page does not show the API as ready"
+info "Checking signed-out access is refused (Phase 04)"
+code="$(curl -s -o /dev/null -w '%{http_code}' -H 'x-correlation-id: smoke-test-0001' http://127.0.0.1:4000/v1/me)"
+[[ "$code" == "401" ]] || die "GET /v1/me without a session returned $code, expected 401"
+location="$(curl -s -o /dev/null -w '%{redirect_url}' http://127.0.0.1:3000/home)"
+[[ "$location" == *"/sign-in?next=%2Fhome" ]] || die "signed-out /home did not redirect to sign-in ($location)"
+
+info "Checking the sign-in page sees a working account service"
+config="$(curl -s http://127.0.0.1:4000/v1/auth-config)"
+echo "$config"
+[[ "$config" == *'"accounts":"available"'* ]] || die "accounts are not available on the API"
+page="$(curl -s http://127.0.0.1:3000/sign-in)"
+[[ "$page" == *"Sign in to OriginOS"* && "$page" != *"API is unreachable"* ]] \
+  || die "sign-in page does not show a usable form"
 
 info "Checking the correlation ID reached the API log"
 grep -q '"correlationId":"smoke-test-0001"' "$LOG_DIR/api.log" || die "correlation ID missing from API logs"

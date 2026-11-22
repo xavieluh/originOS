@@ -161,6 +161,28 @@ describe("organizations and workspace switching", () => {
     expect(org).toMatchObject({ organization: { name: "Alice Research" }, myRole: "owner" });
   });
 
+  it("a new session opens in the organization the person used most recently", async () => {
+    const email = uniqueEmail("returning");
+    const first = await new Client(h).signUp(email);
+    const fresh = await new Client(h).request("POST", "/api/auth/sign-in/email", {
+      email,
+      password: "correct horse battery staple",
+    });
+    expect(fresh.statusCode).toBe(200);
+    const o1 = json(await first.request("POST", "/v1/organizations", { name: "First Org" }));
+    const o2 = json(await first.request("POST", "/v1/organizations", { name: "Second Org" }));
+    await first.request("PUT", "/v1/me/active-organization", { organizationId: o1.organizationId });
+    const later = new Client(h);
+    const signIn = await later.request("POST", "/api/auth/sign-in/email", {
+      email,
+      password: "correct horse battery staple",
+    });
+    expect(signIn.statusCode).toBe(200);
+    const me = json(await later.request("GET", "/v1/me"));
+    expect(me.activeOrganizationId).toBe(o1.organizationId);
+    expect(me.activeOrganizationId).not.toBe(o2.organizationId);
+  });
+
   it("state-changing calls need the web origin and a JSON body", async () => {
     const c = await new Client(h).signUp(uniqueEmail("csrf"));
     const wrongOrigin = await c.request(

@@ -15,6 +15,7 @@ async function main(): Promise<void> {
     logLevel: env.LOG_LEVEL,
     mailer: createMailer(env),
     publicUrl: env.ORIGINOS_PUBLIC_URL,
+    authRateLimit: env.AUTH_RATE_LIMIT === "on",
     ...(env.BETTER_AUTH_SECRET ? { authSecret: env.BETTER_AUTH_SECRET } : {}),
   });
   if (database) {

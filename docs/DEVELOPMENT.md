@@ -19,7 +19,7 @@ scripts/bootstrap.sh     # once: .env from .env.example, pnpm install, uv sync, 
 scripts/dev.sh           # every day: containers + all TypeScript processes in watch mode, .env exported
 ```
 
-Then open http://127.0.0.1:3000. The home page shows the API and database status read live.
+Then run `pnpm db:migrate` once (and after pulling new migrations), open **http://localhost:3000** (use `localhost`, not `127.0.0.1`: cookies and passkeys are bound to `ORIGINOS_PUBLIC_URL`), and create an account. The verification email lands in Mailpit at http://127.0.0.1:8025; nothing is sent to real addresses. `scripts/db-reset-local.sh` drops and re-migrates the local databases (local compose only).
 
 | Process | Package | Address | Health |
 |---|---|---|---|
@@ -32,6 +32,7 @@ Then open http://127.0.0.1:3000. The home page shows the API and database status
 | AI worker (Python) | `services/ai-worker` | no server | `uv run --project services/ai-worker python -m originos_ai_worker` |
 | Postgres 18 + pgvector 0.8.7 | compose `postgres` | 127.0.0.1:5432 (`originos`, `originos_test`) | `pg_isready` |
 | S3-compatible storage (SeaweedFS 4.54) | compose `object-storage` | http://127.0.0.1:8333 | `/healthz`; used from Phase 07 |
+| Mail catcher (Mailpit 1.34.0) | compose `mail` | SMTP 127.0.0.1:1025, UI http://127.0.0.1:8025 | `/mailpit readyz` |
 
 Everything binds to loopback. Redis is not part of the stack because nothing uses it (ADR-003).
 
@@ -54,14 +55,15 @@ CI (`.github/workflows/ci.yml`) runs on every push to `main` and every pull requ
 | Secret scan | gitleaks over the full history; no tracked `.env` |
 | Lint, typecheck, test, build | the whole TypeScript workspace from a clean install |
 | ai-worker (Python) | ruff and pytest |
-| Local stack | `compose.yaml` starts; DB integration tests (pgvector); seed guard; `scripts/smoke.sh` |
+| Local stack | `compose.yaml` starts; migrations apply; DB (row-level security) and API (auth, tenancy, CSRF) integration tests; seed guard; `scripts/smoke.sh` |
+| Web E2E | Playwright against built web + API with Postgres and Mailpit service containers: auth journeys, routes, axe, keyboard, visual |
 | Dependency audit and SBOM | `pnpm audit --prod --audit-level high`; CycloneDX SBOM uploaded as an artifact |
 
-Migration checks start in Phase 06, when the first migration exists.
+Migrations live in `packages/db/migrations` (drizzle-kit 0.31.11 generates them from `src/schema.ts` with `pnpm --filter @originos/db db:generate`; row-level security is hand-written SQL). Never edit an applied migration; add a new one.
 
-## Browser tests (Phase 03)
+## Browser tests (Phase 03, real stack since Phase 04)
 
-`apps/web/e2e` holds Playwright suites for routes and dead controls, axe accessibility (light and dark), keyboard use and visual regression. Run them after `pnpm build`:
+`apps/web/e2e` holds Playwright suites for sign-up, verification, invitations, workspaces, password reset, two-step verification and passkeys (a virtual authenticator), routes and dead controls, axe accessibility (light and dark), keyboard use and visual regression. Playwright starts the built API (after migrating `originos_test`) on port 4990 and the built web app on http://localhost:3100. Start Postgres and Mailpit first (`docker compose up -d postgres mail`), then run after `pnpm build`:
 
 ```bash
 scripts/e2e-docker.sh                       # everything, in the pinned Playwright image (needs Docker)

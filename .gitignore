@@ -25,3 +25,5 @@ __pycache__/
 # Playwright output (baselines in e2e/*-snapshots are committed)
 test-results/
 playwright-report/
+# Browser sessions created by E2E setup (real but disposable test accounts)
+apps/web/e2e/.auth/

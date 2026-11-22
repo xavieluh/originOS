@@ -6,6 +6,10 @@ const WebServerEnvSchema = z.object({
   NODE_ENV: envFields.nodeEnv,
   /** Base URL of apps/api, used only from server code. Never sent to the browser. */
   ORIGINOS_API_URL: envFields.url.default("http://127.0.0.1:4000"),
+  /** This app's browser-facing origin; must match the API's ORIGINOS_PUBLIC_URL. */
+  ORIGINOS_PUBLIC_URL: envFields.url.default("http://localhost:3000"),
+  /** Local mail catcher UI (Mailpit). Shown on "check your email" screens outside production only. */
+  ORIGINOS_DEV_MAILBOX_URL: envFields.url.optional(),
   /** Opt-in for the /design-system gallery in production builds. Only the exact string "true" enables it. */
   ORIGINOS_ENABLE_GALLERY: z.enum(["true", "false"]).default("false"),
 });

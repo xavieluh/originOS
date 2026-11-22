@@ -81,7 +81,7 @@ jobs:
       - run: uv run --frozen pytest
 
   local-stack:
-    name: Local stack (compose, DB integration, smoke)
+    name: Local stack (compose, DB and API integration, smoke)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -90,13 +90,17 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - name: Start Postgres (pgvector) and object storage from compose.yaml
+      - name: Start Postgres (pgvector), object storage and Mailpit from compose.yaml
         run: |
           cp .env.example .env
           docker compose up -d --wait
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Database integration tests
+      - name: Apply migrations to the development database
+        run: |
+          set -a; . ./.env; set +a
+          pnpm db:migrate
+      - name: Database (RLS) and API (auth, tenancy) integration tests
         run: |
           set -a; . ./.env; set +a
           pnpm test:integration
@@ -117,8 +121,31 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.65.1-noble
       options: --ipc=host
+    # Real Postgres and a mail catcher: sign-up, verification, invitations and
+    # password reset run end to end (apps/web/e2e/env.ts reads these URLs).
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg18-trixie
+        env:
+          POSTGRES_USER: originos
+          POSTGRES_PASSWORD: originos-local-only
+          POSTGRES_DB: originos_test
+        options: >-
+          --health-cmd "pg_isready -U originos -d originos_test"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+      mail:
+        image: axllent/mailpit:v1.34.0
+        env:
+          MP_SMTP_AUTH_ACCEPT_ANY: "true"
+          MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+        options: >-
+          --health-cmd "/mailpit readyz"
+          --health-interval 3s --health-timeout 3s --health-retries 20
     env:
       HOME: /root
+      E2E_DATABASE_URL: postgres://originos:originos-local-only@postgres:5432/originos_test
+      E2E_SMTP_URL: smtp://mail:1025
+      E2E_MAILPIT_URL: http://mail:8025
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -127,8 +154,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build --filter=@originos/web
-      - name: Playwright (routes, dead controls, axe, keyboard, visual)
+      - run: pnpm turbo run build --filter=@originos/web --filter=@originos/api
+      - name: Playwright (auth journeys, routes, dead controls, axe, keyboard, visual)
         working-directory: apps/web
         run: pnpm exec playwright test
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
