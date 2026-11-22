@@ -1,9 +1,12 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import * as schema from "./schema.js";
+import * as schema from "./tables.js";
 
 /** Non-superuser role created by migration 0001; row-level security applies to it. */
 export const APPLICATION_ROLE = "originos_app";
+
+/** Role for the worker (migration 0005): outbox tables only, no tenant data. */
+export const WORKER_ROLE = "originos_worker";
 
 export interface DatabaseOptions {
   /** postgres:// connection string. Treated as a secret: never logged. */

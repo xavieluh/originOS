@@ -29,6 +29,20 @@
       "when": 1795385511965,
       "tag": "0003_core_authz_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795387468533,
+      "tag": "0004_domain_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795387523143,
+      "tag": "0005_domain_rls_outbox_ledger",
+      "breakpoints": true
     }
   ]
 }

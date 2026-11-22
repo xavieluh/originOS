@@ -1,9 +1,9 @@
 # OriginOS build state
 
-**Current phase:** 05 — acceptance checks pass locally; PR in review
-**Last fully completed phase:** 04 (authentication, teams and organizations; PR #5 merged by owner 2026-11-22).
+**Current phase:** 06 — PASSED, IN REVIEW (PR open; not merged)
+**Last fully completed phase:** 05 (authorization, policy baseline and consent; PR #6 merged by owner 2026-11-22).
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
-**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. Phase 05 adds the single permission evaluator (`packages/authz`: roles, resource-scoped grants, explicit deny, agent and service actors), agents capped by their owner, and consent records with history, with API guards, settings pages and audit events. No product module and no external integration exists yet; production email delivery is not configured.
+**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. Phase 05 adds the single permission evaluator (`packages/authz`: roles, resource-scoped grants, explicit deny, agent and service actors), agents capped by their owner, and consent records with history, with API guards, settings pages and audit events. Phase 06 adds the canonical domain schema (contracts plus 12 tables in four context schemas, an object registry with whitelisted typed relations, append-oriented writes), a hash-chained audit log, the transactional outbox with a worker dispatcher, down migrations and the retention policy (docs/RETENTION.md). No product module and no external integration exists yet; production email delivery is not configured.
 
 ## Phase progress
 
@@ -14,8 +14,8 @@
 | 02 Local development, CI and conventions | COMPLETE | All 4 checks passed locally and in GitHub Actions run 45063816462 (see Phase 02 handoff). PR #3 merged 2026-11-22. | — |
 | 03 Distinctive UX system and app shell | COMPLETE | All 4 checks passed locally 2026-11-22: 78/78 Playwright tests in the pinned container (routes, dead controls, axe light and dark, keyboard, 22 visual baselines), 73 UI unit tests incl. 54 contrast checks, `scripts/check.sh` and `scripts/smoke.sh` green. GitHub Actions run 45069044008: 6/6 jobs green, incl. `web-e2e` against the committed baselines. See Phase 03 handoff. PR #4 merged 2026-11-22. | — |
 | 04 Authentication, teams and organizations | COMPLETE | All 4 checks passed locally 2026-11-22: DB RLS integration 15/15, API integration 16/16, Playwright 119/119 in the pinned container against the real API, Postgres and Mailpit (auth journeys, routes, axe, keyboard, 24 visual baselines), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 04 handoff. PR #5 merged 2026-11-22. | Production SMTP provider not chosen (BLOCKED, see handoff) |
-| 05 Authorization, policy baseline and consent | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: authz unit 16/16, DB RLS integration 23/23, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 05 handoff. | ADR-024 Accepted. GitHub Actions run 45078282778: 6/6 jobs green |
-| 06 Core domain schema, ledger and outbox | NOT STARTED | — | — |
+| 05 Authorization, policy baseline and consent | COMPLETE | All 4 checks passed locally 2026-11-22: authz unit 16/16, DB RLS integration 23/23, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 05 handoff. PR #6 merged 2026-11-22. | ADR-024 Accepted. GitHub Actions run 45078282778: 6/6 jobs green |
+| 06 Core domain schema, ledger and outbox | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: contracts 14/14, db unit 21/21, DB integration 39/39 (domain schema, RLS, audit chain, every migration down and up), worker outbox integration 8/8, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 06 handoff. | ADR-025 Proposed. GitHub Actions run 45080783848: 6/6 jobs green |
 | 07 Object storage, ingestion queues and workflow core | NOT STARTED | — | — |
 | 08 Origin Connect OAuth and integration broker | NOT STARTED | — | — |
 | 09 IdentityMesh creator and organization profiles | NOT STARTED | — | — |
@@ -71,6 +71,33 @@
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
 2. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+
+## Phase 06 handoff (2026-11-22)
+
+- **Phase:** 06 Core domain schema, ledger and outbox. Procedure: origin-build, followed by hand. Branch restarted from main after PR #6 merged.
+- **Files added/changed:**
+  - `packages/contracts/src/domain/` (new): `ids.ts` (opaque prefixed ids, `newId`, `kindOf`, `idOf`), `vocabulary.ts` (assurance labels, capture methods, visibilities, statuses, `RELATION_RULES`), `entities.ts` (zod schema per entity, `DOMAIN_ENTITIES`), `events.ts` (event envelope); `test/domain.test.ts`.
+  - `packages/db`: `src/domain-schema.ts` (12 domain tables in `trust`, `content`, `evidence`, `agents`; `core.objects`, `core.relation_rules`, `core.relations`, `core.outbox_events`, `core.outbox_receipts`), `src/tables.ts`, `src/outbox.ts` (`enqueueEvent`, `claimEvents`, `consumeOnce`, `markDelivered`, `markFailed`, `backoffMs`), `src/rollback.ts` + `rollback-cli.ts` (`rollback` script), `WORKER_ROLE`, audit chain columns on `audit_events`, `migrations/0004_domain_schema.sql` (generated), `0005_domain_rls_outbox_ledger.sql` (registry triggers and foreign keys, relation rules, grants, RLS, worker role, outbox policies, audit hash chain), `migrations/down/0000–0005`, README; tests `test/domain-schema.test.ts`, `test/integration/domain.test.ts`, `test/integration/rollback.test.ts`.
+  - `apps/worker`: `src/outbox-dispatcher.ts` (claim, consume once per consumer, deliver / retry / dead-letter, poll loop), wired into `worker.ts` and `main.ts` (connects as `originos_worker`; `OUTBOX_POLL_MS`), `registeredConsumers` (empty), unit tests, `vitest.integration.config.ts`, `test/integration/outbox.test.ts`.
+  - Root `test:integration` includes the worker; CI step renamed; `.env.example`; `docs/RETENTION.md` (new); DECISIONS (ADR-025, Proposed); ACCEPTANCE_MATRIX.
+- **Migrations:** `0004_domain_schema`, `0005_domain_rls_outbox_ledger` (`pnpm db:migrate`). Additive: existing tables only gain the audit chain columns, and existing audit events are backfilled into the chain. Every migration now has a down script.
+- **API changes:** none. Phase 06 is schema, library and worker only; modules start writing domain rows from Phase 09/11.
+- **Commands executed and results (2026-11-22):**
+  - `scripts/check.sh --db` → "All checks passed" (format, lint, typecheck, unit tests incl. contracts 14, db 21, worker 7; build; DB integration 39/39, API integration 29/29, worker integration 8/8).
+  - Worker outbox integration re-run 3× → 8/8 each time (lease timing is real time, 200–400 ms).
+  - `scripts/smoke.sh` → passed (worker readiness OK while connected as `originos_worker`).
+  - `CI=1 scripts/e2e-docker.sh` → 128/128 (no UI changes in this phase; run as a regression check).
+- **Acceptance checks:** migrations apply and roll back ✓; outbox event survives a worker outage and is processed once under retries ✓; foreign keys and uniqueness hold ✓; schemas documented in contracts ✓ (evidence in ACCEPTANCE_MATRIX row 06).
+- **Found and fixed while testing:** the first audit chain hashed `actor_user_id`, which becomes null when a person is deleted, so erasing anyone would have broken verification for their whole history. The chain now hashes `actor_digest` (set by the trigger), and a test erases a person and verifies the chain.
+- **Security and privacy:** domain tables deny by default under RLS (membership required; private rows visible only to their creator; attribution only to yourself or an agent you own); the application role has no DELETE and can only update state columns; composite same-tenant foreign keys stop cross-tenant links even for the owner; the worker role reads outbox tables only, no tenant data; outbox payloads and audit metadata carry ids only; failure reasons stored truncated. The audit chain detects tampering, it does not prevent it, and it is not externally anchored yet (Phase 20).
+- **External setup required:** none. **Production note for Phase 44:** the migration role must be a superuser or have BYPASSRLS, because the SECURITY DEFINER helpers read FORCE-RLS tables as their owner (ADR-025).
+- **Known gaps:**
+  - No module writes domain rows or events yet, and no outbox consumer is registered, so the running worker leaves events pending (it says so at startup). Consumers arrive with search (34), notifications and Automations (35).
+  - Consumers run as the worker role, which can only touch outbox tables; a consumer that writes tenant data needs a narrowly granted path, decided with its phase.
+  - Export, erasure requests, purge jobs and legal hold are Phase 41 (`docs/RETENTION.md` §4).
+  - Audit chain verification runs on demand only.
+  - Relation traversal and the graph explorer are Phase 13.
+- **Next phase:** 07 Object storage, ingestion queues and workflow core, after the Phase 06 PR is reviewed.
 
 ## Phase 05 handoff (2026-11-22)
 

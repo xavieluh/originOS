@@ -18,7 +18,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "seed": "node dist/seed-cli.js",
     "migrate": "node dist/migrate-cli.js",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "rollback": "node dist/rollback-cli.js"
   },
   "dependencies": {
     "@originos/config": "workspace:*",
