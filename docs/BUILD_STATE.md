@@ -1,9 +1,9 @@
 # OriginOS build state
 
-**Current phase:** 07 — in progress
+**Current phase:** 07 — acceptance checks passed, PR #9 in review
 **Last fully completed phase:** 06 (core domain schema, ledger and outbox; PR #7 merged by owner 2026-11-22).
-**Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator); GitHub Actions CI added in Phase 02. Nothing deployed.
-**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. Phase 05 adds the single permission evaluator (`packages/authz`: roles, resource-scoped grants, explicit deny, agent and service actors), agents capped by their owner, and consent records with history, with API guards, settings pages and audit events. Phase 06 adds the canonical domain schema (contracts plus 12 tables in four context schemas, an object registry with whitelisted typed relations, append-oriented writes), a hash-chained audit log, the transactional outbox with a worker dispatcher, down migrations and the retention policy (docs/RETENTION.md). No product module and no external integration exists yet; production email delivery is not configured.
+**Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator, ClamAV); GitHub Actions CI added in Phase 02. Nothing deployed.
+**Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. Phase 05 adds the single permission evaluator (`packages/authz`: roles, resource-scoped grants, explicit deny, agent and service actors), agents capped by their owner, and consent records with history, with API guards, settings pages and audit events. Phase 06 adds the canonical domain schema (contracts plus 12 tables in four context schemas, an object registry with whitelisted typed relations, append-oriented writes), a hash-chained audit log, the transactional outbox with a worker dispatcher, down migrations and the retention policy (docs/RETENTION.md). Phase 07 adds file uploads (S3-compatible storage with quarantine, content sniffing, ClamAV scanning in the worker, signed downloads) and the durable job runner with retries, dead-letter review, cancellation and human waits, with files and jobs pages. No product module and no external integration exists yet; production email delivery is not configured.
 
 ## Phase progress
 
@@ -16,7 +16,7 @@
 | 04 Authentication, teams and organizations | COMPLETE | All 4 checks passed locally 2026-11-22: DB RLS integration 15/15, API integration 16/16, Playwright 119/119 in the pinned container against the real API, Postgres and Mailpit (auth journeys, routes, axe, keyboard, 24 visual baselines), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 04 handoff. PR #5 merged 2026-11-22. | Production SMTP provider not chosen (BLOCKED, see handoff) |
 | 05 Authorization, policy baseline and consent | COMPLETE | All 4 checks passed locally 2026-11-22: authz unit 16/16, DB RLS integration 23/23, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 05 handoff. PR #6 merged 2026-11-22. | ADR-024 Accepted. GitHub Actions run 45078282778: 6/6 jobs green |
 | 06 Core domain schema, ledger and outbox | COMPLETE | All 4 checks passed locally 2026-11-22: contracts 14/14, db unit 21/21, DB integration 39/39 (domain schema, RLS, audit chain, every migration down and up), worker outbox integration 8/8, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 06 handoff. | ADR-025 Accepted. GitHub Actions run 45080783848: 6/6 jobs green. PR #7 merged 2026-11-22. |
-| 07 Object storage, ingestion queues and workflow core | NOT STARTED | — | — |
+| 07 Object storage, ingestion queues and workflow core | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-22: storage unit 11/11 and integration 4/4 (real SeaweedFS and ClamAV), DB integration 42/42, API integration 38/38, worker integration 21/21, Playwright 137/137 in the pinned container (incl. real upload, scan and EICAR rejection), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 07 handoff. | ADR-026 Proposed. PR #9 open |
 | 08 Origin Connect OAuth and integration broker | NOT STARTED | — | — |
 | 09 IdentityMesh creator and organization profiles | NOT STARTED | — | — |
 | 10 IdentityMesh portable credentials | NOT STARTED | — | — |
@@ -71,6 +71,37 @@
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
 2. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+
+## Phase 07 handoff (2026-11-22)
+
+- **Phase:** 07 Object storage, ingestion queues and workflow core. Procedure: origin-build, followed by hand. Branch rebased on main after PR #8 (Windows fixes) merged.
+- **Files added/changed:**
+  - `packages/contracts`: `src/ingest.ts` (accepted types, limits, upload statuses and error codes, `UploadView`), `src/jobs.ts` (job statuses, `JobView`, `ResumeDecision`), upload and job id prefixes.
+  - `packages/db`: `core.uploads`, `core.jobs`, `core.job_steps` (`src/platform-schema.ts`); `src/jobs.ts` (enqueue, claim, heartbeat, `runStep`, succeed/fail/wait/cancel, and the owner/admin transitions); migrations `0006_ingest_jobs.sql` (generated) and `0007_ingest_jobs_rls.sql` (grants and RLS for app and worker roles) with down scripts; `src/status.ts` + `status-cli.ts` (`pnpm db:status`).
+  - `packages/storage` (new): S3 object store (`object-store.ts`), content sniffing (`sniff.ts`), upload policy (`policy.ts`), clamd adapter (`scanner.ts`), env, health checks, `setup-cli.ts` (`pnpm storage:setup`); unit and integration tests.
+  - `packages/config`: `loadLocalEnv()`; the db and storage CLIs read the repository's `.env` themselves.
+  - `packages/authz` and web access labels: resource types `files` and `jobs` (members read/write files; owners and admins also administer jobs).
+  - `apps/worker`: `src/job-runner.ts` (durable runner), `src/jobs/scan-upload.ts`, `src/handlers.ts`; readiness reports object storage and the scanner; `test/integration/jobs.test.ts`.
+  - `apps/api`: `src/modules/ingest/` (files and jobs controllers and services), `@AcceptsBinaryBody` and the CSRF exception for it, raw body parser; `test/integration/files.test.ts`.
+  - `apps/web`: `/settings/files`, `/settings/jobs`, `/api/files` upload proxy, `components/file-library.tsx`, `components/job-admin.tsx`, `app/actions/files.ts`; `e2e/files.spec.ts`; Playwright starts the worker and uses real storage and ClamAV.
+  - `compose.yaml` (`scanner` service, profile `scanner`), `.env.example`, `scripts/lib.sh`/`bootstrap.sh`/`dev.sh` (migrate on bootstrap, database check before dev, scanner and buckets), CI (scanner, buckets and storage tests in local-stack; SeaweedFS, ClamAV and the worker in the e2e job), README troubleshooting, DEVELOPMENT, THREAT_MODEL, RETENTION, DECISIONS (ADR-026, Proposed).
+- **Migrations:** `0006_ingest_jobs`, `0007_ingest_jobs_rls` (`pnpm db:migrate`). Additive; both roll back (`rollback.test.ts` covers all 8).
+- **API changes:** `POST /v1/files` (raw body, `x-upload-filename`, `x-upload-type`), `GET /v1/files`, `GET /v1/files/settings`, `GET /v1/files/:id`, `GET /v1/files/:id/preview`, `POST /v1/files/:id/download`; `GET /v1/organization/jobs?status=`, `POST /v1/organization/jobs/:id/retry|cancel|resume`. New audit actions `file.uploaded`, `file.download_link_issued`, `job.retried`, `job.cancel_requested`, `job.resumed`; outbox events `upload.cleaned`, `upload.rejected`.
+- **Commands executed and results (2026-11-22):**
+  - `scripts/check.sh --db` (with only `TEST_DATABASE_URL` exported) → "All checks passed": format, lint (one existing web warning), typecheck, unit tests (contracts 14, config 21, db 21, storage 11, worker 8, api 11, web 28, …), build, DB integration 42/42, storage integration 4/4, API integration 38/38, worker integration 21/21.
+  - `scripts/smoke.sh` → passed; worker readiness shows database, objectStorage and malwareScanner ok.
+  - `CI=1 scripts/e2e-docker.sh` → 137/137, including `files.spec.ts` (3 journeys against the real API, worker, SeaweedFS and ClamAV). No visual baseline changed.
+- **Acceptance checks:** unauthorized tenant cannot retrieve an object ✓; failed job retries without duplicate publishing ✓; upload errors are visible ✓; malicious/oversize file is quarantined or rejected ✓ (evidence in ACCEPTANCE_MATRIX row 07).
+- **Found and fixed while testing:** `pnpm --filter … setup` runs pnpm's own `setup` command, so bucket setup is `pnpm storage:setup`. The API tests leave scan jobs queued in the shared test database, which the worker tests then claimed; the worker scan suite now settles them first. A fresh local database was never migrated by the scripts, so the first sign-up failed with `role "originos_app" does not exist`; bootstrap now migrates and dev checks first.
+- **Security and privacy:** deny by default (uploads need `files:write`, jobs pages `jobs:read`/`jobs:admin`); RLS on uploads and jobs (members see their organization's files and only the jobs they started; the worker role sees jobs and uploads, no other tenant data); keys are tenant-prefixed and never use the file name; downloads are one-minute signed URLs for clean files only, as attachments; previews never render HTML, SVG or PDFs; the only non-JSON API route is the upload, and the origin check still applies; job payloads, events and logs carry ids, never file contents; stored errors are truncated.
+- **External setup required:** none locally. Production object storage, buckets, lifecycle rules and a managed scanner are Phase 44; nothing external was contacted except ClamAV's own signature updates inside its container.
+- **Known gaps:**
+  - No PDF preview (needs a sandboxed renderer, Phase 21); no re-scan when signatures update.
+  - Orphaned quarantine objects when the database insert fails after storing; no purge of an organization's objects yet (RETENTION §4, Phases 41 and 44).
+  - API readiness does not include object storage (deliberate; uploads answer 503 when it is down).
+  - Files are not yet attached to works or evidence; that starts with the modules that use them (Phase 09 onwards).
+  - CI has not yet run the new e2e services (ClamAV start-up time on GitHub runners is untested).
+- **Next phase:** 08 Origin Connect OAuth and integration broker, after the Phase 07 PR is reviewed.
 
 ## Phase 06 handoff (2026-11-22)
 
