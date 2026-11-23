@@ -66,7 +66,10 @@ describe("object store", () => {
 
 describe("ClamAV scanner", () => {
   it("answers, detects the EICAR test file and passes a clean file", async () => {
-    expect(await scanner.ping()).toBe(true);
+    expect(
+      await scanner.ping(),
+      "ClamAV is not answering. Start it with: docker compose --profile scanner up -d --wait",
+    ).toBe(true);
     expect(await scanner.scan(new TextEncoder().encode(EICAR))).toEqual({
       verdict: "infected",
       signature: "Eicar-Test-Signature",

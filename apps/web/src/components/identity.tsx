@@ -22,7 +22,7 @@ import {
   TextField,
 } from "@originos/ui";
 import { useRouter } from "next/navigation";
-import type { FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import {
   checkProofAction,
   createProfileAction,
@@ -38,6 +38,7 @@ import {
   withdrawReviewAction,
 } from "../app/actions/identity";
 import { ConfirmButton, useAction } from "./action-helpers";
+import { FormMessage } from "./auth/auth-panel";
 
 const VISIBILITY_OPTIONS = [
   { value: "public", label: "Public: anyone can open /p/<handle>" },
@@ -50,6 +51,11 @@ const PROOF_STATUS: Record<ProofView["status"], { label: string; tone: BadgeTone
   verified: { label: "verified", tone: "positive" },
   stale: { label: "stale", tone: "warning" },
   revoked: { label: "revoked", tone: "negative" },
+};
+
+const PROOF_EXPIRED = { label: "expired", tone: "warning" } as const satisfies {
+  label: string;
+  tone: BadgeTone;
 };
 
 const MODERATION: Record<ModerationState, { label: string; tone: BadgeTone }> = {
@@ -324,7 +330,9 @@ function ProofRow({
   readonly canRevoke: boolean;
 }) {
   const { run, messages } = useAction();
-  const s = PROOF_STATUS[proof.status];
+  // A verified proof past its expiry no longer backs the profile (badges.ts says the same).
+  const expired = proof.expired;
+  const s = expired ? PROOF_EXPIRED : PROOF_STATUS[proof.status];
   const live = proof.status !== "revoked";
   return (
     <li
@@ -368,7 +376,9 @@ function ProofRow({
       <p className="text-xs text-fg-muted">
         {proof.lastVerifiedAt ? `Last passed ${formatTime(proof.lastVerifiedAt)}. ` : ""}
         {proof.expiresAt && proof.status === "verified"
-          ? `Expires ${formatTime(proof.expiresAt)} unless re-checked. `
+          ? expired
+            ? `Expired ${formatTime(proof.expiresAt)}; check or prove it again to renew. `
+            : `Expires ${formatTime(proof.expiresAt)} unless re-checked. `
           : ""}
         {proof.lastCheckedAt ? `Last checked ${formatTime(proof.lastCheckedAt)}.` : ""}
         {proof.revokedAt
@@ -685,10 +695,13 @@ function ReviewItem({
   review,
   showProfile,
   canRevoke,
+  onDecided,
 }: {
   readonly review: ReviewView;
   readonly showProfile: boolean;
   readonly canRevoke: boolean;
+  /** Told after a decision; the list shows the confirmation because the item leaves "Waiting". */
+  readonly onDecided: () => void;
 }) {
   const { run, messages } = useAction();
   const s = REVIEW_STATUS[review.status];
@@ -778,14 +791,12 @@ function ReviewItem({
             const f = new FormData(event.currentTarget);
             const submitter = (event.nativeEvent as SubmitEvent)
               .submitter as HTMLButtonElement | null;
-            void run(
-              () =>
-                decideReviewAction(review.id, {
-                  decision: submitter?.value === "reject" ? "reject" : "approve",
-                  reason: text(f, "reason"),
-                }),
-              "Decision recorded.",
-            );
+            void run(() =>
+              decideReviewAction(review.id, {
+                decision: submitter?.value === "reject" ? "reject" : "approve",
+                reason: text(f, "reason"),
+              }),
+            ).then((ok) => ok && onDecided());
           }}
         >
           <TextField
@@ -860,12 +871,27 @@ export function ReviewList({
   readonly emptyTitle: string;
   readonly emptyText: string;
 }) {
-  if (reviews.length === 0) return <EmptyState title={emptyTitle}>{emptyText}</EmptyState>;
+  const [notice, setNotice] = useState<string | null>(null);
   return (
-    <ul className="grid gap-3" aria-label="Review requests">
-      {reviews.map((r) => (
-        <ReviewItem key={r.id} review={r} showProfile={showProfile} canRevoke={canRevoke} />
-      ))}
-    </ul>
+    <div className="flex flex-col gap-3">
+      <div aria-live="polite">
+        {notice ? <FormMessage tone="info">{notice}</FormMessage> : null}
+      </div>
+      {reviews.length === 0 ? (
+        <EmptyState title={emptyTitle}>{emptyText}</EmptyState>
+      ) : (
+        <ul className="grid gap-3" aria-label="Review requests">
+          {reviews.map((r) => (
+            <ReviewItem
+              key={r.id}
+              review={r}
+              showProfile={showProfile}
+              canRevoke={canRevoke}
+              onDecided={() => setNotice("Decision recorded.")}
+            />
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

@@ -70,7 +70,7 @@ export function BadgeList({
     <div className="flex flex-col gap-6">
       <section aria-labelledby="badges-current">
         <H id="badges-current" className="mb-3 font-display text-lg font-semibold">
-          Checked facts
+          Current badges
         </H>
         {current.length === 0 ? (
           <p className="text-sm text-fg-muted">{emptyText}</p>

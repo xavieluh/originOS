@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Run every check CI runs that can run locally. Exits non-zero on the first failure.
 #   scripts/check.sh          static checks, unit tests, build
-#   scripts/check.sh --db     also database integration tests (needs TEST_DATABASE_URL or compose up)
+#   scripts/check.sh --db     also database integration tests (needs TEST_DATABASE_URL and
+#                             `docker compose --profile scanner up -d --wait`, which includes ClamAV)
 source "$(dirname "$0")/lib.sh"
 
 info "Secrets: .env must be git-ignored"

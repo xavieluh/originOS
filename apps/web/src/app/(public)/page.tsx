@@ -13,9 +13,10 @@ export default function PublicHomePage() {
             Show how work was made, by whom, and what backs it up.
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-fg-muted">
-            OriginOS connects creator identity, content provenance, AI-agent accountability and
-            scientific evidence in one record. Labels say exactly what was checked: a valid C2PA
-            manifest proves a supported provenance claim, not human authorship or factual truth.
+            OriginOS is being built to connect creator identity, content provenance, AI-agent
+            accountability and scientific evidence in one record. Labels say exactly what was
+            checked: a valid C2PA manifest proves a supported provenance claim, not human authorship
+            or factual truth.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button action="public.open-workspace" href="/home" variant="primary">
@@ -32,7 +33,8 @@ export default function PublicHomePage() {
           The public network
         </h2>
         <p className="mt-1 mb-5 text-fg-muted">
-          This is a development build. No public records exist yet.
+          This is a development build. Public creator profiles exist; verification records and the
+          directory do not yet.
         </p>
         <ul className="grid gap-3 md:grid-cols-3">
           {publicPlanned.map((p) => (

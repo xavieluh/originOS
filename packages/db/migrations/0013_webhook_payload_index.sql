@@ -1,0 +1,1 @@
+CREATE INDEX "webhook_deliveries_connection_payload_idx" ON "core"."webhook_deliveries" USING btree ("connection_id","payload_sha256");

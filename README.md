@@ -1,6 +1,6 @@
 # OriginOS — Claude Code Full-Platform Prompt System
 
-This package is a **build specification, 48 execution prompts, project skills and continuity files**. It is not a completed OriginOS app. The goal is to help Claude Code develop the entire ambitious product incrementally with reviewable, testable stages.
+This repository holds the OriginOS code and the **build specification, 48 execution prompts, project skills and continuity files** it is built from. Phases 00–09 are implemented (accounts and organizations, authorization and consent, the domain schema and ledger, files and jobs, Origin Connect, IdentityMesh profiles); the rest of the product is not built yet. Status and evidence: [`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
 
 ## Developing the code
 
@@ -8,7 +8,7 @@ Fresh checkout to running stack (Node 22.13+, Docker, optionally uv):
 
 ```bash
 scripts/bootstrap.sh   # checks tools, creates .env, installs deps, builds, starts Postgres + object storage, migrates
-scripts/dev.sh         # checks the database is migrated, then web :3000, api :4000, worker, mcp-server, telemetry, media-validator in watch mode
+scripts/dev.sh         # checks the database is migrated, then web :3000, api :4000, worker, and the mcp-server, telemetry and media-validator scaffolds (health checks only) in watch mode
 scripts/check.sh       # the same checks CI runs (add --db for database integration tests)
 ```
 
@@ -35,13 +35,13 @@ The scripts are Bash, and the package scripts run on Windows too (environment va
 Details, ports and conventions: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Secrets policy:
 [`docs/SECRETS.md`](docs/SECRETS.md). Build progress: [`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
 
-## Quick start (recommended)
+## Continuing the build
 
-1. Create a new empty folder/repository named `originos` and extract **the contents** of this kit into its root. Make sure `CLAUDE.md`, `.claude/skills/origin-build/SKILL.md`, `docs/`, and `prompts/` are directly inside the repository root.
-2. Open that root folder in VS Code and start **Claude Code**. Run `/origin-build 00`.
-3. After review and passing tests, run `/origin-build 01`, then 02, etc. Prefer a new session for long phases; the repo state and `CLAUDE.md` carry continuity.
+1. Work in this repository; `CLAUDE.md`, `.claude/skills/origin-build/SKILL.md`, `docs/` and `prompts/` are at its root. (Originally the kit was extracted into an empty repository; that step is done.)
+2. Open that root folder in VS Code and start **Claude Code**. Run `/origin-build NN` for the next phase in `docs/BUILD_STATE.md`.
+3. After review and passing tests, run the next phase. Prefer a new session for long phases; the repo state and `CLAUDE.md` carry continuity.
 4. If something is unclear, read `PROMPT_INDEX.md` and the phase markdown. The command's exact requirements are in each phase file.
-5. Run `/origin-audit 00` periodically for a critical, independent check. Save changes with Git between major phases.
+5. Run `/origin-audit` periodically for a critical, independent check. Save changes with Git between major phases.
 6. When an API credential is required, obtain it from the provider yourself; never paste secrets into project files. Enable external writes and paid infrastructure only with explicit approval.
 
 ## Important files
