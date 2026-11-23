@@ -1,0 +1,33 @@
+{
+  "name": "@originos/identity",
+  "version": "0.0.0",
+  "private": true,
+  "description": "IdentityMesh rules (Phase 09): domain normalization, ownership challenges (DNS TXT and HTML file) with SSRF-safe lookups, and the fixed wording and lifecycle of badges. testing/ holds a fixture checker for tests only.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@originos/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  }
+}

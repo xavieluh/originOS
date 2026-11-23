@@ -5,6 +5,7 @@ import type { Storage } from "@originos/storage";
 import { ConnectModule } from "./modules/connect/index.js";
 import { type Auth, AuthModule, type Mailer } from "./modules/core/index.js";
 import { HealthModule } from "./modules/health/index.js";
+import { IdentityModule } from "./modules/identity/index.js";
 import { IngestModule } from "./modules/ingest/index.js";
 
 export interface AppModuleOptions {
@@ -40,6 +41,11 @@ export class AppModule {
           db: options.database?.db ?? null,
           publicOrigin: options.publicOrigin,
           webhookBaseUrl: options.webhookBaseUrl,
+        }),
+        IdentityModule.register({
+          connect: options.connect,
+          db: options.database?.db ?? null,
+          publicOrigin: options.publicOrigin,
         }),
       ],
     };

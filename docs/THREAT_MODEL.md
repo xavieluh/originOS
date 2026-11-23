@@ -32,11 +32,11 @@ Agent histories and traces; unpublished manuscripts; creator personal informatio
 | Webhook spoofing / replay / duplicates | B4 | S, T | Signature verification, timestamp window, idempotency keys. **Built in 08:** HMAC-SHA256 over the raw bytes in constant time before any lookup, 5-minute window where the provider sends a timestamp (GitHub does not), `(provider, delivery id)` stored once, revoked connections refused, 256 KB JSON only. Not yet: per-connection webhook secrets (21) | 08, 21, 22, 39 |
 | Secrets in agent traces | B3 | I | Redaction before persistence, metadata-only default, content opt-in | 16, 17 |
 | Forged telemetry or outcomes | B3 | S, R | Per-installation ingest keys; "observed by" recorded; outcomes only from provider confirmation | 16, 21 |
-| Fraudulent identity or ownership claims | B1 | S | Challenge-based proofs, human review queue, labels with method and date; ownership never "proven" | 09, 33 |
+| Fraudulent identity or ownership claims | B1 | S | Built in 09: domain proofs verified only by the worker after a passed DNS/HTTPS challenge (DB trigger refuses other writers); account proofs by OAuth; claims decided by an owner or admin who did not request them, with reasons and an evidence hash in the audit log; badges derived from evidence with method, date, expiry and "what this does not show"; stale on failed re-check or when another profile proves the same control; ownership changes revoke the old owner's proofs. Ownership or legal identity is never labeled proven. Platform-staff review and abuse reports: 41 | 09, 33, 41 |
 | Tampered or stale C2PA media | B5 | T | Official SDK validation; unsigned ≠ fraudulent; stale status on change | 12, 14 |
 | Signing-key compromise or misuse | B9 | S, R | KMS, no keys in code/LLM/browser, rotation, revocation, key registry | 10, 20, 36, 42 |
 | Untrusted MCP servers / extensions | B2, B7 | E | Curated internal extensions only; manifest scopes; no untrusted code in main process | 40 |
-| SSRF via URL import or webhooks out | B7 | I, E | Egress allow-list, block private ranges, fetch in worker | 07, 11, 42 |
+| SSRF via URL import or webhooks out | B7 | I, E | Egress allow-list, block private ranges, fetch in worker. Built in 09 for challenge checks: public addresses only (IPv4 and IPv6 lists), connection pinned to the checked address, HTTPS 443, no redirects, 4 KB and 5 s caps, content never stored | 07, 09, 11, 42 |
 | XSS in published/previewed content and embeds | B1 | T, E | Sanitized HTML, CSP, separate-origin embed | 14, 30 |
 | Insider misuse | B8 | I, R | Scoped support access with reason, audit of every staff read | 41 |
 | Retention/erasure failure | all | I | Documented policy, purge jobs tested, honest receipt-retention exception | 06, 41 |

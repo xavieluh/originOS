@@ -10,6 +10,7 @@ export default defineConfig({
     "./src/domain-schema.ts",
     "./src/platform-schema.ts",
     "./src/connect-schema.ts",
+    "./src/identity-schema.ts",
   ],
   out: "./migrations",
   schemaFilter: ["core", "trust", "content", "evidence", "agents"],

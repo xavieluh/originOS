@@ -71,6 +71,20 @@
       "when": 1795392631253,
       "tag": "0009_connect_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795395501042,
+      "tag": "0010_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795395501708,
+      "tag": "0011_identity_rls",
+      "breakpoints": true
     }
   ]
 }

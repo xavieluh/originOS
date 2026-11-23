@@ -33,6 +33,10 @@ export const JOB_ID_PREFIX = "job";
 /** Origin Connect (Phase 08): provider connections and received webhook deliveries. */
 export const CONNECTION_ID_PREFIX = "con";
 export const WEBHOOK_DELIVERY_ID_PREFIX = "whd";
+/** IdentityMesh (Phase 09): profiles, ownership proofs and review requests. */
+export const PROFILE_ID_PREFIX = "prf";
+export const PROOF_ID_PREFIX = "prv";
+export const REVIEW_ID_PREFIX = "rvw";
 
 const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz"; // Crockford base32, lowercase
 const BODY = /^[0-9a-hjkmnp-tv-z]{26}$/;
@@ -85,6 +89,18 @@ export function newConnectionId(now?: number): string {
 
 export function newWebhookDeliveryId(now?: number): string {
   return `${WEBHOOK_DELIVERY_ID_PREFIX}_${idBody(now)}`;
+}
+
+export function newProfileId(now?: number): string {
+  return `${PROFILE_ID_PREFIX}_${idBody(now)}`;
+}
+
+export function newProofId(now?: number): string {
+  return `${PROOF_ID_PREFIX}_${idBody(now)}`;
+}
+
+export function newReviewId(now?: number): string {
+  return `${REVIEW_ID_PREFIX}_${idBody(now)}`;
 }
 
 const KIND_BY_PREFIX = new Map<string, ObjectKind>(

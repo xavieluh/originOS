@@ -102,12 +102,22 @@ export const oauthStates = core.table(
     codeVerifier: text("code_verifier").notNull(),
     redirectUri: text("redirect_uri").notNull(),
     scopes: text("scopes").array().notNull(),
+    /** connect: an organization connection. identity_proof: a person proving an account (Phase 09). */
+    purpose: text("purpose", { enum: ["connect", "identity_proof"] })
+      .notNull()
+      .default("connect"),
+    /** The profile an identity proof is for. */
+    profileId: text("profile_id"),
     expiresAt: ts("expires_at").notNull(),
     consumedAt: ts("consumed_at"),
     createdAt: ts("created_at").notNull().defaultNow(),
   },
   (t) => [
     check("oauth_states_hash_ck", sql`${t.stateHash} ~ '^[0-9a-f]{64}$'`),
+    check(
+      "oauth_states_purpose_ck",
+      sql`(${t.purpose} = 'connect' and ${t.profileId} is null) or (${t.purpose} = 'identity_proof' and ${t.profileId} is not null)`,
+    ),
     index("oauth_states_expires_idx").on(t.expiresAt),
   ],
 );

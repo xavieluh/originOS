@@ -20,12 +20,9 @@ import {
   ProviderError,
   WEBHOOK_MAX_BYTES,
   authorizeUrl,
-  createPkce,
   exchangeCode,
   fetchIdentity,
   findProvider,
-  hashState,
-  newState,
   providerView,
   seal,
   tokenContext,
@@ -33,23 +30,20 @@ import {
   verifyWebhook,
 } from "@originos/connect";
 import { type Db, enqueueJob, schema, withScope } from "@originos/db";
-import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import {
   APP_DB,
   ApiError,
   type Principal,
   type TenantContext,
-  badRequest,
   conflict,
   notFound,
   recordAudit,
 } from "../core/index.js";
+import { beginAttempt, consumeAttempt } from "./attempts.js";
 import { CONNECT, CONNECT_PUBLIC_ORIGIN, WEBHOOK_BASE_URL } from "./tokens.js";
 
-const { integrationConnections: conns, oauthStates, webhookDeliveries, users } = schema;
-
-/** Ten minutes: the life of a GitHub authorization code. */
-export const STATE_TTL_MS = 10 * 60 * 1000;
+const { integrationConnections: conns, webhookDeliveries, users } = schema;
 
 /** Columns the application role may read. Sealed tokens are not among them. */
 const VIEW_COLUMNS = {
@@ -175,34 +169,33 @@ export class ConnectService {
     correlationId: string,
   ): Promise<{ authorizeUrl: string }> {
     const { config } = this.usableProvider(providerId);
-    const state = newState();
-    const pkce = createPkce();
     const scopes = config.definition.scopes.map((s) => s.scope);
     const redirectUri = this.redirectUri(providerId);
-    await withScope(this.database, { userId: p.userId, tenantId: t.tenantId }, async (tx) => {
-      // Tidy this person's attempts that can no longer be used.
-      await tx.delete(oauthStates).where(lt(oauthStates.expiresAt, new Date()));
-      await tx.insert(oauthStates).values({
-        stateHash: hashState(state),
-        tenantId: t.tenantId,
-        userId: p.userId,
-        provider: providerId,
-        codeVerifier: pkce.verifier,
-        redirectUri,
-        scopes,
-        expiresAt: new Date(Date.now() + STATE_TTL_MS),
-      });
-      await recordAudit(tx, {
-        tenantId: t.tenantId,
-        actorUserId: p.userId,
-        action: "integration.connect_started",
-        targetType: "provider",
-        targetId: providerId,
-        correlationId,
-      });
-    });
+    const { state, challenge } = await withScope(
+      this.database,
+      { userId: p.userId, tenantId: t.tenantId },
+      async (tx) => {
+        const attempt = await beginAttempt(tx, {
+          tenantId: t.tenantId,
+          userId: p.userId,
+          provider: providerId,
+          purpose: "connect",
+          redirectUri,
+          scopes,
+        });
+        await recordAudit(tx, {
+          tenantId: t.tenantId,
+          actorUserId: p.userId,
+          action: "integration.connect_started",
+          targetType: "provider",
+          targetId: providerId,
+          correlationId,
+        });
+        return attempt;
+      },
+    );
     return {
-      authorizeUrl: authorizeUrl(config, { redirectUri, state, challenge: pkce.challenge, scopes }),
+      authorizeUrl: authorizeUrl(config, { redirectUri, state, challenge, scopes }),
     };
   }
 
@@ -218,38 +211,9 @@ export class ConnectService {
   ): Promise<ConnectionView> {
     const { config, keyring } = this.usableProvider(input.provider);
     const scope = { userId: p.userId, tenantId: t.tenantId };
-    const stateHash = hashState(input.state);
-
-    const attempt = await withScope(this.database, scope, async (tx) => {
-      const [row] = await tx.select().from(oauthStates).where(eq(oauthStates.stateHash, stateHash));
-      // Row-level security hides other people's and other organizations' attempts.
-      if (!row || row.provider !== input.provider)
-        throw badRequest(
-          "invalid_state",
-          "This connection attempt is not valid here. It may have been started by someone else or in another organization. Start connecting again.",
-        );
-      if (row.consumedAt)
-        throw badRequest(
-          "state_used",
-          "This connection attempt was already used. Start connecting again.",
-        );
-      if (row.expiresAt <= new Date())
-        throw badRequest(
-          "state_expired",
-          "This connection attempt expired. Start connecting again.",
-        );
-      const consumed = await tx
-        .update(oauthStates)
-        .set({ consumedAt: new Date() })
-        .where(and(eq(oauthStates.stateHash, stateHash), isNull(oauthStates.consumedAt)))
-        .returning({ h: oauthStates.stateHash });
-      if (consumed.length === 0)
-        throw badRequest(
-          "state_used",
-          "This connection attempt was already used. Start connecting again.",
-        );
-      return row;
-    });
+    const attempt = await withScope(this.database, scope, (tx) =>
+      consumeAttempt(tx, { state: input.state, provider: input.provider, purpose: "connect" }),
+    );
 
     let tokens;
     let identity;

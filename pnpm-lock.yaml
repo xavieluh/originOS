@@ -56,6 +56,9 @@ importers:
       '@originos/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@originos/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@originos/service-kit':
         specifier: workspace:*
         version: link:../../packages/service-kit
@@ -245,6 +248,9 @@ importers:
       '@originos/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@originos/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@originos/service-kit':
         specifier: workspace:*
         version: link:../../packages/service-kit
@@ -406,6 +412,28 @@ importers:
       drizzle-kit:
         specifier: 0.31.11
         version: 0.31.11
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vite:
+        specifier: 8.3.8
+        version: 8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
+      vitest:
+        specifier: 5.1.1
+        version: 5.1.1(@types/node@22.20.5)(vite@8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/identity:
+    dependencies:
+      '@originos/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.5
+        version: 22.20.5
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)

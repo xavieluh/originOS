@@ -10,7 +10,12 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       nav={publicNav}
       linkComponent={NextLink}
       headerExtra={<ThemeToggle />}
-      footer={<p>Development build. Nothing on this site is a live verification record yet.</p>}
+      footer={
+        <p>
+          Development build. Profile badges state what was checked, how and when; they are not trust
+          scores.
+        </p>
+      }
     >
       {children}
     </PublicShell>

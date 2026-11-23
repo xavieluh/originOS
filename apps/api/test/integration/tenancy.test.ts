@@ -33,9 +33,11 @@ describe("logged-out requests cannot reach private endpoints", () => {
     "POST /api/auth/*",
     // Authenticated by the provider's signature over the raw body, not a session (Phase 08).
     "POST /v1/webhooks/:provider/:connectionId",
+    // Public creator and organization pages: public, active profiles only (Phase 09).
+    "GET /v1/public/profiles/:handle",
   ]);
 
-  it("the only public routes are health, auth-config, the auth endpoints and signed webhooks", () => {
+  it("the only public routes are health, auth-config, the auth endpoints, signed webhooks and public profiles", () => {
     const routes = listRoutes(h.app).map((r) => `${r.method} ${r.url}`);
     expect(routes.length).toBeGreaterThan(10);
     const privateRoutes = routes.filter((r) => !PUBLIC.has(r));

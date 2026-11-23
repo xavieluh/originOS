@@ -23,6 +23,7 @@ export const RESOURCE_TYPES = [
   "files",
   "jobs",
   "integrations",
+  "identity",
 ] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
 

@@ -4,3 +4,4 @@ export * from "./schema.js";
 export * from "./domain-schema.js";
 export * from "./platform-schema.js";
 export * from "./connect-schema.js";
+export * from "./identity-schema.js";

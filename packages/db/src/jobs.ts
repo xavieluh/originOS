@@ -20,7 +20,8 @@ export interface NewJob {
   readonly idempotencyKey?: string | null;
   readonly maxAttempts?: number;
   readonly runAt?: Date;
-  readonly createdByUserId: string;
+  /** null for jobs the system schedules itself (re-checks). */
+  readonly createdByUserId: string | null;
   readonly correlationId?: string | null;
   /** Pre-generated id, when the caller must store it before the job exists. */
   readonly id?: string;
