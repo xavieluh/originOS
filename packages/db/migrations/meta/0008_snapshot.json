@@ -113,12 +113,8 @@
           "tableFrom": "accounts",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -221,12 +217,8 @@
           "tableFrom": "agents",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -235,12 +227,8 @@
           "tableFrom": "agents",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -249,12 +237,8 @@
           "tableFrom": "agents",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "disabled_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["disabled_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -406,12 +390,8 @@
           "tableFrom": "audit_events",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -420,12 +400,8 @@
           "tableFrom": "audit_events",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -586,12 +562,8 @@
           "tableFrom": "consents",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -600,12 +572,8 @@
           "tableFrom": "consents",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -614,12 +582,8 @@
           "tableFrom": "consents",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "granted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["granted_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -628,12 +592,8 @@
           "tableFrom": "consents",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "revoked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["revoked_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -755,12 +715,8 @@
           "tableFrom": "invitations",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -769,12 +725,8 @@
           "tableFrom": "invitations",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "invited_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -783,12 +735,8 @@
           "tableFrom": "invitations",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "accepted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accepted_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -797,12 +745,8 @@
           "tableFrom": "invitations",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "revoked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["revoked_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -812,9 +756,7 @@
         "invitations_token_hash_unique": {
           "name": "invitations_token_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token_hash"
-          ]
+          "columns": ["token_hash"]
         }
       },
       "policies": {},
@@ -934,12 +876,8 @@
           "tableFrom": "memberships",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -948,12 +886,8 @@
           "tableFrom": "memberships",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1019,12 +953,8 @@
           "tableFrom": "organizations",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1034,9 +964,7 @@
         "organizations_slug_unique": {
           "name": "organizations_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1154,12 +1082,8 @@
           "tableFrom": "passkeys",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1296,12 +1220,8 @@
           "tableFrom": "permission_grants",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1310,12 +1230,8 @@
           "tableFrom": "permission_grants",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1324,12 +1240,8 @@
           "tableFrom": "permission_grants",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "revoked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["revoked_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1438,12 +1350,8 @@
           "tableFrom": "sessions",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1452,12 +1360,8 @@
           "tableFrom": "sessions",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "active_organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["active_organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1467,9 +1371,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -1564,12 +1466,8 @@
           "tableFrom": "two_factors",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1645,9 +1543,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1917,12 +1813,8 @@
           "tableFrom": "agent_runs",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1931,14 +1823,8 @@
           "tableFrom": "agent_runs",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1947,14 +1833,8 @@
           "tableFrom": "agent_runs",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1963,14 +1843,8 @@
           "tableFrom": "agent_runs",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1979,16 +1853,8 @@
           "tableFrom": "agent_runs",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "agent_subject_id",
-            "agent_subject_kind"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id",
-            "kind"
-          ],
+          "columnsFrom": ["tenant_id", "agent_subject_id", "agent_subject_kind"],
+          "columnsTo": ["tenant_id", "id", "kind"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1998,10 +1864,7 @@
         "agent_runs_tenant_id_uq": {
           "name": "agent_runs_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -2151,12 +2014,8 @@
           "tableFrom": "approvals",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2165,14 +2024,8 @@
           "tableFrom": "approvals",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2181,14 +2034,8 @@
           "tableFrom": "approvals",
           "tableTo": "tool_actions",
           "schemaTo": "agents",
-          "columnsFrom": [
-            "tenant_id",
-            "action_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "action_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2197,14 +2044,8 @@
           "tableFrom": "approvals",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "decided_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "decided_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2214,10 +2055,7 @@
         "approvals_tenant_id_uq": {
           "name": "approvals_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -2412,12 +2250,8 @@
           "tableFrom": "artifacts",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2426,14 +2260,8 @@
           "tableFrom": "artifacts",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2442,14 +2270,8 @@
           "tableFrom": "artifacts",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2458,14 +2280,8 @@
           "tableFrom": "artifacts",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2474,14 +2290,8 @@
           "tableFrom": "artifacts",
           "tableTo": "work_versions",
           "schemaTo": "content",
-          "columnsFrom": [
-            "tenant_id",
-            "work_version_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "work_version_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2491,10 +2301,7 @@
         "artifacts_tenant_id_uq": {
           "name": "artifacts_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -2682,12 +2489,8 @@
           "tableFrom": "claims",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2696,14 +2499,8 @@
           "tableFrom": "claims",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2712,14 +2509,8 @@
           "tableFrom": "claims",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2728,14 +2519,8 @@
           "tableFrom": "claims",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2744,14 +2529,8 @@
           "tableFrom": "claims",
           "tableTo": "claims",
           "schemaTo": "evidence",
-          "columnsFrom": [
-            "tenant_id",
-            "superseded_by_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "superseded_by_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2761,10 +2540,7 @@
         "claims_tenant_id_uq": {
           "name": "claims_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -2975,12 +2751,8 @@
           "tableFrom": "identity_claims",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2989,14 +2761,8 @@
           "tableFrom": "identity_claims",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3005,14 +2771,8 @@
           "tableFrom": "identity_claims",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3021,14 +2781,8 @@
           "tableFrom": "identity_claims",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3037,14 +2791,8 @@
           "tableFrom": "identity_claims",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3053,14 +2801,8 @@
           "tableFrom": "identity_claims",
           "tableTo": "identity_claims",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "superseded_by_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "superseded_by_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3070,10 +2812,7 @@
         "identity_claims_tenant_id_uq": {
           "name": "identity_claims_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -3146,12 +2885,8 @@
           "tableFrom": "objects",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3161,19 +2896,12 @@
         "objects_tenant_id_kind_uq": {
           "name": "objects_tenant_id_kind_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id",
-            "kind"
-          ]
+          "columns": ["tenant_id", "id", "kind"]
         },
         "objects_tenant_id_uq": {
           "name": "objects_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -3316,12 +3044,8 @@
           "tableFrom": "outbox_events",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3376,12 +3100,8 @@
           "tableFrom": "outbox_receipts",
           "tableTo": "outbox_events",
           "schemaTo": "core",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3389,10 +3109,7 @@
       "compositePrimaryKeys": {
         "outbox_receipts_pk": {
           "name": "outbox_receipts_pk",
-          "columns": [
-            "event_id",
-            "consumer"
-          ]
+          "columns": ["event_id", "consumer"]
         }
       },
       "uniqueConstraints": {},
@@ -3572,12 +3289,8 @@
           "tableFrom": "provenance_assertions",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3586,14 +3299,8 @@
           "tableFrom": "provenance_assertions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3602,14 +3309,8 @@
           "tableFrom": "provenance_assertions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3618,14 +3319,8 @@
           "tableFrom": "provenance_assertions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3634,14 +3329,8 @@
           "tableFrom": "provenance_assertions",
           "tableTo": "objects",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id",
-            "target_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "target_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3651,10 +3340,7 @@
         "provenance_assertions_tenant_id_uq": {
           "name": "provenance_assertions_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -3732,11 +3418,7 @@
       "compositePrimaryKeys": {
         "relation_rules_pk": {
           "name": "relation_rules_pk",
-          "columns": [
-            "type",
-            "from_kind",
-            "to_kind"
-          ]
+          "columns": ["type", "from_kind", "to_kind"]
         }
       },
       "uniqueConstraints": {},
@@ -3967,12 +3649,8 @@
           "tableFrom": "relations",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3981,14 +3659,8 @@
           "tableFrom": "relations",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3997,14 +3669,8 @@
           "tableFrom": "relations",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4013,14 +3679,8 @@
           "tableFrom": "relations",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4029,16 +3689,8 @@
           "tableFrom": "relations",
           "tableTo": "relation_rules",
           "schemaTo": "core",
-          "columnsFrom": [
-            "type",
-            "from_kind",
-            "to_kind"
-          ],
-          "columnsTo": [
-            "type",
-            "from_kind",
-            "to_kind"
-          ],
+          "columnsFrom": ["type", "from_kind", "to_kind"],
+          "columnsTo": ["type", "from_kind", "to_kind"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4047,16 +3699,8 @@
           "tableFrom": "relations",
           "tableTo": "objects",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id",
-            "from_id",
-            "from_kind"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id",
-            "kind"
-          ],
+          "columnsFrom": ["tenant_id", "from_id", "from_kind"],
+          "columnsTo": ["tenant_id", "id", "kind"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4065,16 +3709,8 @@
           "tableFrom": "relations",
           "tableTo": "objects",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id",
-            "to_id",
-            "to_kind"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id",
-            "kind"
-          ],
+          "columnsFrom": ["tenant_id", "to_id", "to_kind"],
+          "columnsTo": ["tenant_id", "id", "kind"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4083,14 +3719,8 @@
           "tableFrom": "relations",
           "tableTo": "relations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id",
-            "superseded_by_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "superseded_by_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4100,10 +3730,7 @@
         "relations_tenant_id_uq": {
           "name": "relations_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -4324,12 +3951,8 @@
           "tableFrom": "sources",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4338,14 +3961,8 @@
           "tableFrom": "sources",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4354,14 +3971,8 @@
           "tableFrom": "sources",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4370,14 +3981,8 @@
           "tableFrom": "sources",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4387,10 +3992,7 @@
         "sources_tenant_id_uq": {
           "name": "sources_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -4542,12 +4144,8 @@
           "tableFrom": "subjects",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4556,12 +4154,8 @@
           "tableFrom": "subjects",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -4570,12 +4164,8 @@
           "tableFrom": "subjects",
           "tableTo": "agents",
           "schemaTo": "core",
-          "columnsFrom": [
-            "agent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agent_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4584,14 +4174,8 @@
           "tableFrom": "subjects",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4601,19 +4185,12 @@
         "subjects_tenant_id_uq": {
           "name": "subjects_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         },
         "subjects_tenant_id_kind_uq": {
           "name": "subjects_tenant_id_kind_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id",
-            "kind"
-          ]
+          "columns": ["tenant_id", "id", "kind"]
         }
       },
       "policies": {},
@@ -4803,12 +4380,8 @@
           "tableFrom": "tool_actions",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4817,14 +4390,8 @@
           "tableFrom": "tool_actions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4833,14 +4400,8 @@
           "tableFrom": "tool_actions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4849,14 +4410,8 @@
           "tableFrom": "tool_actions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4865,14 +4420,8 @@
           "tableFrom": "tool_actions",
           "tableTo": "agent_runs",
           "schemaTo": "agents",
-          "columnsFrom": [
-            "tenant_id",
-            "run_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "run_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4882,18 +4431,12 @@
         "tool_actions_tenant_id_uq": {
           "name": "tool_actions_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         },
         "tool_actions_idempotency_uq": {
           "name": "tool_actions_idempotency_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "idempotency_key"
-          ]
+          "columns": ["tenant_id", "idempotency_key"]
         }
       },
       "policies": {},
@@ -5086,12 +4629,8 @@
           "tableFrom": "work_versions",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5100,14 +4639,8 @@
           "tableFrom": "work_versions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5116,14 +4649,8 @@
           "tableFrom": "work_versions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "asserted_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "asserted_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5132,14 +4659,8 @@
           "tableFrom": "work_versions",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "observed_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "observed_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5148,14 +4669,8 @@
           "tableFrom": "work_versions",
           "tableTo": "works",
           "schemaTo": "content",
-          "columnsFrom": [
-            "tenant_id",
-            "work_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "work_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5165,18 +4680,12 @@
         "work_versions_tenant_id_uq": {
           "name": "work_versions_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         },
         "work_versions_number_uq": {
           "name": "work_versions_number_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "work_id",
-            "version_number"
-          ]
+          "columns": ["work_id", "version_number"]
         }
       },
       "policies": {},
@@ -5290,12 +4799,8 @@
           "tableFrom": "works",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5304,14 +4809,8 @@
           "tableFrom": "works",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "created_by_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "created_by_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5320,14 +4819,8 @@
           "tableFrom": "works",
           "tableTo": "subjects",
           "schemaTo": "trust",
-          "columnsFrom": [
-            "tenant_id",
-            "owner_subject_id"
-          ],
-          "columnsTo": [
-            "tenant_id",
-            "id"
-          ],
+          "columnsFrom": ["tenant_id", "owner_subject_id"],
+          "columnsTo": ["tenant_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5337,10 +4830,7 @@
         "works_tenant_id_uq": {
           "name": "works_tenant_id_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "tenant_id",
-            "id"
-          ]
+          "columns": ["tenant_id", "id"]
         }
       },
       "policies": {},
@@ -5397,12 +4887,8 @@
           "tableFrom": "job_steps",
           "tableTo": "jobs",
           "schemaTo": "core",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5410,10 +4896,7 @@
       "compositePrimaryKeys": {
         "job_steps_pk": {
           "name": "job_steps_pk",
-          "columns": [
-            "job_id",
-            "step"
-          ]
+          "columns": ["job_id", "step"]
         }
       },
       "uniqueConstraints": {},
@@ -5656,12 +5139,8 @@
           "tableFrom": "jobs",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5670,12 +5149,8 @@
           "tableFrom": "jobs",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cancel_requested_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cancel_requested_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -5684,12 +5159,8 @@
           "tableFrom": "jobs",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5885,12 +5356,8 @@
           "tableFrom": "uploads",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5899,12 +5366,8 @@
           "tableFrom": "uploads",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "uploaded_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6114,12 +5577,8 @@
           "tableFrom": "integration_connections",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6128,12 +5587,8 @@
           "tableFrom": "integration_connections",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "connected_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["connected_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -6142,12 +5597,8 @@
           "tableFrom": "integration_connections",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "revoked_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["revoked_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6268,12 +5719,8 @@
           "tableFrom": "oauth_states",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6282,12 +5729,8 @@
           "tableFrom": "oauth_states",
           "tableTo": "users",
           "schemaTo": "core",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6425,12 +5868,8 @@
           "tableFrom": "webhook_deliveries",
           "tableTo": "organizations",
           "schemaTo": "core",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6439,12 +5878,8 @@
           "tableFrom": "webhook_deliveries",
           "tableTo": "integration_connections",
           "schemaTo": "core",
-          "columnsFrom": [
-            "connection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["connection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
