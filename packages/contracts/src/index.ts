@@ -17,3 +17,4 @@ export * from "./domain/entities.js";
 export * from "./domain/events.js";
 export * from "./ingest.js";
 export * from "./jobs.js";
+export * from "./connect.js";
