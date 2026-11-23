@@ -1,6 +1,6 @@
 # OriginOS product map
 
-**Status:** v1.0, accepted by owner 2026-11-22 (Phase 00). **Every module below is NOT BUILT.** Placement and MVP slices tagged **[GUESS]** are Phase 00 proposals.
+**Status:** v1.0, accepted by owner 2026-11-22 (Phase 00). **Status per module is in the last column** (updated in the 00–09 audit, 2026-11-23): IdentityMesh and Origin Connect are PARTIAL; every other module is NOT BUILT. Shared foundations (accounts, organizations, authorization, the domain schema, files and jobs) exist from Phases 04–07. Placement and MVP slices tagged **[GUESS]** are Phase 00 proposals.
 Canonical object names follow ADR-002; module-specific aliases are shown in parentheses.
 
 ## Release surfaces
@@ -37,7 +37,7 @@ Canonical object names follow ADR-002; module-specific aliases are shown in pare
 | 2 | **PublisherOS** | Editorial review, approval and publishing to existing channels | Work/WorkVersion (Draft), Submission, Review, Approval, Publication, ProviderConnection (Channel) | Content | Publish | Canonical link on published pages | 29, 30 | 11, 20, 28, 08 | NOT BUILT |
 | 3 | **EvidenceGraph** | Map claims to exact cited passages and show disagreement | Source (Paper), SourceVersion, EvidenceSpan, Claim, Assessment, Relation(CITES, SUPPORTS, CONTRADICTS) | Evidence | Research | — | 24, 25, 26 | 07, 15, 06 | NOT BUILT |
 | 4 | **OriginGraph** | Provenance history of works: versions, contributors, derivations, linked agent actions and publications | Work, WorkVersion (Version), Asset, ContentHash, ProvenanceAssertion (Attestation), Relation (Derivation) | Trust + Graph | Trust | Work pages, verification records | 11, 13 (+12, 14) | 06, 07, 12 | NOT BUILT |
-| 5 | **IdentityMesh** | Verify control of domains/accounts, issue and revoke scoped credentials | Subject, IdentityClaim, Credential, Subject(issuer) (Issuer) | Trust | Trust | Profile badges with "how" and "as of" | 09, 10 | 04, 05, ADR-006 | NOT BUILT |
+| 5 | **IdentityMesh** | Verify control of domains/accounts, issue and revoke scoped credentials | Subject, IdentityClaim, Credential, Subject(issuer) (Issuer) | Trust | Trust | Profile badges with "how" and "as of" | 09, 10 | 04, 05, ADR-006 | PARTIAL: Phase 09 profiles and proofs; portable credentials are Phase 10; live DNS/HTTPS and GitHub account proof BLOCKED |
 | 6 | **CreatorRights** | Declare licences, handle reuse requests and disputes as evidence-backed claims | LicenseDeclaration (LicenseClaim), Grant, ReuseRequest, Dispute | Content | Trust | Licence terms on work pages | 33 | 11, 41 | NOT BUILT |
 | 7 | **Verified Human** | Opt-in public creator directory and curated discovery with transparent labels | Subject profile (CreatorProfile), Collection, DiscoveryItem, Consent | Content | Discover | Directory, profiles, collections, digests; subscriptions with the subscriber's choice of email, SMS or Slack (owner requirement 2026-11-23, see BUILD_STATE) | 31, 32 (+14, 22) | 09, 11, 14 | NOT BUILT |
 | 8 | **Origin Studio** | Research writing with citations, comments, attributed edits and AI-use disclosure | WorkVersion (DraftVersion), Note, Citation (Relation CITES → EvidenceSpan), Comment | Content | Publish | — | 28 | 11, 26, 15 | NOT BUILT |
@@ -46,7 +46,7 @@ Canonical object names follow ADR-002; module-specific aliases are shown in pare
 | 11 | **Origin Automations** | Durable, supervised workflows on trusted events with approval nodes | Workflow, Trigger, Step, Execution | Platform | Integrations **[GUESS]** | — | 35 (+07) | 07, 20, ADR-003 | NOT BUILT |
 | 12 | **Origin Registry** | Lookup of agents, issuers, publishers, keys and credential status | Subject (AgentIdentity, Issuer, Publisher), key registry, CredentialStatus | Trust | Trust | Public privacy-filtered lookup | 36 | 10, 20, ADR-006 | NOT BUILT |
 | 13 | **Origin Analytics** | Measured usage, cost, reliability and conversion dashboards | UsageMetric, CostEvent, Report | Platform | Home summary + Settings | — | 37 (+39) | 16, 15, 39 | NOT BUILT |
-| 14 | **Origin Connect** | Integration broker: OAuth, tokens, webhooks, connectors (Claude MCP, Slack, GitHub, WordPress, research feeds) | ProviderConnection (Connection, OAuthGrant), WebhookDelivery, MCPTool | Connect | Integrations | — | 08, 21, 22, 23 (+24, 30) | 04, 05 | NOT BUILT |
+| 14 | **Origin Connect** | Integration broker: OAuth, tokens, webhooks, connectors (Claude MCP, Slack, GitHub, WordPress, research feeds) | ProviderConnection (Connection, OAuthGrant), WebhookDelivery, MCPTool | Connect | Integrations | — | 08, 21, 22, 23 (+24, 30) | 04, 05 | PARTIAL: Phase 08 OAuth broker, token vault and webhooks; MCP, Slack, GitHub App and other connectors in later phases; live GitHub BLOCKED |
 | 15 | **Origin Marketplace** | Reviewed extensions with explicit scopes and admin consent | ExtensionManifest, Listing, Installation | Connect + Platform | Integrations | Listing pages **[GUESS]** | 40 | 08, 05 | NOT BUILT |
 
 ## Module notes

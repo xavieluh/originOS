@@ -294,7 +294,6 @@ export class ConnectService {
         targetId: connectionId,
         metadata: {
           provider: input.provider,
-          account: identity.label,
           scopes: tokens.scopes.join(" "),
           reconnected: Boolean(existing),
         },

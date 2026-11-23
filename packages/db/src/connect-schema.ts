@@ -153,5 +153,7 @@ export const webhookDeliveries = core.table(
     check("webhook_deliveries_sha256_ck", sql`${t.payloadSha256} ~ '^[0-9a-f]{64}$'`),
     uniqueIndex("webhook_deliveries_delivery_uq").on(t.provider, t.deliveryId),
     index("webhook_deliveries_connection_idx").on(t.connectionId, t.receivedAt),
+    // A body seen before on a connection is a duplicate (0012_audit_guards).
+    index("webhook_deliveries_connection_payload_idx").on(t.connectionId, t.payloadSha256),
   ],
 );

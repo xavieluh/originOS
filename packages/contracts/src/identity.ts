@@ -163,6 +163,8 @@ export const ProofView = z.object({
   firstVerifiedAt: iso.nullable(),
   lastVerifiedAt: iso.nullable(),
   expiresAt: iso.nullable(),
+  /** Verified but past expiresAt when the response was built: it no longer backs the profile. */
+  expired: z.boolean(),
   lastCheckedAt: iso.nullable(),
   lastCheckError: z.string().nullable(),
   staleReason: z.string().nullable(),

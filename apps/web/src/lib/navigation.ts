@@ -32,8 +32,9 @@ export const workspaceSections = [
     planned: [
       {
         feature: "Activity feed",
-        phase: 6,
-        description: "Audit events from the shared ledger, newest first.",
+        phase: 37,
+        description:
+          "Workspace events, newest first. Until then, owners and admins see the activity log in Settings.",
       },
       {
         feature: "Pending approvals",

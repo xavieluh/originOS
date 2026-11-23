@@ -6,7 +6,7 @@
 |---|---|---|
 | Node.js | 22.13 or newer (`.nvmrc` says 22) | Tested on 22.23.5 |
 | pnpm | 10.28.0 (pinned in `package.json` `packageManager`) | `scripts/bootstrap.sh` enables it through corepack if missing |
-| Docker with Compose v2 | any current | Runs Postgres and the object-storage emulator. `--no-docker` skips it |
+| Docker with Compose v2 | any current | Runs Postgres, the object-storage emulator and Mailpit; ClamAV with `--profile scanner`. `--no-docker` skips it |
 | uv | 0.11 or newer | Only for `services/ai-worker` (Python 3.12+); skipped with a warning if absent |
 | gitleaks | 8.30.1 | Optional locally; CI always runs it |
 
@@ -56,15 +56,15 @@ CI (`.github/workflows/ci.yml`) runs on every push to `main` and every pull requ
 | Secret scan | gitleaks over the full history; no tracked `.env` |
 | Lint, typecheck, test, build | the whole TypeScript workspace from a clean install |
 | ai-worker (Python) | ruff and pytest |
-| Local stack | `compose.yaml` starts; migrations apply; DB (row-level security) and API (auth, tenancy, CSRF) integration tests; seed guard; `scripts/smoke.sh` |
-| Web E2E | Playwright against built web + API with Postgres and Mailpit service containers: auth journeys, routes, axe, keyboard, visual |
+| Local stack | `compose.yaml` starts (with SeaweedFS and ClamAV); migrations apply; DB, storage, API and worker integration tests; seed guard; `scripts/smoke.sh` |
+| Web E2E | Playwright against the built web app, API and worker with Postgres, Mailpit, SeaweedFS and ClamAV: auth, access, files, integrations and identity journeys, routes, axe, keyboard, visual |
 | Dependency audit and SBOM | `pnpm audit --prod --audit-level high`; CycloneDX SBOM uploaded as an artifact |
 
 Migrations live in `packages/db/migrations` (drizzle-kit 0.31.11 generates them from `src/schema.ts` with `pnpm --filter @originos/db db:generate`; row-level security is hand-written SQL). Never edit an applied migration; add a new one.
 
 ## Browser tests (Phase 03, real stack since Phase 04)
 
-`apps/web/e2e` holds Playwright suites for sign-up, verification, invitations, workspaces, password reset, two-step verification and passkeys (a virtual authenticator), routes and dead controls, axe accessibility (light and dark), keyboard use and visual regression. Playwright starts the built API (after migrating `originos_test` and creating the `originos-e2e-*` buckets) on port 4990, the built worker (health on 4991) and the built web app on http://localhost:3100. The E2E stack lowers the upload limit to 1 MB. Start the containers first (`docker compose --profile scanner up -d --wait`), then run after `pnpm build`:
+`apps/web/e2e` holds Playwright suites for sign-up, verification, invitations, workspaces, password reset, two-step verification and passkeys (a virtual authenticator), access and consent (Phase 05), files (07), integrations (08), identity profiles (09), routes and dead controls, axe accessibility (light and dark), keyboard use and visual regression. Playwright starts the built API (after migrating `originos_test` and creating the `originos-e2e-*` buckets) on port 4990, the built worker (health on 4991) and the built web app on http://localhost:3100. The E2E stack lowers the upload limit to 1 MB. Start the containers first (`docker compose --profile scanner up -d --wait`), then run after `pnpm build`:
 
 ```bash
 scripts/e2e-docker.sh                       # everything, in the pinned Playwright image (needs Docker)
@@ -126,22 +126,26 @@ Shared contract `HealthResponse` (`packages/contracts`):
 
 ## Sample data
 
-`pnpm db:seed` runs registered seed sets (`packages/db/src/seed.ts`). It refuses when `NODE_ENV=production`, and refuses a non-loopback database unless `SEED_ALLOW_NON_LOCAL=true`. Seeded text must carry the `[SAMPLE]` label. No seed sets exist until Phase 06 adds tables.
+`pnpm db:seed` runs registered seed sets (`packages/db/src/seed.ts`). It refuses when `NODE_ENV=production`, and refuses a non-loopback database unless `SEED_ALLOW_NON_LOCAL=true`. Seeded text must carry the `[SAMPLE]` label. No seed sets are registered yet; tests create their own data.
 
 ## Layout
 
 ```
 apps/web               Next.js app (public network, private workspace, developer console)
 apps/api               NestJS + Fastify modular monolith; bounded contexts in src/modules/<name>
-apps/worker            outbox dispatch and durable jobs (queue arrives in Phase 07)
-apps/mcp-server        remote MCP server (tools arrive in Phase 23)
+apps/worker            outbox dispatch, durable jobs, provider calls and identity checks
+apps/mcp-server        remote MCP server (health checks only; tools arrive in Phase 23)
 packages/contracts     Zod contracts shared by every surface (leaf package)
-packages/db            Drizzle + node-postgres, seed guard; only api and worker may import it
+packages/db            Drizzle + node-postgres, migrations, seed guard; only api and worker may import it
+packages/authz         the single permission evaluator (roles, grants, deny, agents capped by owner)
+packages/storage       S3-compatible storage, content sniffing, ClamAV client
+packages/connect       Origin Connect: provider registry, OAuth, token sealing, webhooks; testing/ fake provider
+packages/identity      IdentityMesh: domain challenges, SSRF-safe checker, badges; testing/ fixture checker
 packages/config        env validation, shared ESLint config and boundary rule
 packages/service-kit   shared Fastify bootstrap: redacted logs, correlation IDs, health routes
-packages/ui            shared React primitives (design system grows in Phase 03)
-services/telemetry     agent telemetry ingest (Phase 16)
-services/media-validator  sandboxed C2PA validation (Phase 12)
+packages/ui            shared accessible design system (React primitives, tokens, contrast tests)
+services/telemetry     agent telemetry ingest (health checks only until Phase 16)
+services/media-validator  sandboxed C2PA validation (health checks only until Phase 12)
 services/ai-worker     Python research worker (Phases 24-25); calls models only via the API gateway
 infra/local            compose init files (Postgres extensions, S3 emulator credentials)
 scripts                bootstrap, dev, check, smoke

@@ -220,3 +220,68 @@ test("a hidden profile has no public page", async ({ page }) => {
   await expect(page.getByText("Moderation note: Reported, under review")).toBeVisible();
   expect((await page.request.get(`/p/${handle}`)).status()).toBe(404);
 });
+
+test("a creator who lost their account recovers the profile: an owner approves, the profile moves and the old proofs end", async ({
+  page,
+  browser,
+}) => {
+  await signUpAndVerify(page, "Ruth Owner", uniqueEmail("owner"));
+  await createOrganization(page, "Recovery Desk");
+  const before = await addMember(page, browser, "Old Account", "Recovery Desk");
+  const handle = `kite-${suffix()}`;
+  const domain = `kite-${suffix()}.example.com`;
+  await createProfile(before.page, handle, "Kite Writes", false);
+  const profileUrl = before.page.url();
+
+  // The old account proves a domain.
+  const oldProofs = before.page.getByRole("list", { name: "Proofs" });
+  await before.page.locator("#proof-domain").fill(domain);
+  await before.page.getByRole("button", { name: "Get a challenge" }).click();
+  const value = (await oldProofs.locator("[data-challenge]").innerText()).trim();
+  publishTxt(domain, value);
+  await oldProofs.getByRole("button", { name: "Check now" }).click();
+  await expect(async () => {
+    await before.page.reload();
+    await expect(
+      before.page.locator('[data-badge-state="current"]').filter({ hasText: `Controls ${domain}` }),
+    ).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 20_000 });
+  await before.context.close();
+
+  // The creator's new account asks for the profile back; it cannot edit it yet.
+  const after = await addMember(page, browser, "New Account", "Recovery Desk");
+  const n = after.page;
+  await n.goto(profileUrl);
+  await expect(n.locator("#edit-handle")).toHaveCount(0);
+  await n.locator("#ownership-reason").selectOption("recovery");
+  await n.locator("#ownership-statement").fill("I lost the old login; this is my new account");
+  await n.getByRole("button", { name: "Request ownership" }).click();
+  await expect(n.getByText("Request sent.")).toBeVisible();
+
+  // An owner decides, with a reason.
+  await page.goto("/trust/reviews");
+  const item = page
+    .getByRole("list", { name: "Review requests" })
+    .locator('[data-review-status="pending"]')
+    .filter({ hasText: "Ownership request (recovery)" });
+  await expect(item).toContainText("Requested by New Account");
+  await item.getByLabel("Reason for your decision").fill("Confirmed with the creator in person");
+  await item.getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByText("Decision recorded.")).toBeVisible();
+
+  // The new account now manages it; the old account's proof ended and says why.
+  await n.goto(profileUrl);
+  await expect(n.locator("#edit-handle")).toBeVisible();
+  const pub = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const visitor = await pub.newPage();
+  await visitor.goto(`/p/${handle}`);
+  await expect(visitor.locator('[data-badge-state="current"]')).toHaveCount(0);
+  await expect(
+    visitor
+      .getByRole("region", { name: "No longer current" })
+      .locator('[data-badge-state="revoked"]')
+      .filter({ hasText: `Controls ${domain}` }),
+  ).toContainText("Ended when the profile changed owner");
+  await pub.close();
+  await after.context.close();
+});

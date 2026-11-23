@@ -432,6 +432,7 @@ export class IdentityService {
       firstVerifiedAt: iso(r.firstVerifiedAt),
       lastVerifiedAt: iso(r.lastVerifiedAt),
       expiresAt: iso(r.expiresAt),
+      expired: r.status === "verified" && r.expiresAt !== null && r.expiresAt <= new Date(),
       lastCheckedAt: iso(r.lastCheckedAt),
       lastCheckError: r.lastCheckError,
       staleReason: r.staleReason,

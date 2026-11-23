@@ -1,7 +1,7 @@
 # OriginOS build state
 
-**Current phase:** 09 — passed locally, in review (PR open, not merged)
-**Last fully completed phase:** 08 (Origin Connect OAuth and integration broker; PR #10 merged by owner 2026-11-23).
+**Current phase:** audit of Phases 00–09 done (PR open, not merged); next is 10
+**Last fully completed phase:** 09 (IdentityMesh creator and organization profiles; PR #11 merged by owner 2026-11-23).
 **Environment:** Repository xavieluh/originOS. Local stack via Docker Compose (Postgres 18 + pgvector, S3 emulator, ClamAV); GitHub Actions CI added in Phase 02. Nothing deployed.
 **Implementation status:** Monorepo scaffold, local dev tooling, CI, and (Phase 03) the design system and app shell: public, workspace and developer layouts with eight workspace routes that show honest "not yet available" states. Phase 04 adds real accounts (Better Auth: email + password with verification, password reset, TOTP two-step verification, passkeys), organizations, memberships, invitations, ownership transfer and an append-only audit log, all in the `core` Postgres schema behind row-level security. Phase 05 adds the single permission evaluator (`packages/authz`: roles, resource-scoped grants, explicit deny, agent and service actors), agents capped by their owner, and consent records with history, with API guards, settings pages and audit events. Phase 06 adds the canonical domain schema (contracts plus 12 tables in four context schemas, an object registry with whitelisted typed relations, append-oriented writes), a hash-chained audit log, the transactional outbox with a worker dispatcher, down migrations and the retention policy (docs/RETENTION.md). Phase 07 adds file uploads (S3-compatible storage with quarantine, content sniffing, ClamAV scanning in the worker, signed downloads) and the durable job runner with retries, dead-letter review, cancellation and human waits, with files and jobs pages. Phase 08 adds Origin Connect: a provider registry with permission disclosures, OAuth authorization code with PKCE and single-use state, envelope-encrypted tokens the API cannot read back, provider calls only in the worker (revocation gate, refresh, retries, idempotency keys), disconnect with revocation at the provider, key rotation, and signed inbound webhooks recorded once, with an integrations page. GitHub is wired as the first real provider but has not been run against GitHub (needs an owner-created OAuth app); all tests use a local fake provider. Phase 09 adds IdentityMesh profiles: creator and organization profiles with a public page at `/p/<handle>`, domain proofs by DNS TXT or HTTPS file checked only by the worker (SSRF-safe), account proofs through Origin Connect without scopes or stored tokens, badges derived from evidence with expiry, staleness and revocation, a claim and ownership review queue decided by owners and admins, moderation states and pseudonymous profiles. Production email delivery is not configured.
 
@@ -18,7 +18,7 @@
 | 06 Core domain schema, ledger and outbox | COMPLETE | All 4 checks passed locally 2026-11-22: contracts 14/14, db unit 21/21, DB integration 39/39 (domain schema, RLS, audit chain, every migration down and up), worker outbox integration 8/8, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 06 handoff. | ADR-025 Accepted. GitHub Actions run 45080783848: 6/6 jobs green. PR #7 merged 2026-11-22. |
 | 07 Object storage, ingestion queues and workflow core | COMPLETE | All 4 checks passed locally 2026-11-22: storage unit 11/11 and integration 4/4 (real SeaweedFS and ClamAV), DB integration 42/42, API integration 38/38, worker integration 21/21, Playwright 137/137 in the pinned container (incl. real upload, scan and EICAR rejection), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 07 handoff. | ADR-026 Accepted. GitHub Actions run 45085294461: 6/6 jobs green. PR #9 merged 2026-11-22. |
 | 08 Origin Connect OAuth and integration broker | COMPLETE | All 4 checks passed locally 2026-11-23: connect unit 19/19, DB integration 51/51, API integration 53/53, worker integration 32/32, Playwright 140/140 in the pinned container (incl. connect, check, disconnect, deny and replay against the fake provider), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 08 handoff. | ADR-027 Accepted. GitHub Actions run 45089176559: 6/6 jobs green. PR #10 merged 2026-11-23. Live GitHub smoke test BLOCKED on an owner-created OAuth app (checklist in handoff). |
-| 09 IdentityMesh creator and organization profiles | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-23: identity unit 48/48, DB integration 51/51, API integration 63/63, worker integration 37/37, Playwright 149/149 in the pinned container (domain proof by challenge, account proof, claim review, hidden profile), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 09 handoff. | ADR-028 Proposed. Live DNS/HTTPS checks and live GitHub account proof BLOCKED (checklist in handoff). |
+| 09 IdentityMesh creator and organization profiles | COMPLETE | All 4 checks passed locally 2026-11-23: identity unit 48/48, DB integration 51/51, API integration 63/63, worker integration 37/37, Playwright 149/149 in the pinned container (domain proof by challenge, account proof, claim review, hidden profile), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 09 handoff. | ADR-028 Accepted. GitHub Actions run 45094339906: 6/6 jobs green. PR #11 merged 2026-11-23. Live DNS/HTTPS checks and live GitHub account proof BLOCKED (checklist in handoff). |
 | 10 IdentityMesh portable credentials | NOT STARTED | — | — |
 | 11 Content, authorship and versions | NOT STARTED | — | — |
 | 12 C2PA media validation service | NOT STARTED | — | — |
@@ -73,8 +73,33 @@
 
 ## Current blockers
 
-1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
-2. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+External setup only the owner can do (nothing here blocks the next phase's local build):
+
+1. **Production email provider (Phase 04).** Choose a provider and set `SMTP_URL` (and a production `BETTER_AUTH_SECRET`). Until then sign-up, password reset and invitations say email delivery is not set up. Checklist: Phase 04 handoff.
+2. **GitHub OAuth app (Phases 08 and 09).** Create it and put its client id and secret in `.env` to run the live GitHub connection and the live GitHub account proof. Checklists: Phase 08 and Phase 09 handoffs.
+3. **Live domain checks (Phase 09).** Run the worker with outbound DNS and HTTPS (not possible in the cloud sandbox) and prove a domain you control. Checklist: Phase 09 handoff.
+4. **Production database roles (Phase 44).** The migration role needs `BYPASSRLS` (or to own the tables) in a managed database; set when staging exists.
+
+Tooling notes:
+
+5. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them). Every phase so far, and the 00–09 audit, followed the procedure by hand. Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
+6. gitleaks has not run locally in the cloud sandbox (downloading the binary was not permitted there); it runs and passes in CI.
+
+## Audit of Phases 00–09 (2026-11-23)
+
+- **Report:** `docs/audits/all-2026-11-23.md`. Verdict: CONFIRMED COMPLETE. No blockers; 3 major and several minor findings, fixed in the same PR except where they need the owner.
+- **Code changes:**
+  - migrations `0012_audit_guards` (guard triggers on approvals, tool actions, identity claims, profile content and proof ownership; stricter `core.owns_agent`, `core.accept_webhook`, `trust.public_profile_proofs`) and `0013_webhook_payload_index`, both with down scripts;
+  - the provider login removed from audit metadata;
+  - the workspace shows expired proofs as expired;
+  - copy fixes on Home, the public landing page and badges;
+  - the ClamAV test names its fix.
+- **Tests added:** `packages/db/test/integration/guards.test.ts` (8), a webhook replay case in `packages/db/test/integration/connect.test.ts`, and the account-recovery browser journey in `apps/web/e2e/identity.spec.ts`.
+- **Docs:** BUILD_STATE blockers and handoff notes, ACCEPTANCE_MATRIX, DECISIONS (summary, ADR-025/027/028 notes, ADR-028 Accepted), THREAT_MODEL, DEVELOPMENT, README, PRODUCT_MAP.
+- **Commands executed and results (2026-11-23):**
+  - `scripts/check.sh --db` (with only `TEST_DATABASE_URL` exported and `docker compose --profile scanner up -d --wait`) → "All checks passed": DB integration 59/59 (8 new), storage 4/4, API integration 63/63, worker integration 37/37, all unit suites, build; the existing web lint warning only.
+  - `CI=1 scripts/e2e-docker.sh --update-snapshots` changed 4 baselines (Home and the public landing page at mobile and tablet widths, for the copy fixes); then `CI=1 scripts/e2e-docker.sh` → 150/150.
+  - One identity journey needed a retry on the first run: the "Decision recorded." confirmation lived inside the review item, which leaves the waiting list as soon as the page refreshes. The confirmation now lives on the list. `e2e/identity.spec.ts --repeat-each=4` → 17/17.
 
 ## Phase 09 handoff (2026-11-23)
 
@@ -87,7 +112,7 @@
   - `apps/api`: `src/modules/identity/` (profiles, proofs, account proofs, reviews, ownership, moderation, public profile); `src/modules/connect/attempts.ts` (OAuth attempts shared by Connect and IdentityMesh); `test/integration/identity.test.ts`; the public-route test lists `GET /v1/public/profiles/:handle`.
   - `apps/worker`: `src/jobs/identity.ts` (`identity.check_domain`), `src/identity/rechecks.ts` (daily re-check scheduling), `IDENTITY_CHALLENGE_FIXTURE_FILE` (refused in production); `test/integration/identity.test.ts`.
   - `apps/web`: `/trust/profiles`, `/trust/profiles/[id]`, `/trust/reviews`, public `/p/[handle]`, `/integrations/callback/[provider]/identity`, `app/actions/identity.ts`, `components/identity.tsx`, `components/identity-badges.tsx`; `/trust` links to profiles and the review queue (Phase 9 planned card removed); public footer text; `e2e/identity.spec.ts`; Playwright's worker reads a challenge fixture file.
-  - `.env.example`, DEVELOPMENT, THREAT_MODEL, RETENTION, ACCEPTANCE_MATRIX, DECISIONS (ADR-028, Proposed).
+  - `.env.example`, DEVELOPMENT, THREAT_MODEL, RETENTION, ACCEPTANCE_MATRIX, DECISIONS (ADR-028, Proposed; accepted 2026-11-23).
 - **Migrations:** `0010_identity`, `0011_identity_rls` (`pnpm db:migrate`). Additive; both roll back (`rollback.test.ts` covers all 12).
 - **API changes:** `GET/POST /v1/profiles`; `GET/PATCH /v1/profiles/:id`; `POST /v1/profiles/:id/moderation`; `POST /v1/profiles/:id/proofs/domain`; `POST /v1/profiles/:id/proofs/account/:provider/start`; `POST /v1/profiles/:id/proofs/:proofId/check` (202); `PATCH /v1/profiles/:id/proofs/:proofId`; `POST /v1/profiles/:id/proofs/:proofId/revoke`; `POST /v1/profiles/:id/reviews`; `GET /v1/identity/providers`; `POST /v1/identity/callback`; `GET /v1/identity/reviews?status=pending|decided`; `POST /v1/identity/reviews/:id/decision|withdraw|revoke`; public `GET /v1/public/profiles/:handle`. Audit actions, outbox event and job listed in ADR-028.
 - **Commands executed and results (2026-11-23):**
@@ -117,7 +142,7 @@
   - `apps/api`: `src/modules/connect/` (providers, connections, start, callback, disconnect, check, deliveries, public webhook route); Nest `rawBody` for signature checks; `ORIGINOS_WEBHOOK_BASE_URL`; `test/integration/connect.test.ts`; the public-route test now lists the webhook route.
   - `apps/worker`: `src/connect/provider-client.ts` (outbound delivery manager), `src/connect/rewrap.ts` (key rotation sweep, at start and hourly), `src/jobs/connect.ts` (`connect.check`, `connect.revoke`); `test/integration/connect.test.ts`.
   - `apps/web`: `/integrations` (provider cards with scopes, capabilities, data residency and storage disclosures; connections table with check and disconnect), `/integrations/callback/[provider]` route handler, `app/actions/connect.ts`, `components/integrations.tsx`; navigation drops the Phase 8 planned card from Integrations and moves the developer console's "OAuth apps and outbound webhooks" card to Phase 38 (registering third-party apps is the developer platform, not this broker); 4 developer-console visual baselines regenerated for that text; `e2e/integrations.spec.ts`; Playwright runs the fake provider.
-  - `.env.example` (Origin Connect section), `scripts/bootstrap.sh` (generates a per-machine `CONNECT_TOKEN_KEYS`), root `connect:fake-provider` script, DEVELOPMENT, THREAT_MODEL, RETENTION, DECISIONS (ADR-027, Proposed).
+  - `.env.example` (Origin Connect section), `scripts/bootstrap.sh` (generates a per-machine `CONNECT_TOKEN_KEYS`), root `connect:fake-provider` script, DEVELOPMENT, THREAT_MODEL, RETENTION, DECISIONS (ADR-027, Proposed; accepted 2026-11-23).
 - **Migrations:** `0008_connect`, `0009_connect_rls` (`pnpm db:migrate`). Additive; both roll back (`rollback.test.ts` covers all 10).
 - **API changes:** `GET /v1/connect/providers`; `POST /v1/connect/callback`; `GET /v1/organization/connections`; `POST /v1/organization/connections/:provider/start`; `POST /v1/organization/connections/:id/disconnect`; `POST /v1/organization/connections/:id/check` (202); `GET /v1/organization/connections/:id/deliveries`; public `POST /v1/webhooks/:provider/:connectionId`. Audit actions `integration.connect_started`, `integration.connected`, `integration.connect_failed`, `integration.disconnected`, `integration.check_requested`; outbox event `integration.webhook_received`; jobs `connect.check`, `connect.revoke`.
 - **Commands executed and results (2026-11-23):**
@@ -167,7 +192,7 @@
   - Orphaned quarantine objects when the database insert fails after storing; no purge of an organization's objects yet (RETENTION §4, Phases 41 and 44).
   - API readiness does not include object storage (deliberate; uploads answer 503 when it is down).
   - Files are not yet attached to works or evidence; that starts with the modules that use them (Phase 09 onwards).
-  - CI has not yet run the new e2e services (ClamAV start-up time on GitHub runners is untested).
+  - CI has not yet run the new e2e services (ClamAV start-up time on GitHub runners is untested). [Closed: run 45085294461 ran them green.]
 - **Next phase:** 08 Origin Connect OAuth and integration broker, after the Phase 07 PR is reviewed.
 
 ## Phase 06 handoff (2026-11-22)
@@ -177,7 +202,7 @@
   - `packages/contracts/src/domain/` (new): `ids.ts` (opaque prefixed ids, `newId`, `kindOf`, `idOf`), `vocabulary.ts` (assurance labels, capture methods, visibilities, statuses, `RELATION_RULES`), `entities.ts` (zod schema per entity, `DOMAIN_ENTITIES`), `events.ts` (event envelope); `test/domain.test.ts`.
   - `packages/db`: `src/domain-schema.ts` (12 domain tables in `trust`, `content`, `evidence`, `agents`; `core.objects`, `core.relation_rules`, `core.relations`, `core.outbox_events`, `core.outbox_receipts`), `src/tables.ts`, `src/outbox.ts` (`enqueueEvent`, `claimEvents`, `consumeOnce`, `markDelivered`, `markFailed`, `backoffMs`), `src/rollback.ts` + `rollback-cli.ts` (`rollback` script), `WORKER_ROLE`, audit chain columns on `audit_events`, `migrations/0004_domain_schema.sql` (generated), `0005_domain_rls_outbox_ledger.sql` (registry triggers and foreign keys, relation rules, grants, RLS, worker role, outbox policies, audit hash chain), `migrations/down/0000–0005`, README; tests `test/domain-schema.test.ts`, `test/integration/domain.test.ts`, `test/integration/rollback.test.ts`.
   - `apps/worker`: `src/outbox-dispatcher.ts` (claim, consume once per consumer, deliver / retry / dead-letter, poll loop), wired into `worker.ts` and `main.ts` (connects as `originos_worker`; `OUTBOX_POLL_MS`), `registeredConsumers` (empty), unit tests, `vitest.integration.config.ts`, `test/integration/outbox.test.ts`.
-  - Root `test:integration` includes the worker; CI step renamed; `.env.example`; `docs/RETENTION.md` (new); DECISIONS (ADR-025, Proposed); ACCEPTANCE_MATRIX.
+  - Root `test:integration` includes the worker; CI step renamed; `.env.example`; `docs/RETENTION.md` (new); DECISIONS (ADR-025, Proposed; accepted 2026-11-22); ACCEPTANCE_MATRIX.
 - **Migrations:** `0004_domain_schema`, `0005_domain_rls_outbox_ledger` (`pnpm db:migrate`). Additive: existing tables only gain the audit chain columns, and existing audit events are backfilled into the chain. Every migration now has a down script.
 - **API changes:** none. Phase 06 is schema, library and worker only; modules start writing domain rows from Phase 09/11.
 - **Commands executed and results (2026-11-22):**
@@ -190,7 +215,7 @@
 - **Security and privacy:** domain tables deny by default under RLS (membership required; private rows visible only to their creator; attribution only to yourself or an agent you own); the application role has no DELETE and can only update state columns; composite same-tenant foreign keys stop cross-tenant links even for the owner; the worker role reads outbox tables only, no tenant data; outbox payloads and audit metadata carry ids only; failure reasons stored truncated. The audit chain detects tampering, it does not prevent it, and it is not externally anchored yet (Phase 20).
 - **External setup required:** none. **Production note for Phase 44:** the migration role must be a superuser or have BYPASSRLS, because the SECURITY DEFINER helpers read FORCE-RLS tables as their owner (ADR-025).
 - **Known gaps:**
-  - No module writes domain rows or events yet, and no outbox consumer is registered, so the running worker leaves events pending (it says so at startup). Consumers arrive with search (34), notifications and Automations (35).
+  - No module writes domain rows or events yet [since Phase 09, IdentityMesh writes `trust.identity_claims` and `identity.proof_verified` events], and no outbox consumer is registered, so the running worker leaves events pending (it says so at startup). Consumers arrive with search (34), notifications and Automations (35).
   - Consumers run as the worker role, which can only touch outbox tables; a consumer that writes tenant data needs a narrowly granted path, decided with its phase.
   - Export, erasure requests, purge jobs and legal hold are Phase 41 (`docs/RETENTION.md` §4).
   - Audit chain verification runs on demand only.

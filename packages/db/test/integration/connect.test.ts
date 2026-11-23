@@ -225,6 +225,8 @@ describe("webhook deliveries", () => {
   it("records a delivery once and appends one outbox event, without a session", async () => {
     expect(await accept("d-1")).toBe("accepted");
     expect(await accept("d-1")).toBe("duplicate");
+    // The same signed body under a new delivery id is a replay, not a new event (0012).
+    expect(await accept("d-1-replayed-with-a-new-id")).toBe("duplicate");
     expect(await accept("d-2", newConnectionId())).toBe("unknown_connection");
     expect(await accept("d-3", connectionId, "github")).toBe("unknown_connection");
     const rows = await owner.db
