@@ -57,6 +57,20 @@
       "when": 1795389219561,
       "tag": "0007_ingest_jobs_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795392585146,
+      "tag": "0008_connect",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795392631253,
+      "tag": "0009_connect_rls",
+      "breakpoints": true
     }
   ]
 }

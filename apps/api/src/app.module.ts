@@ -1,6 +1,8 @@
 import { type DynamicModule, Module } from "@nestjs/common";
+import type { Connect } from "@originos/connect";
 import type { Database } from "@originos/db";
 import type { Storage } from "@originos/storage";
+import { ConnectModule } from "./modules/connect/index.js";
 import { type Auth, AuthModule, type Mailer } from "./modules/core/index.js";
 import { HealthModule } from "./modules/health/index.js";
 import { IngestModule } from "./modules/ingest/index.js";
@@ -11,6 +13,8 @@ export interface AppModuleOptions {
   readonly mailer: Mailer;
   readonly publicOrigin: string;
   readonly storage: Storage;
+  readonly connect: Connect;
+  readonly webhookBaseUrl: string | null;
 }
 
 /**
@@ -31,6 +35,12 @@ export class AppModule {
           publicOrigin: options.publicOrigin,
         }),
         IngestModule.register({ storage: options.storage, db: options.database?.db ?? null }),
+        ConnectModule.register({
+          connect: options.connect,
+          db: options.database?.db ?? null,
+          publicOrigin: options.publicOrigin,
+          webhookBaseUrl: options.webhookBaseUrl,
+        }),
       ],
     };
   }

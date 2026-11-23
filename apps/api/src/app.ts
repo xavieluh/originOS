@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
 import { CORRELATION_ID_HEADER } from "@originos/contracts";
+import { type Connect, NO_CONNECT } from "@originos/connect";
 import type { Database } from "@originos/db";
 import { type LogDestination, type LogLevel, fastifyBaseOptions } from "@originos/service-kit";
 import type { Storage } from "@originos/storage";
@@ -27,6 +28,10 @@ export interface CreateApiOptions {
   readonly authRateLimit?: boolean;
   /** Object storage and scanner settings. Without it, uploads answer "not set up". */
   readonly storage?: Storage;
+  /** Origin Connect providers and token keys. Without it, no provider can be connected. */
+  readonly connect?: Connect;
+  /** Public base URL providers use for webhooks (https in production). Without it, none are shown. */
+  readonly webhookBaseUrl?: string;
 }
 
 export interface RouteInfo {
@@ -75,10 +80,18 @@ export async function createApi(options: CreateApiOptions): Promise<NestFastifyA
       mailer,
       publicOrigin,
       storage: options.storage ?? { store: null, scanner: null, maxUploadBytes: 0 },
+      connect: options.connect ?? NO_CONNECT,
+      webhookBaseUrl: options.webhookBaseUrl?.replace(/\/+$/, "") ?? null,
     }),
     adapter,
     // Fastify's logger (redacted) is the structured log; Nest's own logger only reports boot errors.
-    { logger: options.logLevel === "silent" ? false : ["error", "warn"], bufferLogs: false },
+    {
+      logger: options.logLevel === "silent" ? false : ["error", "warn"],
+      bufferLogs: false,
+      // Keep each JSON body's exact bytes as request.rawBody: webhook signatures
+      // are verified over what was sent, not over re-serialized JSON.
+      rawBody: true,
+    },
   );
   fastify.addHook("onRequest", async (request, reply) => {
     reply.header(CORRELATION_ID_HEADER, request.id);

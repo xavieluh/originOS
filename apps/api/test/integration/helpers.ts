@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { APPLICATION_ROLE, createDatabase, runMigrations, type Database } from "@originos/db";
+import type { Connect } from "@originos/connect";
+import type { LogDestination, LogLevel } from "@originos/service-kit";
 import type { Storage } from "@originos/storage";
 import { createApi } from "../../src/app.js";
 import { MemoryMailer } from "../../src/modules/core/index.js";
@@ -22,6 +24,12 @@ export interface Harness {
 export interface HarnessOptions {
   /** Object storage and scanner; omitted means "not set up". */
   readonly storage?: Storage;
+  /** Origin Connect providers and token keys; omitted means "not set up". */
+  readonly connect?: Connect;
+  readonly webhookBaseUrl?: string;
+  /** Capture structured logs (default: silent). */
+  readonly logDestination?: LogDestination;
+  readonly logLevel?: LogLevel;
 }
 
 export async function startHarness(options: HarnessOptions = {}): Promise<Harness> {
@@ -31,12 +39,15 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
   const mailer = new MemoryMailer();
   const app = await createApi({
     database,
-    logLevel: "silent",
+    logLevel: options.logLevel ?? "silent",
+    ...(options.logDestination ? { logDestination: options.logDestination } : {}),
     mailer,
     publicUrl: ORIGIN,
     authSecret: "test-secret-test-secret-test-secret-0123456789",
     authRateLimit: false,
     ...(options.storage ? { storage: options.storage } : {}),
+    ...(options.connect ? { connect: options.connect } : {}),
+    ...(options.webhookBaseUrl ? { webhookBaseUrl: options.webhookBaseUrl } : {}),
   });
   return {
     app,

@@ -47,6 +47,9 @@ importers:
       '@originos/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@originos/connect':
+        specifier: workspace:*
+        version: link:../../packages/connect
       '@originos/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -233,6 +236,9 @@ importers:
       '@originos/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@originos/connect':
+        specifier: workspace:*
+        version: link:../../packages/connect
       '@originos/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -303,6 +309,34 @@ importers:
       typescript-eslint:
         specifier: 8.73.0
         version: 8.73.0(eslint@9.39.5(jiti@2.7.0))(typescript@6.0.3)
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.5
+        version: 22.20.5
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vite:
+        specifier: 8.3.8
+        version: 8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
+      vitest:
+        specifier: 5.1.1
+        version: 5.1.1(@types/node@22.20.5)(vite@8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/connect:
+    dependencies:
+      '@originos/config':
+        specifier: workspace:*
+        version: link:../config
+      '@originos/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       zod:
         specifier: 4.6.7
         version: 4.6.7

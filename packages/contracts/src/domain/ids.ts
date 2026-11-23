@@ -30,6 +30,9 @@ export const EVENT_ID_PREFIX = "evt";
 /** Uploads and jobs (Phase 07) are plumbing records, not domain objects either. */
 export const UPLOAD_ID_PREFIX = "upl";
 export const JOB_ID_PREFIX = "job";
+/** Origin Connect (Phase 08): provider connections and received webhook deliveries. */
+export const CONNECTION_ID_PREFIX = "con";
+export const WEBHOOK_DELIVERY_ID_PREFIX = "whd";
 
 const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz"; // Crockford base32, lowercase
 const BODY = /^[0-9a-hjkmnp-tv-z]{26}$/;
@@ -74,6 +77,14 @@ export function newUploadId(now?: number): string {
 
 export function newJobId(now?: number): string {
   return `${JOB_ID_PREFIX}_${idBody(now)}`;
+}
+
+export function newConnectionId(now?: number): string {
+  return `${CONNECTION_ID_PREFIX}_${idBody(now)}`;
+}
+
+export function newWebhookDeliveryId(now?: number): string {
+  return `${WEBHOOK_DELIVERY_ID_PREFIX}_${idBody(now)}`;
 }
 
 const KIND_BY_PREFIX = new Map<string, ObjectKind>(

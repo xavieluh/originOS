@@ -1,0 +1,36 @@
+{
+  "name": "@originos/connect",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Origin Connect broker (Phase 08): provider registry, OAuth authorization code with PKCE, envelope-encrypted tokens, webhook verification and provider calls. testing/ holds a fake provider for tests only.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "fake-provider": "node dist/testing/fake-provider-cli.js"
+  },
+  "dependencies": {
+    "@originos/config": "workspace:*",
+    "@originos/contracts": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  }
+}

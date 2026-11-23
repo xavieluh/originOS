@@ -2,6 +2,7 @@
 const apiPort = 4990;
 const webPort = 3100;
 const workerPort = 4991;
+const fakeProviderPort = 4995;
 
 export const E2E = {
   apiPort,
@@ -19,6 +20,11 @@ export const E2E = {
   // Object storage (SeaweedFS) and the malware scanner (ClamAV), Phase 07.
   s3Endpoint: process.env.E2E_S3_ENDPOINT ?? "http://127.0.0.1:8333",
   clamavHost: process.env.E2E_CLAMAV_HOST ?? "127.0.0.1",
+  // Origin Connect (Phase 08): the fake OAuth provider from @originos/connect/testing.
+  fakeProviderPort,
+  fakeProviderUrl: `http://127.0.0.1:${fakeProviderPort}`,
+  /** Every token the fake provider issues starts with this (FAKE_TOKEN_PREFIX). */
+  fakeTokenPrefix: "ftp_",
   /** Lowered so the size refusal can be tested without a 25 MB file. */
   uploadMaxBytes: 1024 * 1024,
   ownerState: "e2e/.auth/owner.json",

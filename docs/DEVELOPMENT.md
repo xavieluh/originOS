@@ -81,6 +81,21 @@ To try the malware path locally, upload a `.txt` file containing the standard EI
 
 Job handlers live in `apps/worker/src/jobs/` and are registered in `src/handlers.ts`. Put each side effect in `ctx.step(name, fn)`, so a retry never repeats it; call `ctx.progress()` in long loops (it also notices cancellation).
 
+## Integrations (Phase 08)
+
+`/integrations` lists providers with what each asks for and why, and the organization's connections. Owners and admins connect, check and disconnect. Design: ADR-027.
+
+To try the flow locally without any real account, run the fake provider (test-only, refused in production) and point the API and worker at it:
+
+```bash
+pnpm connect:fake-provider            # http://127.0.0.1:4995, uses CONNECT_TEST_PROVIDER_* from .env
+# in .env: CONNECT_TEST_PROVIDER_URL=http://127.0.0.1:4995, then restart scripts/dev.sh
+```
+
+`CONNECT_TOKEN_KEYS` must be set (bootstrap generates one into `.env`); without it every provider shows "not set up". To rotate: append a new `kid:key`, set `CONNECT_TOKEN_ACTIVE_KEY` to it and restart the worker, which rewraps stored tokens; remove the old key once the worker has logged "token keys rotated" and no row of `core.integration_connections` still has the old `token_key_id`. Generate a key with `node -e 'console.log(require("node:crypto").randomBytes(32).toString("base64"))'`.
+
+Real GitHub needs an OAuth app you create yourself (callback `http://localhost:3000/integrations/callback/github`) and `GITHUB_OAUTH_CLIENT_ID`/`GITHUB_OAUTH_CLIENT_SECRET` in `.env`. Webhook URLs appear only when `ORIGINOS_WEBHOOK_BASE_URL` (a URL providers can reach) is set. Provider calls belong in worker jobs through `createProviderClient` (`apps/worker/src/connect/`), never in the API.
+
 ## Readiness semantics
 
 Shared contract `HealthResponse` (`packages/contracts`):

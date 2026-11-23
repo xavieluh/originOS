@@ -29,6 +29,7 @@ const ROLE_PERMISSIONS: Record<Role, Readonly<Partial<Record<ResourceType, reado
     consents: ["read", "write"],
     files: ["read", "write", "admin"],
     jobs: ["read", "write", "admin"],
+    integrations: ["read", "write", "admin"],
   },
   member: {
     organization: ["read"],
@@ -37,6 +38,8 @@ const ROLE_PERMISSIONS: Record<Role, Readonly<Partial<Record<ResourceType, reado
     consents: ["read"],
     // Members upload files and download clean ones; managing jobs is for owners and admins.
     files: ["read", "write"],
+    // Members see which providers are connected; connecting and disconnecting is for owners and admins.
+    integrations: ["read"],
   },
 };
 

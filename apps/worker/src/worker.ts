@@ -1,8 +1,10 @@
+import { type Connect, NO_CONNECT } from "@originos/connect";
 import { type Database, databaseHealthCheck } from "@originos/db";
 import { createHttpService } from "@originos/service-kit";
 import { type Storage, scannerHealthCheck, storageHealthCheck } from "@originos/storage";
 import type { FastifyInstance } from "fastify";
 import type { WorkerEnv } from "./env.js";
+import { rewrapTokens } from "./connect/rewrap.js";
 import { jobHandlers, registeredConsumers } from "./handlers.js";
 import { type JobHandler, type JobRunner, createJobRunner } from "./job-runner.js";
 import {
@@ -24,6 +26,7 @@ export interface Worker {
 
 export interface WorkerOptions {
   readonly storage?: Storage;
+  readonly connect?: Connect;
   readonly handlers?: readonly JobHandler[];
   readonly consumers?: readonly OutboxConsumer[];
   readonly workerId?: string;
@@ -37,7 +40,8 @@ export function createWorker(
   options: WorkerOptions = {},
 ): Worker {
   const storage = options.storage ?? NO_STORAGE;
-  const handlers = options.handlers ?? jobHandlers(storage);
+  const connect = options.connect ?? NO_CONNECT;
+  const handlers = options.handlers ?? jobHandlers(storage, connect);
   const consumers = options.consumers ?? registeredConsumers;
   const workerId = options.workerId ?? `worker-${process.pid}-${Date.now().toString(36)}`;
   const health = createHttpService({
@@ -62,6 +66,27 @@ export function createWorker(
   if (!storage.scanner) {
     health.log.warn("No malware scanner is configured; uploads stay in quarantine.");
   }
+  // Rewrap tokens sealed under a retired key: at start, then hourly.
+  let rewrapTimer: NodeJS.Timeout | null = null;
+  if (database && connect.keyring) {
+    const keyring = connect.keyring;
+    const sweep = () =>
+      void rewrapTokens(database.db, keyring)
+        .then((r) => {
+          if (r.rewrapped || r.failed) health.log.info(r, "token keys rotated");
+        })
+        .catch((error: unknown) =>
+          health.log.error(
+            { err: error instanceof Error ? error.message : "error" },
+            "token rewrap failed",
+          ),
+        );
+    sweep();
+    rewrapTimer = setInterval(sweep, 3_600_000);
+    rewrapTimer.unref();
+  } else if (!connect.keyring) {
+    health.log.warn("CONNECT_TOKEN_KEYS is not set; provider connections cannot be used.");
+  }
   if (consumers.length === 0) {
     health.log.warn(
       "No outbox consumers are registered; events stay pending until a module registers one.",
@@ -73,6 +98,7 @@ export function createWorker(
     jobs,
     outbox,
     async stop() {
+      if (rewrapTimer) clearInterval(rewrapTimer);
       await jobs?.stop();
       await outbox?.stop();
       await health.close();

@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { defineConfig, devices } from "@playwright/test";
 import { E2E } from "./e2e/env";
 
@@ -25,6 +26,19 @@ const storageEnv = {
   CLAMAV_PORT: "3310",
 };
 
+/**
+ * Origin Connect against the fake provider (test-only, refused in production).
+ * The token key is generated for each run; the web servers start from the
+ * main process, so the API and the worker share it.
+ */
+const connectEnv = {
+  CONNECT_TOKEN_KEYS: `e2e:${randomBytes(32).toString("base64")}`,
+  CONNECT_TEST_PROVIDER_URL: E2E.fakeProviderUrl,
+  CONNECT_TEST_PROVIDER_CLIENT_ID: "originos-e2e",
+  CONNECT_TEST_PROVIDER_CLIENT_SECRET: "originos-local-only-test-provider-secret",
+  CONNECT_TEST_PROVIDER_WEBHOOK_SECRET: "originos-local-only-test-webhook-secret",
+};
+
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
@@ -42,6 +56,18 @@ export default defineConfig({
     },
   ],
   webServer: [
+    {
+      command: "node ../../packages/connect/dist/testing/fake-provider-cli.js",
+      url: `${E2E.fakeProviderUrl}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+      env: {
+        NODE_ENV: "test",
+        CONNECT_TEST_PROVIDER_PORT: String(E2E.fakeProviderPort),
+        CONNECT_TEST_PROVIDER_CLIENT_ID: connectEnv.CONNECT_TEST_PROVIDER_CLIENT_ID,
+        CONNECT_TEST_PROVIDER_CLIENT_SECRET: connectEnv.CONNECT_TEST_PROVIDER_CLIENT_SECRET,
+      },
+    },
     {
       // Migrate the test database and create the buckets, then start the API exactly as in production.
       command:
@@ -61,7 +87,9 @@ export default defineConfig({
         MAIL_FROM: "OriginOS E2E <no-reply@localhost>",
         // Every test request comes from one address; per-IP limits would make runs flaky.
         AUTH_RATE_LIMIT: "off",
+        ORIGINOS_WEBHOOK_BASE_URL: E2E.apiUrl,
         ...storageEnv,
+        ...connectEnv,
       },
     },
     {
@@ -78,6 +106,7 @@ export default defineConfig({
         DATABASE_URL: E2E.databaseUrl,
         JOB_POLL_MS: "300",
         ...storageEnv,
+        ...connectEnv,
       },
     },
     {

@@ -1,4 +1,6 @@
+import type { Connect } from "@originos/connect";
 import type { Storage } from "@originos/storage";
+import { connectCheckHandler, connectRevokeHandler } from "./jobs/connect.js";
 import type { JobHandler } from "./job-runner.js";
 import { scanUploadHandler } from "./jobs/scan-upload.js";
 import type { OutboxConsumer } from "./outbox-dispatcher.js";
@@ -6,8 +8,8 @@ import type { OutboxConsumer } from "./outbox-dispatcher.js";
 export type { JobHandler } from "./job-runner.js";
 
 /** Job handlers this worker runs (ADR-026). */
-export function jobHandlers(storage: Storage): JobHandler[] {
-  return [scanUploadHandler(storage)];
+export function jobHandlers(storage: Storage, connect: Connect): JobHandler[] {
+  return [scanUploadHandler(storage), connectCheckHandler(connect), connectRevokeHandler(connect)];
 }
 
 /**

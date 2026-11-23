@@ -1,3 +1,4 @@
+import { connectFromEnv } from "@originos/connect";
 import { WORKER_ROLE, createDatabase } from "@originos/db";
 import { storageFromEnv } from "@originos/storage";
 import { loadWorkerEnv } from "./env.js";
@@ -8,11 +9,14 @@ async function main(): Promise<void> {
   const database = env.DATABASE_URL
     ? createDatabase({ url: env.DATABASE_URL, role: WORKER_ROLE })
     : null;
-  const worker = createWorker(env, database, { storage: storageFromEnv() });
+  const worker = createWorker(env, database, {
+    storage: storageFromEnv(),
+    connect: connectFromEnv(),
+  });
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
     process.once(signal, () => void worker.stop().then(() => process.exit(0)));
   }
-  // The worker role reaches jobs, uploads and the outbox only; it sees no other tenant data.
+  // The worker role reaches jobs, uploads, connections and the outbox only; it sees no other tenant data.
   worker.jobs?.start(env.JOB_POLL_MS);
   worker.outbox?.start(env.OUTBOX_POLL_MS);
   await worker.health.listen({ port: env.WORKER_HEALTH_PORT, host: env.WORKER_HEALTH_HOST });
