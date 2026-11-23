@@ -1,3 +1,4 @@
+import { NO_CONNECT } from "@originos/connect";
 import { HealthResponse } from "@originos/contracts";
 import type { Database } from "@originos/db";
 import { describe, expect, it } from "vitest";
@@ -8,10 +9,10 @@ import { createOutboxDispatcher } from "../src/outbox-dispatcher.js";
 import { createWorker } from "../src/worker.js";
 
 describe("worker", () => {
-  it("registers the upload scan job, no outbox consumers yet, and has no runners without a database", () => {
+  it("registers the upload scan and connect jobs, no outbox consumers yet, and has no runners without a database", () => {
     expect(
-      jobHandlers({ store: null, scanner: null, maxUploadBytes: 1 }).map((h) => h.type),
-    ).toEqual(["ingest.scan_upload"]);
+      jobHandlers({ store: null, scanner: null, maxUploadBytes: 1 }, NO_CONNECT).map((h) => h.type),
+    ).toEqual(["ingest.scan_upload", "connect.check", "connect.revoke"]);
     const worker = createWorker({ LOG_LEVEL: "silent" }, null);
     expect(worker.jobs).toBeNull();
     expect(worker.outbox).toBeNull();
