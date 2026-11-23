@@ -70,7 +70,8 @@ export function connectFromEnv(source: EnvSource = process.env): Connect {
   return { keyring, providers };
 }
 
-export const NO_CONNECT: Connect = { keyring: null, providers: [] };
+/** No credentials and no token keys: every provider shows its setup-required state. */
+export const NO_CONNECT: Connect = connectFromEnv({});
 
 export function findProvider(connect: Connect, id: string): ProviderConfig | undefined {
   return connect.providers.find((p) => p.definition.id === id);

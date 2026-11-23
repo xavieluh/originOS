@@ -1,3 +1,4 @@
+import { connectFromEnv } from "@originos/connect";
 import { APPLICATION_ROLE, createDatabase } from "@originos/db";
 import { storageFromEnv } from "@originos/storage";
 import { createApi } from "./app.js";
@@ -18,6 +19,8 @@ async function main(): Promise<void> {
     publicUrl: env.ORIGINOS_PUBLIC_URL,
     authRateLimit: env.AUTH_RATE_LIMIT === "on",
     storage: storageFromEnv(),
+    connect: connectFromEnv(),
+    ...(env.ORIGINOS_WEBHOOK_BASE_URL ? { webhookBaseUrl: env.ORIGINOS_WEBHOOK_BASE_URL } : {}),
     ...(env.BETTER_AUTH_SECRET ? { authSecret: env.BETTER_AUTH_SECRET } : {}),
   });
   if (database) {

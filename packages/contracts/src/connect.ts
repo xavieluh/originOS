@@ -64,3 +64,17 @@ export const ConnectCallback = z.object({
   state: z.string().min(1).max(256),
 });
 export type ConnectCallback = z.infer<typeof ConnectCallback>;
+
+/** A verified inbound webhook delivery, as owners and admins see it (no payload). */
+export const WebhookDeliveryView = z.object({
+  id: z.string().regex(/^whd_[0-9a-hjkmnp-tv-z]{26}$/),
+  event: z.string(),
+  deliveryId: z.string(),
+  byteSize: z.number().int(),
+  receivedAt: z.iso.datetime({ offset: true }),
+});
+export type WebhookDeliveryView = z.infer<typeof WebhookDeliveryView>;
+
+/** Job types Origin Connect enqueues (the worker runs them). */
+export const CONNECT_CHECK_JOB = "connect.check";
+export const CONNECT_REVOKE_JOB = "connect.revoke";

@@ -22,6 +22,7 @@ export const RESOURCE_TYPES = [
   "consents",
   "files",
   "jobs",
+  "integrations",
 ] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
 

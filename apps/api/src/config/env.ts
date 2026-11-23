@@ -24,6 +24,11 @@ const ApiEnvSchema = z
      * every request comes from one address; it is refused in production.
      */
     AUTH_RATE_LIMIT: z.enum(["on", "off"]).default("on"),
+    /**
+     * Public base URL of this API as providers reach it, for webhook URLs shown
+     * to admins (Phase 08). Without it, connections show no webhook URL.
+     */
+    ORIGINOS_WEBHOOK_BASE_URL: envFields.url.optional(),
   })
   .refine((env) => env.NODE_ENV !== "production" || env.DATABASE_URL !== undefined, {
     path: ["DATABASE_URL"],
@@ -37,6 +42,13 @@ const ApiEnvSchema = z
     path: ["AUTH_RATE_LIMIT"],
     message: "cannot be off when NODE_ENV=production",
   })
+  .refine(
+    (env) =>
+      env.NODE_ENV !== "production" ||
+      env.ORIGINOS_WEBHOOK_BASE_URL === undefined ||
+      env.ORIGINOS_WEBHOOK_BASE_URL.startsWith("https://"),
+    { path: ["ORIGINOS_WEBHOOK_BASE_URL"], message: "must use https when NODE_ENV=production" },
+  )
   .refine(
     (env) => env.NODE_ENV !== "production" || env.ORIGINOS_PUBLIC_URL.startsWith("https://"),
     {
