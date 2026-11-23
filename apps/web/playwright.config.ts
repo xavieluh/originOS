@@ -105,6 +105,7 @@ export default defineConfig({
         WORKER_HEALTH_PORT: String(E2E.workerPort),
         DATABASE_URL: E2E.databaseUrl,
         JOB_POLL_MS: "300",
+        IDENTITY_CHALLENGE_FIXTURE_FILE: E2E.challengeFixtureFile,
         ...storageEnv,
         ...connectEnv,
       },

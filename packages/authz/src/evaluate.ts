@@ -30,6 +30,8 @@ const ROLE_PERMISSIONS: Record<Role, Readonly<Partial<Record<ResourceType, reado
     files: ["read", "write", "admin"],
     jobs: ["read", "write", "admin"],
     integrations: ["read", "write", "admin"],
+    // Review identity claims and ownership requests, and moderate profiles.
+    identity: ["read", "write", "admin"],
   },
   member: {
     organization: ["read"],
@@ -40,6 +42,8 @@ const ROLE_PERMISSIONS: Record<Role, Readonly<Partial<Record<ResourceType, reado
     files: ["read", "write"],
     // Members see which providers are connected; connecting and disconnecting is for owners and admins.
     integrations: ["read"],
+    // Members keep their own profile and proofs and ask for reviews; deciding is for owners and admins.
+    identity: ["read", "write"],
   },
 };
 

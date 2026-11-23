@@ -162,6 +162,10 @@ export const workspaceSections = [
     keywords: [
       "identity",
       "identitymesh",
+      "profiles",
+      "domain",
+      "proofs",
+      "reviews",
       "provenance",
       "origingraph",
       "c2pa",
@@ -170,11 +174,6 @@ export const workspaceSections = [
       "registry",
     ],
     planned: [
-      {
-        feature: "Creator and organization profiles",
-        phase: 9,
-        description: "Identity evidence with honest assurance labels.",
-      },
       {
         feature: "Portable credentials",
         phase: 10,

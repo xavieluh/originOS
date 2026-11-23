@@ -1,5 +1,6 @@
 import { connectFromEnv } from "@originos/connect";
 import { WORKER_ROLE, createDatabase } from "@originos/db";
+import { fileFixtureChecker } from "@originos/identity/testing";
 import { storageFromEnv } from "@originos/storage";
 import { loadWorkerEnv } from "./env.js";
 import { createWorker } from "./worker.js";
@@ -12,11 +13,14 @@ async function main(): Promise<void> {
   const worker = createWorker(env, database, {
     storage: storageFromEnv(),
     connect: connectFromEnv(),
+    ...(env.IDENTITY_CHALLENGE_FIXTURE_FILE
+      ? { challengeChecker: fileFixtureChecker(env.IDENTITY_CHALLENGE_FIXTURE_FILE) }
+      : {}),
   });
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
     process.once(signal, () => void worker.stop().then(() => process.exit(0)));
   }
-  // The worker role reaches jobs, uploads, connections and the outbox only; it sees no other tenant data.
+  // The worker role reaches jobs, uploads, connections, the outbox and what a domain check needs; it sees no other tenant data.
   worker.jobs?.start(env.JOB_POLL_MS);
   worker.outbox?.start(env.OUTBOX_POLL_MS);
   await worker.health.listen({ port: env.WORKER_HEALTH_PORT, host: env.WORKER_HEALTH_HOST });

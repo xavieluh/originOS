@@ -14,6 +14,7 @@ export const RESOURCE_TYPES = [
   "files",
   "jobs",
   "integrations",
+  "identity",
 ] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
 
@@ -30,6 +31,7 @@ export const RESOURCE_LABELS: Record<ResourceType | "*", string> = {
   files: "Files",
   jobs: "Background jobs",
   integrations: "Integrations",
+  identity: "Profiles and identity reviews",
   "*": "Everything",
 };
 

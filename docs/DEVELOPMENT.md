@@ -96,6 +96,19 @@ pnpm connect:fake-provider            # http://127.0.0.1:4995, uses CONNECT_TEST
 
 Real GitHub needs an OAuth app you create yourself (callback `http://localhost:3000/integrations/callback/github`) and `GITHUB_OAUTH_CLIENT_ID`/`GITHUB_OAUTH_CLIENT_SECRET` in `.env`. Webhook URLs appear only when `ORIGINOS_WEBHOOK_BASE_URL` (a URL providers can reach) is set. Provider calls belong in worker jobs through `createProviderClient` (`apps/worker/src/connect/`), never in the API.
 
+## Identity profiles (Phase 09)
+
+`/trust/profiles` creates creator or organization profiles and manages their proofs; `/trust/reviews` is the claim and ownership review queue (owners and admins decide); `/p/<handle>` is the public page. Design: ADR-028.
+
+Domain proofs are checked only by the worker. Locally it uses live DNS and HTTPS, so a check only passes for a domain you control. To try the flow offline, point the worker at a fixture file (TEST ONLY, refused in production):
+
+```bash
+echo '{"dns":{"_originos-challenge.example.com":["originos-verify=..."]}}' > /tmp/challenges.json
+# in .env: IDENTITY_CHALLENGE_FIXTURE_FILE=/tmp/challenges.json, then restart scripts/dev.sh
+```
+
+The file also takes `"html": {"<domain>": "<body>"}` and `"unreachable": ["<domain>"]`; it is re-read on every check. Account proofs use the Origin Connect providers (the fake provider locally, GitHub with the Phase 08 OAuth app); no scopes are requested and no token is kept.
+
 ## Readiness semantics
 
 Shared contract `HealthResponse` (`packages/contracts`):

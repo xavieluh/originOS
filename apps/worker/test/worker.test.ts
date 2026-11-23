@@ -1,6 +1,7 @@
 import { NO_CONNECT } from "@originos/connect";
 import { HealthResponse } from "@originos/contracts";
 import type { Database } from "@originos/db";
+import { liveChecker } from "@originos/identity";
 import { describe, expect, it } from "vitest";
 import { loadWorkerEnv } from "../src/env.js";
 import { jobHandlers } from "../src/handlers.js";
@@ -9,10 +10,12 @@ import { createOutboxDispatcher } from "../src/outbox-dispatcher.js";
 import { createWorker } from "../src/worker.js";
 
 describe("worker", () => {
-  it("registers the upload scan and connect jobs, no outbox consumers yet, and has no runners without a database", () => {
+  it("registers the upload scan, connect and identity jobs, no outbox consumers yet, and has no runners without a database", () => {
     expect(
-      jobHandlers({ store: null, scanner: null, maxUploadBytes: 1 }, NO_CONNECT).map((h) => h.type),
-    ).toEqual(["ingest.scan_upload", "connect.check", "connect.revoke"]);
+      jobHandlers({ store: null, scanner: null, maxUploadBytes: 1 }, NO_CONNECT, liveChecker()).map(
+        (h) => h.type,
+      ),
+    ).toEqual(["ingest.scan_upload", "connect.check", "connect.revoke", "identity.check_domain"]);
     const worker = createWorker({ LOG_LEVEL: "silent" }, null);
     expect(worker.jobs).toBeNull();
     expect(worker.outbox).toBeNull();
@@ -84,5 +87,19 @@ describe("worker", () => {
 
   it("requires DATABASE_URL in production", () => {
     expect(() => loadWorkerEnv({ NODE_ENV: "production" })).toThrow(/DATABASE_URL/);
+  });
+
+  it("refuses the test-only challenge fixture in production", () => {
+    expect(() =>
+      loadWorkerEnv({
+        NODE_ENV: "production",
+        DATABASE_URL: "postgres://u:p@db.example.com/x",
+        IDENTITY_CHALLENGE_FIXTURE_FILE: "/tmp/fixtures.json",
+      }),
+    ).toThrow(/IDENTITY_CHALLENGE_FIXTURE_FILE/);
+    expect(
+      loadWorkerEnv({ IDENTITY_CHALLENGE_FIXTURE_FILE: "/tmp/fixtures.json" })
+        .IDENTITY_CHALLENGE_FIXTURE_FILE,
+    ).toBe("/tmp/fixtures.json");
   });
 });

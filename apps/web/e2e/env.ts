@@ -25,6 +25,11 @@ export const E2E = {
   fakeProviderUrl: `http://127.0.0.1:${fakeProviderPort}`,
   /** Every token the fake provider issues starts with this (FAKE_TOKEN_PREFIX). */
   fakeTokenPrefix: "ftp_",
+  /**
+   * TEST ONLY (Phase 09): the worker answers domain challenges from this file
+   * instead of DNS and HTTPS; the identity suite writes records into it.
+   */
+  challengeFixtureFile: `${process.cwd()}/e2e/.auth/challenges.json`,
   /** Lowered so the size refusal can be tested without a 25 MB file. */
   uploadMaxBytes: 1024 * 1024,
   ownerState: "e2e/.auth/owner.json",

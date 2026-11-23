@@ -96,6 +96,27 @@ export const BUTTON_ACTIONS = new Set([
   "integration.disconnect",
   "integration.disconnect.confirm",
   "integration.disconnect.cancel",
+  // Phase 09: IdentityMesh
+  "identity.profile-create",
+  "identity.profile-save",
+  "identity.moderate",
+  "identity.proof-domain",
+  "identity.proof-account",
+  "identity.proof-check",
+  "identity.proof-visibility",
+  "identity.proof-revoke",
+  "identity.proof-revoke.confirm",
+  "identity.proof-revoke.cancel",
+  "identity.claim-request",
+  "identity.ownership-request",
+  "identity.review-approve",
+  "identity.review-reject",
+  "identity.review-withdraw",
+  "identity.review-withdraw.confirm",
+  "identity.review-withdraw.cancel",
+  "identity.review-revoke",
+  "identity.review-revoke.confirm",
+  "identity.review-revoke.cancel",
 ]);
 
 /** Account screens. Signed-out ones are checked without a session. */
@@ -113,5 +134,7 @@ export const SIGNED_IN_ROUTES = [
   "/settings/consent",
   "/settings/files",
   "/settings/jobs",
+  "/trust/profiles",
+  "/trust/reviews",
   "/onboarding",
 ];

@@ -1,10 +1,12 @@
 import { type Connect, NO_CONNECT } from "@originos/connect";
 import { type Database, databaseHealthCheck } from "@originos/db";
+import { type ChallengeChecker, liveChecker } from "@originos/identity";
 import { createHttpService } from "@originos/service-kit";
 import { type Storage, scannerHealthCheck, storageHealthCheck } from "@originos/storage";
 import type { FastifyInstance } from "fastify";
 import type { WorkerEnv } from "./env.js";
 import { rewrapTokens } from "./connect/rewrap.js";
+import { scheduleDomainRechecks } from "./identity/rechecks.js";
 import { jobHandlers, registeredConsumers } from "./handlers.js";
 import { type JobHandler, type JobRunner, createJobRunner } from "./job-runner.js";
 import {
@@ -27,6 +29,10 @@ export interface Worker {
 export interface WorkerOptions {
   readonly storage?: Storage;
   readonly connect?: Connect;
+  /** Looks for domain challenges. Defaults to the live, SSRF-safe checker. */
+  readonly challengeChecker?: ChallengeChecker;
+  /** Schedule daily re-checks of domain proofs (default true with a database). */
+  readonly scheduleRechecks?: boolean;
   readonly handlers?: readonly JobHandler[];
   readonly consumers?: readonly OutboxConsumer[];
   readonly workerId?: string;
@@ -41,7 +47,8 @@ export function createWorker(
 ): Worker {
   const storage = options.storage ?? NO_STORAGE;
   const connect = options.connect ?? NO_CONNECT;
-  const handlers = options.handlers ?? jobHandlers(storage, connect);
+  const checker = options.challengeChecker ?? liveChecker();
+  const handlers = options.handlers ?? jobHandlers(storage, connect, checker);
   const consumers = options.consumers ?? registeredConsumers;
   const workerId = options.workerId ?? `worker-${process.pid}-${Date.now().toString(36)}`;
   const health = createHttpService({
@@ -87,6 +94,26 @@ export function createWorker(
   } else if (!connect.keyring) {
     health.log.warn("CONNECT_TOKEN_KEYS is not set; provider connections cannot be used.");
   }
+  if (checker.kind === "fixture")
+    health.log.warn("Domain challenges are answered from a TEST fixture file, not the internet.");
+  // Re-check domain proofs that are about to expire: at start, then daily.
+  let recheckTimer: NodeJS.Timeout | null = null;
+  if (database && options.scheduleRechecks !== false) {
+    const recheck = () =>
+      void scheduleDomainRechecks(database.db)
+        .then((r) => {
+          if (r.scheduled) health.log.info(r, "domain proof re-checks scheduled");
+        })
+        .catch((error: unknown) =>
+          health.log.error(
+            { err: error instanceof Error ? error.message : "error" },
+            "scheduling domain re-checks failed",
+          ),
+        );
+    recheck();
+    recheckTimer = setInterval(recheck, 86_400_000);
+    recheckTimer.unref();
+  }
   if (consumers.length === 0) {
     health.log.warn(
       "No outbox consumers are registered; events stay pending until a module registers one.",
@@ -99,6 +126,7 @@ export function createWorker(
     outbox,
     async stop() {
       if (rewrapTimer) clearInterval(rewrapTimer);
+      if (recheckTimer) clearInterval(recheckTimer);
       await jobs?.stop();
       await outbox?.stop();
       await health.close();
