@@ -35,6 +35,13 @@ if [[ ! -f .env ]]; then
 else
   info ".env already exists; leaving it unchanged"
 fi
+# Provider tokens are sealed with a key that is generated per machine, never committed.
+if ! grep -qE '^CONNECT_TOKEN_KEYS=.+' .env; then
+  info "Generating a local token key for Origin Connect (CONNECT_TOKEN_KEYS in .env)"
+  key="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64"))')"
+  sed -i.bak '/^CONNECT_TOKEN_KEYS=/d' .env && rm -f .env.bak
+  printf '\nCONNECT_TOKEN_KEYS=local:%s\n' "$key" >> .env
+fi
 
 info "Installing JavaScript dependencies"
 pnpm install --frozen-lockfile

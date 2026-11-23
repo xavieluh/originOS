@@ -20,7 +20,7 @@ export type ApiResult<T> =
  */
 export async function apiFetch<T>(
   path: string,
-  init: { method?: string; body?: unknown } = {},
+  init: { method?: string; body?: unknown; timeoutMs?: number } = {},
 ): Promise<ApiResult<T>> {
   const env = loadWebServerEnv();
   const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
@@ -39,7 +39,7 @@ export async function apiFetch<T>(
       method: init.method ?? "GET",
       headers: requestHeaders,
       cache: "no-store",
-      signal: AbortSignal.timeout(5_000),
+      signal: AbortSignal.timeout(init.timeoutMs ?? 5_000),
       ...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
     });
   } catch {

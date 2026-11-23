@@ -245,11 +245,6 @@ export const workspaceSections = [
     ],
     planned: [
       {
-        feature: "Connections and webhooks",
-        phase: 8,
-        description: "Origin Connect OAuth broker and signed webhooks.",
-      },
-      {
         feature: "GitHub App",
         phase: 21,
         description: "Reconcile agent work with repository outcomes.",
@@ -300,9 +295,10 @@ export const developerSection: Section = {
   keywords: ["api", "keys", "oauth apps", "mcp", "sdk", "docs", "sandbox", "telemetry"],
   planned: [
     {
-      feature: "OAuth apps and webhooks",
-      phase: 8,
-      description: "Register apps and webhook endpoints.",
+      feature: "OAuth apps and outbound webhooks",
+      phase: 38,
+      description:
+        "Register apps that use the OriginOS API, and endpoints OriginOS delivers events to.",
     },
     {
       feature: "Telemetry ingest keys and collector install",

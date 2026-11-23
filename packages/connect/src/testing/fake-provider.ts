@@ -192,6 +192,8 @@ export async function startFakeProvider(options: FakeProviderOptions): Promise<F
     const url = new URL(req.url ?? "/", "http://fake.invalid");
     const route = `${req.method} ${url.pathname}`;
 
+    if (route === "GET /health") return json(res, 200, { status: "ok", testOnly: true });
+
     if (route === "GET /oauth/authorize") {
       const a = parseAuthorize(url);
       res.writeHead(a.problems.length ? 400 : 200, { "content-type": "text/html; charset=utf-8" });

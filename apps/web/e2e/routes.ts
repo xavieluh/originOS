@@ -90,6 +90,12 @@ export const BUTTON_ACTIONS = new Set([
   "jobs.cancel",
   "jobs.cancel.confirm",
   "jobs.cancel.cancel",
+  // Phase 08: Origin Connect
+  "integration.connect",
+  "integration.check",
+  "integration.disconnect",
+  "integration.disconnect.confirm",
+  "integration.disconnect.cancel",
 ]);
 
 /** Account screens. Signed-out ones are checked without a session. */
