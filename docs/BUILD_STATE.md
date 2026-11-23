@@ -17,7 +17,7 @@
 | 05 Authorization, policy baseline and consent | COMPLETE | All 4 checks passed locally 2026-11-22: authz unit 16/16, DB RLS integration 23/23, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 05 handoff. PR #6 merged 2026-11-22. | ADR-024 Accepted. GitHub Actions run 45078282778: 6/6 jobs green |
 | 06 Core domain schema, ledger and outbox | COMPLETE | All 4 checks passed locally 2026-11-22: contracts 14/14, db unit 21/21, DB integration 39/39 (domain schema, RLS, audit chain, every migration down and up), worker outbox integration 8/8, API integration 29/29, Playwright 128/128 in the pinned container, `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 06 handoff. | ADR-025 Accepted. GitHub Actions run 45080783848: 6/6 jobs green. PR #7 merged 2026-11-22. |
 | 07 Object storage, ingestion queues and workflow core | COMPLETE | All 4 checks passed locally 2026-11-22: storage unit 11/11 and integration 4/4 (real SeaweedFS and ClamAV), DB integration 42/42, API integration 38/38, worker integration 21/21, Playwright 137/137 in the pinned container (incl. real upload, scan and EICAR rejection), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 07 handoff. | ADR-026 Accepted. GitHub Actions run 45085294461: 6/6 jobs green. PR #9 merged 2026-11-22. |
-| 08 Origin Connect OAuth and integration broker | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-23: connect unit 19/19, DB integration 51/51, API integration 53/53, worker integration 32/32, Playwright 140/140 in the pinned container (incl. connect, check, disconnect, deny and replay against the fake provider), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 08 handoff. | ADR-027 Proposed. Live GitHub smoke test BLOCKED on an owner-created OAuth app (checklist in handoff). |
+| 08 Origin Connect OAuth and integration broker | PASSED, IN REVIEW | All 4 checks passed locally 2026-11-23: connect unit 19/19, DB integration 51/51, API integration 53/53, worker integration 32/32, Playwright 140/140 in the pinned container (incl. connect, check, disconnect, deny and replay against the fake provider), `scripts/check.sh --db` and `scripts/smoke.sh` green. See Phase 08 handoff. | ADR-027 Proposed. GitHub Actions run 45089176559: 6/6 jobs green. Live GitHub smoke test BLOCKED on an owner-created OAuth app (checklist in handoff). |
 | 09 IdentityMesh creator and organization profiles | NOT STARTED | — | — |
 | 10 IdentityMesh portable credentials | NOT STARTED | — | — |
 | 11 Content, authorship and versions | NOT STARTED | — | — |
@@ -103,7 +103,6 @@
   - Nothing consumes webhook deliveries or `integration.webhook_received` yet (Phase 21 onwards). Delivery rows and payloads have no retention schedule yet (RETENTION §4).
   - Expired OAuth attempts are cleaned up lazily; a scheduled cleanup comes with Phase 41/43 operations.
   - Registering third-party OAuth apps and OriginOS's own outbound webhook endpoints is Phase 38.
-  - CI has not yet run the new browser tests (they need only the fake provider, which Playwright starts).
 - **Next phase:** 09 IdentityMesh creator and organization profiles, after the Phase 08 PR is reviewed.
 
 ## Phase 07 handoff (2026-11-22)
