@@ -31,7 +31,7 @@
 | ADR-024 | Authorization: one pure evaluator (`packages/authz`) for roles, resource-scoped grants and explicit deny; agents capped by their owner; consent records with history | Policy engine (OPA/Cedar/Casbin); permission checks per module; roles only | Accepted 2026-11-22 (Phase 05) | 05, revisit at 06, 16 and 42 |
 | ADR-025 | Canonical domain schema: opaque prefixed ids, one Postgres schema per context, object registry with typed relation whitelist, append-oriented writes, hash-chained audit log, transactional outbox with a separate worker role, down migrations | Graph DB; generic JSON objects; polymorphic edges without FKs; message broker | Accepted 2026-11-22 (Phase 06) | 06, revisit at 13, 20, 41 and 44 |
 | ADR-026 | Ingestion and jobs: S3-compatible storage with quarantine and files buckets, content sniffing, ClamAV scanning in the worker, one-minute signed URLs; a Postgres job runner under row-level security with steps, retries, dead-letter, cancel and human waits, mapped onto Temporal | pg-boss; graphile-worker; Temporal now; scanning in the API; serving files through the API | Accepted 2026-11-22 (Phase 07) | 07, revisit at 08, 21 and 44 |
-| ADR-027 | Origin Connect broker: `packages/connect` with envelope-encrypted tokens (AES-256-GCM, per-value data keys, rotatable key ring), server-side code exchange with PKCE (S256) and single-use hashed state, tokens unreadable to the API role, provider calls only in the worker, webhooks verified over raw bytes and recorded once per delivery id; GitHub as the first real provider and a fake provider for tests | Per-module integrations; a hosted integration platform; tokens readable by the API; Postgres pgcrypto; HTTP library for webhooks | Proposed (Phase 08) | 08, revisit at 21, 22, 30 and 42 |
+| ADR-027 | Origin Connect broker: `packages/connect` with envelope-encrypted tokens (AES-256-GCM, per-value data keys, rotatable key ring), server-side code exchange with PKCE (S256) and single-use hashed state, tokens unreadable to the API role, provider calls only in the worker, webhooks verified over raw bytes and recorded once per delivery id; GitHub as the first real provider and a fake provider for tests | Per-module integrations; a hosted integration platform; tokens readable by the API; Postgres pgcrypto; HTTP library for webhooks | Accepted 2026-11-23 (Phase 08) | 08, revisit at 21, 22, 30 and 42 |
 
 ---
 
@@ -370,7 +370,7 @@ Reference docs: nextjs.org/docs, docs.nestjs.com/techniques/performance (Fastify
 
 ## ADR-027 — Origin Connect: OAuth broker, token vault and webhooks (Phase 08)
 
-**Status.** Proposed 2026-11-23 (Phase 08). Implements ADR-009.
+**Status.** Accepted 2026-11-23 (proposed in Phase 08; accepted by the owner after merge). Implements ADR-009.
 
 **Sources checked (2026-11-22).** GitHub "Authorizing OAuth apps" (authorize and token endpoints, `state`, `code_challenge` with `S256` only, codes expire after 10 minutes, `Accept: application/json`), the GitHub changelog of 2025-07-14 (PKCE support for OAuth and GitHub Apps), "Refreshing user access tokens" (optional expiring tokens), the REST "OAuth authorizations" endpoints (`DELETE /applications/{client_id}/grant` with HTTP Basic and `{"access_token"}`), and "Validating webhook deliveries" (`X-Hub-Signature-256` HMAC-SHA256 over the raw body, constant-time comparison, the documented test vector, which a unit test reproduces). RFC 6749, 7636 (the appendix B PKCE vector is a unit test) and 7009. No new npm dependency: Node's `crypto` and `fetch` cover AES-GCM, HMAC, SHA-256 and HTTP.
 
