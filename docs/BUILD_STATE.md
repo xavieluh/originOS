@@ -67,6 +67,10 @@
 | ACCEPTANCE_MATRIX.md maps each capability to verification | Done | Part A: 73 capabilities with verification type and evidence |
 | No implementation claims without implementation | Holds | Every module NOT BUILT; every result NOT RUN |
 
+## Owner requirements for later phases
+
+- **Multi-channel subscriptions (requested by the owner 2026-11-23; Phase 32, with Phase 22 for Slack).** People can subscribe to updates and choose how they receive them: email, SMS or Slack (more channels later). Build it as channel-agnostic delivery: one subscription and consent model with double opt-in and one-click unsubscribe per channel, throttling, and per-channel adapters behind Origin Connect and the job runner. SMS needs a provider the owner chooses (paid; ask before any account or spend). Not built in Phase 08; designs from now on should not assume email only.
+
 ## Current blockers
 
 1. `/origin-build` and `/origin-audit` are still untested as slash commands (they set `disable-model-invocation: true`, so only a person can start them; phases 01–02 followed the procedure by hand). Phase 02 changed origin-build's last step to "commit on a feature branch, push and open a PR; never merge", matching how phases are delivered.
